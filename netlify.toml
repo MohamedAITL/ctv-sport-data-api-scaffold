@@ -1,0 +1,10 @@
+# Netlify build config. The Next.js runtime turns the API routes into serverless
+# functions, so GOAL_API_KEY stays server-side (set it in Netlify env vars).
+[build]
+  command = "npm run build"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"

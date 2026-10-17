@@ -32,7 +32,13 @@ export async function readSettings(): Promise<AppSettings> {
 export async function writeSettings(patch: Partial<AppSettings>): Promise<AppSettings> {
   const current = await readSettings();
   const next = { ...current, ...patch };
-  await fs.mkdir(path.dirname(FILE), { recursive: true });
-  await fs.writeFile(FILE, JSON.stringify(next, null, 2));
+  try {
+    // Best-effort: on serverless (read-only FS) persistence is skipped, which is
+    // fine — discovery re-resolves via the id hint and data is fetched fresh.
+    await fs.mkdir(path.dirname(FILE), { recursive: true });
+    await fs.writeFile(FILE, JSON.stringify(next, null, 2));
+  } catch {
+    /* read-only filesystem */
+  }
   return next;
 }

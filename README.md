@@ -122,3 +122,19 @@ Switch between the two posters with the **Standings / Matchday** nav.
 Notes: kickoff times are the API's `matchTime` (venue-local). "Most famous" is
 ranked globally by club fame; non-listed clubs show their English name until you
 add an Arabic override.
+
+## Deploy to Netlify
+
+1. Push this repo to GitHub (done).
+2. In Netlify: **Add new site → Import from Git**, pick the repo. Build command
+   `npm run build` and the Next.js runtime are auto-detected (`netlify.toml`).
+3. **Site settings → Environment variables**, add:
+   - `GOAL_API_KEY` = your key (kept server-side in the API functions; never exposed)
+   - `GOAL_API_BASE` = `https://api.goal-api.com/v1`
+4. Deploy. The API routes run as serverless functions; the poster pages are
+   static/client-rendered.
+
+Note: the on-disk cache (`data/settings.json`, `data/matchday.json`) is not used
+on Netlify's read-only filesystem — the league is re-resolved via the id hint and
+data is fetched fresh each request (team names/logos still come from the bundled
+`data/botolaTeams.json` and your browser overrides).
