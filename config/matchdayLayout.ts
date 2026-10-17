@@ -24,7 +24,6 @@ export interface MatchdayLayout {
   homeNameRightX: number;
   awayBadgeX: number;
   awayNameLeftX: number;
-  leagueLogo: { show: boolean; size: number; dy: number };
 }
 
 export const DEFAULT_MATCHDAY_LAYOUT: MatchdayLayout = {
@@ -48,5 +47,4 @@ export const DEFAULT_MATCHDAY_LAYOUT: MatchdayLayout = {
   homeNameRightX: 930,
   awayBadgeX: 78,
   awayNameLeftX: 150,
-  leagueLogo: { show: false, size: 28, dy: -30 },
 };

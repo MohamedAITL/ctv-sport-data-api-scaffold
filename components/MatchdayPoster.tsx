@@ -97,10 +97,6 @@ const MatchdayPoster = forwardRef<HTMLDivElement, Props>(function MatchdayPoster
             {arName(m.home.id, m.home.nameAr)}
           </div>
 
-          {L.leagueLogo.show && m.leagueLogo && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={m.leagueLogo} alt="" style={badgeStyle(L.centerX, rowY + L.leagueLogo.dy, L.leagueLogo.size)} />
-          )}
           <div style={{ position: "absolute", left: L.centerX, top: rowY, transform: "translate(-50%, -50%)", direction: "ltr", textAlign: "center", color: L.centerColor, fontSize: L.centerFontSize, fontWeight: 800, whiteSpace: "nowrap" }}>
             {m.statusLabel}
           </div>

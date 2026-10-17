@@ -26,7 +26,6 @@ export default function MatchdayDesign({ layout, onChange }: Props) {
         <Toggle label="Title" value={L.title.show} onChange={(v) => up((n) => (n.title.show = v))} />
         <Toggle label="Date label" value={L.dateLabel.show} onChange={(v) => up((n) => (n.dateLabel.show = v))} />
         <Toggle label="Row cards" value={L.rowBg.show} onChange={(v) => up((n) => (n.rowBg.show = v))} />
-        <Toggle label="League logos" value={L.leagueLogo.show} onChange={(v) => up((n) => (n.leagueLogo.show = v))} />
       </div>
       {L.title.show && (
         <div className="grid">
@@ -65,7 +64,6 @@ export default function MatchdayDesign({ layout, onChange }: Props) {
         <Num label="Center X" value={L.centerX} onChange={(v) => up((n) => (n.centerX = v))} />
         <Num label="Away badge X" value={L.awayBadgeX} onChange={(v) => up((n) => (n.awayBadgeX = v))} />
         <Num label="Away name X" value={L.awayNameLeftX} onChange={(v) => up((n) => (n.awayNameLeftX = v))} />
-        <Num label="League logo size" value={L.leagueLogo.size} onChange={(v) => up((n) => (n.leagueLogo.size = v))} />
       </div>
     </details>
   );
