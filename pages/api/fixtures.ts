@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { promises as fs } from "fs";
 import path from "path";
-import { goalFetch, GoalApiError, hasApiKey } from "@/lib/goalApi";
+import { goalFetch, hasApiKey } from "@/lib/goalApi";
 import { normalizeFixtures, selectMatchday } from "@/lib/fixtures";
 import { FEATURED_LEAGUES } from "@/config/featuredLeagues";
 import type { RawFixturesResponse, Match } from "@/types/fixtures";
