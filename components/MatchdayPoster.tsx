@@ -62,11 +62,12 @@ const MatchdayPoster = forwardRef<HTMLDivElement, Props>(function MatchdayPoster
 
   // Lay out headers + rows top-to-bottom with a running y cursor.
   const nodes: React.ReactNode[] = [];
+  const headerNodes: React.ReactNode[] = [];
   let y = L.firstRowCenterY;
 
   for (const g of groups) {
     if (L.groupHeader.show) {
-      nodes.push(
+      headerNodes.push(
         <div key={"h-" + g.leagueId} style={{ position: "absolute", left: L.rowBg.insetX, width: L.width - 2 * L.rowBg.insetX, top: y, transform: "translateY(-50%)", display: "flex", alignItems: "center", justifyContent: "center", gap: 12, direction: "rtl" }}>
           {g.leagueLogo && (
             // eslint-disable-next-line @next/next/no-img-element
@@ -137,6 +138,7 @@ const MatchdayPoster = forwardRef<HTMLDivElement, Props>(function MatchdayPoster
         <div style={{ position: "absolute", left: L.dateLabel.x, top: L.dateLabel.y, transform: "translate(-50%, -50%)", direction: "rtl", color: L.dateLabel.color, fontSize: L.dateLabel.fontSize, fontWeight: 700, whiteSpace: "nowrap" }}>{L.dateLabel.text}</div>
       )}
       {nodes}
+      {headerNodes}
     </div>
   );
 });
