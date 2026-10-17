@@ -5,6 +5,9 @@
 
 [build.environment]
   NODE_VERSION = "20"
+  # GOAL_API_BASE is a public URL, so exempt it from secrets scanning (it appears
+  # in code as the default). The scan stays on for GOAL_API_KEY.
+  SECRETS_SCAN_OMIT_KEYS = "GOAL_API_BASE"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
