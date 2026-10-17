@@ -26,8 +26,8 @@ export default function MatchdayTeams({ matches, nameOverrides, logoOverrides, o
   }
 
   return (
-    <div className="card">
-      <h3>Teams — Arabic names & badges</h3>
+    <details className="card collapsible" open>
+      <summary><h3>Teams — Arabic names & badges</h3><span className="chev" /></summary>
       <p className="muted">Edits persist and are shared with the standings editor (same teamId).</p>
       <div className="teamlist">
         {teams.map((t) => {
@@ -48,6 +48,6 @@ export default function MatchdayTeams({ matches, nameOverrides, logoOverrides, o
           );
         })}
       </div>
-    </div>
+    </details>
   );
 }

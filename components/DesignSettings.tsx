@@ -50,8 +50,8 @@ export default function DesignSettings({ layout, onChange }: Props) {
   const M = layout.mask;
 
   return (
-    <div className="card">
-      <h3>Design</h3>
+    <details className="card collapsible">
+      <summary><h3>Design</h3><span className="chev" /></summary>
 
       <h4>Rows</h4>
       <div className="grid">
@@ -113,6 +113,6 @@ export default function DesignSettings({ layout, onChange }: Props) {
       {layout.updatedLabel.show && (
         <Text label="Updated text" rtl value={layout.updatedLabel.text || ""} onChange={(v) => up((n) => (n.updatedLabel.text = v))} />
       )}
-    </div>
+    </details>
   );
 }

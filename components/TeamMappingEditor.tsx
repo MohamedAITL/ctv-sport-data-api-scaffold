@@ -32,8 +32,8 @@ export default function TeamMappingEditor({
   }
 
   return (
-    <div className="card">
-      <h3>Teams — Arabic names & logos</h3>
+    <details className="card collapsible" open>
+      <summary><h3>Teams — Arabic names & logos</h3><span className="chev" /></summary>
       <p className="muted">
         Upload a logo from your computer to fix a wrong crest — every other club keeps its
         official logo, and <b>Revert</b> restores the official one. Name &amp; logo edits are
@@ -81,6 +81,6 @@ export default function TeamMappingEditor({
           );
         })}
       </div>
-    </div>
+    </details>
   );
 }

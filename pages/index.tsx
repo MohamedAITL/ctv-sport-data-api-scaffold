@@ -131,11 +131,14 @@ export default function Home() {
         <title>Botola Pro Standings Poster — Chouf TV</title>
       </Head>
       <main className="app">
-        <header className="apphead">
-          <h1>Botola Pro — Standings Poster</h1>
+        <header className="topbar">
+          <div className="brand"><span className="brandmark">شوف<b>TV</b></span> Poster Studio</div>
           <Nav />
-          <span className="muted">Chouf TV · live GOAL API · 1080×1350</span>
         </header>
+        <div className="pagehead">
+          <h1>Standings Poster</h1>
+          <span className="muted">Botola Pro · official table · live GOAL API · exports 1080×1350 PNG</span>
+        </div>
 
         <div className="layout">
           <section className="controls">

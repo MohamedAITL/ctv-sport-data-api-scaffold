@@ -8,13 +8,13 @@ import TemplateUploader from "@/components/TemplateUploader";
 import ExportControls from "@/components/ExportControls";
 import { DEFAULT_MATCHDAY_LAYOUT, type MatchdayLayout } from "@/config/matchdayLayout";
 import type { Match } from "@/types/fixtures";
-import { loadNameOverrides, saveNameOverrides } from "@/lib/persist";
+import { loadNameOverrides, saveNameOverrides, deepMerge } from "@/lib/persist";
 import { getLogoOverrides, setLogoOverride, clearLogoOverride, getTemplate, setTemplate, clearTemplate } from "@/lib/db";
 
 const PREVIEW_W = 480;
 const LKEY = "botola.matchdayLayout";
 const loadLayout = (): MatchdayLayout => {
-  try { const r = localStorage.getItem(LKEY); return r ? { ...DEFAULT_MATCHDAY_LAYOUT, ...JSON.parse(r) } : DEFAULT_MATCHDAY_LAYOUT; } catch { return DEFAULT_MATCHDAY_LAYOUT; }
+  try { const r = localStorage.getItem(LKEY); return r ? deepMerge(DEFAULT_MATCHDAY_LAYOUT, JSON.parse(r)) : DEFAULT_MATCHDAY_LAYOUT; } catch { return DEFAULT_MATCHDAY_LAYOUT; }
 };
 const saveLayout = (l: MatchdayLayout) => { try { localStorage.setItem(LKEY, JSON.stringify(l)); } catch { /* ignore */ } };
 const today = () => new Date().toISOString().slice(0, 10);
@@ -76,11 +76,14 @@ export default function Matchday() {
     <>
       <Head><title>Matchday Poster — Chouf TV</title></Head>
       <main className="app">
-        <header className="apphead">
-          <h1>Matchday Poster</h1>
+        <header className="topbar">
+          <div className="brand"><span className="brandmark">شوف<b>TV</b></span> Poster Studio</div>
           <Nav />
-          <span className="muted">Chouf TV · live GOAL API · 1080×1350</span>
         </header>
+        <div className="pagehead">
+          <h1>Matchday Poster</h1>
+          <span className="muted">Botola Pro first, then the biggest games · live GOAL API · exports 1080×1350 PNG</span>
+        </div>
 
         <div className="layout">
           <section className="controls">
@@ -95,7 +98,7 @@ export default function Matchday() {
               )}
               <button className="btn" disabled={loading} onClick={() => fetchFixtures(date)}>{loading ? "Refreshing…" : "Refresh"}</button>
             </div>
-            <TemplateUploader isCustom={templateSrc !== null} onTemplate={onTemplate} />
+            <TemplateUploader isCustom={templateSrc !== null} onTemplate={onTemplate} defaultLabel="No template yet — using a plain background. Upload your matchday template." resetLabel="Remove template" />
             <ExportControls posterRef={posterRef} canExport={matches.length > 0} onResetDesign={() => updateLayout(DEFAULT_MATCHDAY_LAYOUT)} fileBase="choufsport-matchday" />
             <MatchdayTeams matches={matches} nameOverrides={nameOverrides} logoOverrides={logoOverrides} onName={onName} onLogo={onLogo} onClearLogo={onClearLogo} />
             <MatchdayDesign layout={layout} onChange={updateLayout} />

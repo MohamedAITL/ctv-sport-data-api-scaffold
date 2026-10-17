@@ -19,8 +19,8 @@ export default function MatchdayDesign({ layout, onChange }: Props) {
   const up = (fn: (n: MatchdayLayout) => void) => { const n = structuredClone(layout); fn(n); onChange(n); };
   const L = layout;
   return (
-    <div className="card">
-      <h3>Design</h3>
+    <details className="card collapsible">
+      <summary><h3>Design</h3><span className="chev" /></summary>
       <h4>Overlays (turn off when your template has them)</h4>
       <div className="grid">
         <Toggle label="Title" value={L.title.show} onChange={(v) => up((n) => (n.title.show = v))} />
@@ -36,6 +36,15 @@ export default function MatchdayDesign({ layout, onChange }: Props) {
           <Color label="Title color" value={L.title.color} onChange={(v) => up((n) => (n.title.color = v))} />
         </div>
       )}
+      <h4>Competition headers</h4>
+      <div className="grid">
+        <Toggle label="Show headers" value={L.groupHeader.show} onChange={(v) => up((n) => (n.groupHeader.show = v))} />
+        <Num label="Header size" value={L.groupHeader.fontSize} onChange={(v) => up((n) => (n.groupHeader.fontSize = v))} />
+        <Num label="Header logo" value={L.groupHeader.logoSize} onChange={(v) => up((n) => (n.groupHeader.logoSize = v))} />
+        <Color label="Header color" value={L.groupHeader.color} onChange={(v) => up((n) => (n.groupHeader.color = v))} />
+        <Num label="Group gap" value={L.groupGap} onChange={(v) => up((n) => (n.groupGap = v))} />
+      </div>
+
       <h4>Rows</h4>
       <div className="grid">
         <Num label="First row Y" value={L.firstRowCenterY} onChange={(v) => up((n) => (n.firstRowCenterY = v))} />
@@ -58,6 +67,6 @@ export default function MatchdayDesign({ layout, onChange }: Props) {
         <Num label="Away name X" value={L.awayNameLeftX} onChange={(v) => up((n) => (n.awayNameLeftX = v))} />
         <Num label="League logo size" value={L.leagueLogo.size} onChange={(v) => up((n) => (n.leagueLogo.size = v))} />
       </div>
-    </div>
+    </details>
   );
 }
