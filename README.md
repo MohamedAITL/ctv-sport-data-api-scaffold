@@ -96,3 +96,29 @@ npm run typecheck # tsc --noEmit
 
 Tests use a clearly-labelled mock fixture shaped like the real response — never
 presented as live data.
+
+## Matchday poster (`/matchday`)
+
+A second poster that lists up to **10 matches** for a chosen date: **all Botola
+Pro matches first**, then the **most famous matches** from the big competitions
+(UCL, Europa, Premier League, La Liga, Serie A, Bundesliga, Ligue 1) ranked by a
+curated club-fame weighting.
+
+- `config/featuredLeagues.ts` — the scanned competitions (IDs verified live) +
+  `MAX_MATCHES = 10`.
+- `config/famousClubs.ts` — club fame weights + Arabic names (drives "most
+  famous" ranking and auto-Arabic for big clubs).
+- `pages/api/fixtures.ts` — fetches each league's fixtures for the date
+  (`?from=D&to=D`, the only working date filter), selects (Botola first, then
+  fame), inlines logos, caches to `data/matchday.json`, stale-fallback on failure.
+- `components/MatchdayPoster.tsx` — home (right) vs away (left), kickoff/score +
+  league logo in the centre. Upload your own template and switch the title/date/
+  row-card overlays off in Design. Team Arabic names/badges are editable and
+  shared with the standings editor (same teamId). Export is 1080×1350
+  (`choufsport-matchday-YYYY-MM-DD.png`).
+
+Switch between the two posters with the **Standings / Matchday** nav.
+
+Notes: kickoff times are the API's `matchTime` (venue-local). "Most famous" is
+ranked globally by club fame; non-listed clubs show their English name until you
+add an Arabic override.

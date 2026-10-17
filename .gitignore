@@ -40,3 +40,5 @@ next-env.d.ts
 
 # local tooling
 .claude/
+
+/data/matchday.json

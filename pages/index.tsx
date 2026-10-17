@@ -1,6 +1,7 @@
 import Head from "next/head";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Poster from "@/components/Poster";
+import Nav from "@/components/Nav";
 import TemplateUploader from "@/components/TemplateUploader";
 import CompetitionSelector from "@/components/CompetitionSelector";
 import TeamMappingEditor from "@/components/TeamMappingEditor";
@@ -140,6 +141,7 @@ export default function Home() {
       <main className="app">
         <header className="apphead">
           <h1>Botola Pro — Standings Poster</h1>
+          <Nav />
           <span className="muted">Chouf TV · live GOAL API · 1080×1350</span>
         </header>
 
