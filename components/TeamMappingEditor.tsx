@@ -12,8 +12,9 @@ interface Props {
 }
 
 // Edit Arabic display names and upload logo overrides, keyed by stable teamId.
-// API stats (position/played/wins/points) are shown read-only — this editor
-// never changes official figures.
+// Official API logos stay unless you upload a replacement for a specific club;
+// "Revert" drops the override and restores that club's official logo. API stats
+// (position/played/wins/points) are shown read-only — never changed here.
 export default function TeamMappingEditor({
   rows,
   nameOverrides,
@@ -33,9 +34,14 @@ export default function TeamMappingEditor({
   return (
     <div className="card">
       <h3>Teams — Arabic names & logos</h3>
-      <p className="muted">Edits are saved locally and survive refresh. Stats are read-only API values.</p>
+      <p className="muted">
+        Upload a logo from your computer to fix a wrong crest — every other club keeps its
+        official logo, and <b>Revert</b> restores the official one. Name &amp; logo edits are
+        saved locally and survive refresh. Stats are read-only API values.
+      </p>
       <div className="teamlist">
         {rows.map((r) => {
+          const custom = r.teamId in logoOverrides;
           const logo = logoOverrides[r.teamId] || r.logo;
           const nameEdited = r.teamId in nameOverrides;
           return (
@@ -43,9 +49,9 @@ export default function TeamMappingEditor({
               <span className="rank">{r.rank}</span>
               {logo ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img className="logo" src={logo} alt="" width={28} height={28} />
+                <img className="logo" src={logo} alt="" width={28} height={28} title={custom ? "custom logo" : "official logo"} />
               ) : (
-                <span className="logo fallback">{(r.nameOriginal || "?").charAt(0)}</span>
+                <span className="logo fallback" title="no official logo — upload one">{(r.nameOriginal || "?").charAt(0)}</span>
               )}
               <input
                 className="namein"
@@ -55,15 +61,19 @@ export default function TeamMappingEditor({
                 onChange={(e) => onName(r.teamId, e.target.value)}
               />
               <span className="stats" title="played / wins / points">{r.played} · {r.wins} · {r.points}</span>
-              <button className="btn tiny" onClick={() => fileInputs.current[r.teamId]?.click()}>logo</button>
-              {logoOverrides[r.teamId] && (
-                <button className="btn tiny ghost" onClick={() => onClearLogo(r.teamId)}>×</button>
+              <button className="btn tiny" onClick={() => fileInputs.current[r.teamId]?.click()}>
+                {custom ? "Change logo" : "Upload logo"}
+              </button>
+              {custom && (
+                <button className="btn tiny ghost" title="restore official logo" onClick={() => onClearLogo(r.teamId)}>
+                  Revert
+                </button>
               )}
-              {nameEdited && <span className="edited" title="manual override">•</span>}
+              {nameEdited && <span className="edited" title="manual name override">•</span>}
               <input
                 ref={(el) => { fileInputs.current[r.teamId] = el; }}
                 type="file"
-                accept="image/png,image/jpeg,image/svg+xml"
+                accept="image/png,image/jpeg,image/svg+xml,image/webp"
                 hidden
                 onChange={(e) => pick(r.teamId, e)}
               />
