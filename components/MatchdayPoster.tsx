@@ -68,7 +68,7 @@ const MatchdayPoster = forwardRef<HTMLDivElement, Props>(function MatchdayPoster
   for (const g of groups) {
     if (L.groupHeader.show) {
       headerNodes.push(
-        <div key={"h-" + g.leagueId} style={{ position: "absolute", left: L.rowBg.insetX, width: L.width - 2 * L.rowBg.insetX, top: y, transform: "translateY(-50%)", display: "flex", alignItems: "center", justifyContent: "center", gap: 12, direction: "rtl" }}>
+        <div key={"h-" + g.leagueId} style={{ position: "absolute", left: L.rowBg.insetX, width: L.width - 2 * L.rowBg.insetX, top: y + L.groupHeader.dy, transform: "translateY(-50%)", display: "flex", alignItems: "center", justifyContent: "center", gap: 12, direction: "rtl" }}>
           {g.leagueLogo && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={g.leagueLogo} alt="" width={L.groupHeader.logoSize} height={L.groupHeader.logoSize} style={{ width: L.groupHeader.logoSize, height: L.groupHeader.logoSize, objectFit: "contain" }} />

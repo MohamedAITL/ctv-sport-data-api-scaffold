@@ -10,7 +10,7 @@ export interface MatchdayLayout {
   dateLabel: MLText;
   firstRowCenterY: number; // y of the first element (group header or row)
   rowHeight: number;
-  groupHeader: { show: boolean; height: number; fontSize: number; color: string; logoSize: number };
+  groupHeader: { show: boolean; height: number; fontSize: number; color: string; logoSize: number; dy: number };
   groupGap: number;
   rowBg: { show: boolean; color: string; opacity: number; radius: number; insetX: number; height: number };
   badgeSize: number;
@@ -33,7 +33,7 @@ export const DEFAULT_MATCHDAY_LAYOUT: MatchdayLayout = {
   dateLabel: { show: true, text: "", x: 540, y: 150, fontSize: 28, color: "#f6c744" },
   firstRowCenterY: 205,
   rowHeight: 78,
-  groupHeader: { show: true, height: 62, fontSize: 32, color: "#f6c744", logoSize: 40 },
+  groupHeader: { show: true, height: 62, fontSize: 32, color: "#f6c744", logoSize: 40, dy: 0 },
   groupGap: 8,
   rowBg: { show: true, color: "#3b2a5e", opacity: 0.85, radius: 16, insetX: 40, height: 70 },
   badgeSize: 50,

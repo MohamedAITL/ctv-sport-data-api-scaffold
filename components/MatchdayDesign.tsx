@@ -42,6 +42,7 @@ export default function MatchdayDesign({ layout, onChange }: Props) {
         <Num label="Header logo" value={L.groupHeader.logoSize} onChange={(v) => up((n) => (n.groupHeader.logoSize = v))} />
         <Color label="Header color" value={L.groupHeader.color} onChange={(v) => up((n) => (n.groupHeader.color = v))} />
         <Num label="Group gap" value={L.groupGap} onChange={(v) => up((n) => (n.groupGap = v))} />
+        <Num label="Headers up/down" value={L.groupHeader.dy} onChange={(v) => up((n) => (n.groupHeader.dy = v))} />
       </div>
 
       <h4>Rows</h4>
