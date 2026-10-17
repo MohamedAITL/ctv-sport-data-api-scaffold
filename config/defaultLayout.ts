@@ -21,7 +21,7 @@ export interface LayoutConfig {
   height: number;
 
   // Rectangle covering the old rows; redrawn to blend into the panel.
-  mask: { x: number; y: number; w: number; h: number; color: string; opacity: number; radius: number };
+  mask: { x: number; y: number; w: number; h: number; color: string; opacity: number; radius: number; show: boolean };
 
   // Optional overlays over static template text (off by default).
   heading: TextStyle; // ترتيب البطولة الاحترافية
@@ -61,7 +61,7 @@ export const DEFAULT_LAYOUT: LayoutConfig = {
   width: 1080,
   height: 1350,
 
-  mask: { x: 432, y: 332, w: 618, h: 915, color: "#2b1a45", opacity: 1, radius: 20 },
+  mask: { x: 432, y: 332, w: 618, h: 915, color: "#2b1a45", opacity: 1, radius: 20, show: false },
 
   heading: {
     show: false,

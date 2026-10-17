@@ -60,7 +60,7 @@ const Poster = forwardRef<HTMLDivElement, PosterProps>(function Poster(
           height: L.mask.h,
           background: L.mask.color,
           opacity: L.mask.opacity,
-          borderRadius: L.mask.radius,
+          borderRadius: L.mask.radius, display: L.mask.show ? "block" : "none",
         }}
       />
 
@@ -104,7 +104,7 @@ const Poster = forwardRef<HTMLDivElement, PosterProps>(function Poster(
                 alt=""
                 width={T.logoSize}
                 height={T.logoSize}
-                style={{ position: "absolute", left: T.logoCenterX, top: y, transform: "translate(-50%, -50%)", width: T.logoSize, height: T.logoSize, borderRadius: "50%", objectFit: "cover", background: "#fff" }}
+                style={{ position: "absolute", left: T.logoCenterX, top: y, transform: "translate(-50%, -50%)", width: T.logoSize, height: T.logoSize, borderRadius: "50%", objectFit: "cover" }}
               />
             ) : (
               <div

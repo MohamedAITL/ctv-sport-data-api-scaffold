@@ -99,7 +99,7 @@ export default function DesignSettings({ layout, onChange }: Props) {
         <Toggle label="Heading" value={layout.heading.show} onChange={(v) => up((n) => (n.heading.show = v))} />
         <Toggle label="Column headers" value={layout.columnHeaders.show} onChange={(v) => up((n) => (n.columnHeaders.show = v))} />
         <Toggle label="Season label" value={layout.seasonLabel.show} onChange={(v) => up((n) => (n.seasonLabel.show = v))} />
-        <Toggle label="Updated label" value={layout.updatedLabel.show} onChange={(v) => up((n) => (n.updatedLabel.show = v))} />
+        <Toggle label="Updated label" value={layout.updatedLabel.show} onChange={(v) => up((n) => (n.updatedLabel.show = v))} /> <Toggle label="Row mask" value={layout.mask.show} onChange={(v) => up((n) => (n.mask.show = v))} />
       </div>
       {layout.heading.show && (
         <div className="grid">
