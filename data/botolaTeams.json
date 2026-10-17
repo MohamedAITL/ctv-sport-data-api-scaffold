@@ -1,0 +1,19 @@
+{
+  "_comment": "teamId -> Arabic display name. Seeded from the live GOAL API Botola Pro teams (2026/2027) matched to the Chouf TV poster names. Editable in-app; user overrides are stored in the browser and merged on top of this seed, keyed by the same stable teamId.",
+  "cmri4p62jczfslb074yox7kff": "حسنية أكادير",
+  "cmri4p62eczfnlb07pkeppld5": "اتحاد طنجة",
+  "cmri4p62fczfolb0747wmjupa": "إتحاد تواركة",
+  "cmri4p62hczfqlb07cciqm48h": "المغرب الفاسي",
+  "cmri4p62gczfplb072i1nk00o": "الكوكب المراكشي",
+  "cmr7djfq91kufrx06cbhe6u2r": "الرجاء الرياضي",
+  "cmri4p62iczfrlb07sikb5pwc": "النادي المكناسي",
+  "cmr7bedj10ujzrx061criu1jg": "الجيش الملكي",
+  "cmr7becmb0ubgrx068u8wmv4q": "الوداد الرياضي",
+  "cmri4p63lczgclb079zs4ytri": "وداد تمارة",
+  "cmr7beddb0uivrx06g13tmmde": "نهضة بركان",
+  "cmtwihhsk5e9mqs07o9zs038t": "المغرب التطواني",
+  "cmri4p62xczfwlb07e60dqz81": "الدفاع الحسني الجديدي",
+  "cmri4p63nczgelb07oi8yp4so": "امل تيزنيت",
+  "cmri4p62sczfulb07aekju0f2": "الفتح الرباطي",
+  "cmri4p631czfylb07vfk561e3": "نهضة الزمامرة"
+}

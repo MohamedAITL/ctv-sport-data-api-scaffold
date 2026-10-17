@@ -1,115 +1,195 @@
-import Image from "next/image";
-import localFont from "next/font/local";
+import Head from "next/head";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Poster from "@/components/Poster";
+import TemplateUploader from "@/components/TemplateUploader";
+import CompetitionSelector from "@/components/CompetitionSelector";
+import TeamMappingEditor from "@/components/TeamMappingEditor";
+import DesignSettings from "@/components/DesignSettings";
+import ExportControls from "@/components/ExportControls";
+import { DEFAULT_LAYOUT, type LayoutConfig } from "@/config/defaultLayout";
+import type { TeamRow } from "@/types/standings";
+import { loadLayout, saveLayout, loadNameOverrides, saveNameOverrides } from "@/lib/persist";
+import {
+  getLogoOverrides,
+  setLogoOverride,
+  clearLogoOverride,
+  getTemplate,
+  setTemplate,
+  clearTemplate,
+} from "@/lib/db";
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
-});
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
-});
+const DEFAULT_TEMPLATE = "/templates/botola.jpg";
+const PREVIEW_W = 480;
+
+interface StandingsState {
+  rows: TeamRow[];
+  season: string | null;
+  league?: { id?: string; name?: string };
+  warnings: string[];
+  validation: { ok: boolean; errors: string[]; warnings: string[] };
+  fetchedAt?: string;
+  stale: boolean;
+  error?: string | null;
+}
 
 export default function Home() {
-  return (
-    <div
-      className={`${geistSans.variable} ${geistMono.variable} grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]`}
-    >
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              pages/index.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const posterRef = useRef<HTMLDivElement>(null);
+  const [layout, setLayout] = useState<LayoutConfig>(DEFAULT_LAYOUT);
+  const [nameOverrides, setNameOverrides] = useState<Record<string, string>>({});
+  const [logoOverrides, setLogoOverrides] = useState<Record<string, string>>({});
+  const [templateSrc, setTemplateSrc] = useState<string>(DEFAULT_TEMPLATE);
+  const [data, setData] = useState<StandingsState | null>(null);
+  const [loading, setLoading] = useState(false);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+  // Load persisted state on mount (client-only).
+  useEffect(() => {
+    setLayout(loadLayout(DEFAULT_LAYOUT));
+    setNameOverrides(loadNameOverrides());
+    getLogoOverrides().then(setLogoOverrides);
+    getTemplate().then((t) => t && setTemplateSrc(t));
+  }, []);
+
+  const fetchStandings = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/standings");
+      const json = await res.json();
+      if (!res.ok && !json.rows) {
+        setData({
+          rows: [],
+          season: null,
+          warnings: [],
+          validation: { ok: false, errors: [json.error || "Request failed"], warnings: [] },
+          stale: true,
+          error: json.error,
+        });
+      } else {
+        setData(json);
+      }
+    } catch (e) {
+      setData({
+        rows: [],
+        season: null,
+        warnings: [],
+        validation: { ok: false, errors: [String(e)], warnings: [] },
+        stale: true,
+        error: String(e),
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchStandings();
+  }, [fetchStandings]);
+
+  const updateLayout = (next: LayoutConfig) => {
+    setLayout(next);
+    saveLayout(next);
+  };
+  const resetDesign = () => updateLayout(DEFAULT_LAYOUT);
+
+  const onName = (teamId: string, value: string) => {
+    setNameOverrides((prev) => {
+      const next = { ...prev, [teamId]: value };
+      saveNameOverrides(next);
+      return next;
+    });
+  };
+  const onLogo = (teamId: string, dataUrl: string) => {
+    setLogoOverrides((prev) => ({ ...prev, [teamId]: dataUrl }));
+    setLogoOverride(teamId, dataUrl);
+  };
+  const onClearLogo = (teamId: string) => {
+    setLogoOverrides((prev) => {
+      const next = { ...prev };
+      delete next[teamId];
+      return next;
+    });
+    clearLogoOverride(teamId);
+  };
+  const onTemplate = (dataUrl: string | null) => {
+    if (dataUrl) {
+      setTemplateSrc(dataUrl);
+      setTemplate(dataUrl);
+    } else {
+      setTemplateSrc(DEFAULT_TEMPLATE);
+      clearTemplate();
+    }
+  };
+
+  // Apply client-side Arabic-name overrides on top of the server rows.
+  const rows: TeamRow[] = useMemo(
+    () =>
+      (data?.rows || []).map((r) => ({
+        ...r,
+        nameAr: nameOverrides[r.teamId] ?? r.nameAr,
+      })),
+    [data, nameOverrides]
+  );
+
+  const blocked = data && !data.validation.ok ? data.validation.errors.join("; ") : null;
+  const scale = PREVIEW_W / layout.width;
+
+  return (
+    <>
+      <Head>
+        <title>Botola Pro Standings Poster — Chouf TV</title>
+      </Head>
+      <main className="app">
+        <header className="apphead">
+          <h1>Botola Pro — Standings Poster</h1>
+          <span className="muted">Chouf TV · live GOAL API · 1080×1350</span>
+        </header>
+
+        <div className="layout">
+          <section className="controls">
+            <CompetitionSelector
+              leagueName={data?.league?.name}
+              season={data?.season}
+              count={rows.length}
+              fetchedAt={data?.fetchedAt}
+              stale={Boolean(data?.stale)}
+              error={data?.error}
+              loading={loading}
+              onRefresh={fetchStandings}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            {data && data.validation.warnings.length > 0 && (
+              <div className="card">
+                <h3>Data warnings</h3>
+                <ul className="warnlist">
+                  {data.validation.warnings.map((w, i) => (
+                    <li key={i}>{w}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <TemplateUploader isCustom={templateSrc !== DEFAULT_TEMPLATE} onTemplate={onTemplate} />
+            <ExportControls posterRef={posterRef} canExport={rows.length > 0} blocked={blocked} onResetDesign={resetDesign} />
+            <TeamMappingEditor
+              rows={rows}
+              nameOverrides={nameOverrides}
+              logoOverrides={logoOverrides}
+              onName={onName}
+              onLogo={onLogo}
+              onClearLogo={onClearLogo}
+            />
+            <DesignSettings layout={layout} onChange={updateLayout} />
+          </section>
+
+          <section className="previewpane">
+            <div className="previewsticky">
+              <h3 className="muted">Live preview</h3>
+              <div className="previewbox" style={{ width: PREVIEW_W, height: layout.height * scale }}>
+                <div style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}>
+                  <Poster ref={posterRef} rows={rows} layout={layout} templateSrc={templateSrc} logoOverrides={logoOverrides} />
+                </div>
+              </div>
+            </div>
+          </section>
         </div>
       </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+    </>
   );
 }

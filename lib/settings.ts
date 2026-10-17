@@ -1,0 +1,38 @@
+// Server-side persistence in data/settings.json: resolved league/season and the
+// last-good standings (authoritative cache + stale flag). Single-user local app,
+// so a JSON file is enough.
+import { promises as fs } from "fs";
+import path from "path";
+import type { TeamRow } from "@/types/standings";
+
+const FILE = path.join(process.cwd(), "data", "settings.json");
+
+export interface AppSettings {
+  leagueId?: string;
+  leagueName?: string;
+  countryName?: string;
+  season?: string | null;
+  resolvedAt?: string;
+  lastStandings?: {
+    rows: TeamRow[];
+    season: string | null;
+    warnings: string[];
+    fetchedAt: string;
+  };
+}
+
+export async function readSettings(): Promise<AppSettings> {
+  try {
+    return JSON.parse(await fs.readFile(FILE, "utf8")) as AppSettings;
+  } catch {
+    return {};
+  }
+}
+
+export async function writeSettings(patch: Partial<AppSettings>): Promise<AppSettings> {
+  const current = await readSettings();
+  const next = { ...current, ...patch };
+  await fs.mkdir(path.dirname(FILE), { recursive: true });
+  await fs.writeFile(FILE, JSON.stringify(next, null, 2));
+  return next;
+}

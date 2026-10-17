@@ -34,3 +34,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# generated server cache (resolved league/season + last-good standings)
+/data/settings.json
+
+# local tooling
+.claude/

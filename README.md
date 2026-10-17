@@ -1,40 +1,98 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Botola Pro — Standings Poster Generator (Chouf TV)
 
-## Getting Started
+Local app that regenerates the Chouf TV 1080×1350 Botola Pro standings poster
+from **live GOAL API data**, overwriting only the standings region of the
+original design and exporting a publication-ready PNG.
 
-First, run the development server:
+Stack: **Next.js 14 + TypeScript + Tailwind**. The GOAL API key stays server-side
+in a Next API route and is never shipped to the browser.
+
+## Verified (2026-10-17, against the live GOAL API)
+
+- Discovery resolves **Morocco Botola Pro**, season **2026/2027**, 16 clubs.
+- Field mapping uses the documented response fields
+  (`overallLeaguePosition`, `team.name`, `overallLeaguePlayed`,
+  `overallLeagueW`, `overallLeaguePTS`, logo = `team.badge`) — values match the
+  reference poster.
+- Export produces a real **1080×1350 PNG**; Arabic renders correctly; the old
+  standings are fully covered; player / Chouf TV logo / heading / footer intact.
+- 18 unit tests pass (`npm test`). Bad-key path returns HTTP 401 → app serves the
+  cached table flagged **stale** (never a silent/misleading poster).
+
+## Setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local      # then put your key in .env.local
+npm run dev                     # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Get a free GOAL API key at https://goal-api.com/signup (free tier, no card) and
+set it in `.env.local`:
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+```
+GOAL_API_KEY=your_api_key_here
+GOAL_API_BASE=https://api.goal-api.com/v1
+```
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+`.env.local` is gitignored — the key is read only in `pages/api/*`.
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+## Workflow
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+1. **Refresh standings** — pulls the current table (status + timestamp + club
+   count shown; falls back to cached data, marked stale, if the API fails).
+2. **Teams** — edit any club's Arabic name or upload a logo override; edits are
+   saved locally and survive a refresh. API stats are read-only.
+3. **Template** — use the bundled reference poster or upload your own
+   (PNG/JPG); reset anytime.
+4. **Design** — adjust row positions, fonts, logo size, column X positions, the
+   mask that covers the old rows, zone colors, and optional overlays.
+5. **Download PNG / JPEG** — exports exactly 1080×1350 as
+   `botola-pro-standings-YYYY-MM-DD.png`. The preview is the export node, so what
+   you see is what you get. **Reset design** restores layout defaults but keeps
+   your name/logo edits.
 
-## Learn More
+## How it works
 
-To learn more about Next.js, take a look at the following resources:
+- `lib/goalApi.ts` — keyed Bearer fetch, maps 401/403/429/network/non-JSON to
+  typed errors.
+- `lib/discovery.ts` — resolves the league via `/countries → Morocco → leagues`
+  (verifies the id hint first); persists `{leagueId, season}` to
+  `data/settings.json`. No hardcoded old season id.
+- `lib/normalize.ts` — documented fields first (aliases only as fallback),
+  string stats parsed to numbers, missing fields surfaced as warnings (never
+  invented), sorted by official position.
+- `pages/api/standings.ts` — fetch → normalize → **inline each logo as a data
+  URL server-side** (defeats canvas CORS) → validate → cache. On failure serves
+  the last-good cache with `stale: true`.
+- `components/Poster.tsx` — the fixed 1080×1350 export node: base template image,
+  an opaque mask over the old rows, then the RTL standings overlaid. Captured
+  client-side by `html-to-image` after fonts + images are ready.
+- Arabic font **Cairo** is self-hosted (`@fontsource/cairo`) for reliable
+  embedding in the export.
+- Persistence: small settings (layout, Arabic names) in `localStorage`; large
+  assets (logo/template overrides) in **IndexedDB**; league/season + last-good
+  standings server-side in `data/settings.json`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Data notes
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+- **Season selector:** the live API exposes a single current season
+  (`league.season` = 2026/2027, `isActive`). It isn't a documented per-request
+  parameter, so there is no season dropdown — the app shows the current table
+  labelled with the real season from the response. Add a selector only if the API
+  later supports historical seasons.
+- **Zone colors** default to top-4 green / bottom-2 red / mid gold (configurable).
+  The API also returns `overallPromotion` (CAF / relegation) if you prefer
+  semantic zones.
+- `data/botolaTeams.json` seeds Arabic names keyed by stable `teamId`; your
+  in-app edits override it and persist.
 
-## Deploy on Vercel
+## Tests
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npm test          # jest: normalize, discovery, validate, layout, persistence, Poster render
+npm run typecheck # tsc --noEmit
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+Tests use a clearly-labelled mock fixture shaped like the real response — never
+presented as live data.
