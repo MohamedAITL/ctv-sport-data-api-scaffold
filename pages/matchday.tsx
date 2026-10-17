@@ -21,6 +21,9 @@ const today = () => new Date().toISOString().slice(0, 10);
 
 interface FixturesState { date: string; matches: Match[]; fetchedAt?: string; stale: boolean; errors?: string[] }
 
+// Cached per date across navigation so switching pages / dates does not refetch.
+const fixturesCache: Record<string, FixturesState> = {};
+
 export default function Matchday() {
   const posterRef = useRef<HTMLDivElement>(null);
   const [date, setDate] = useState(today());
@@ -43,7 +46,9 @@ export default function Matchday() {
     try {
       const res = await fetch(`/api/fixtures?date=${d}`);
       const json = await res.json();
-      setData({ date: json.date ?? d, matches: json.matches ?? [], fetchedAt: json.fetchedAt, stale: Boolean(json.stale), errors: json.errors });
+      const s: FixturesState = { date: json.date ?? d, matches: json.matches ?? [], fetchedAt: json.fetchedAt, stale: Boolean(json.stale), errors: json.errors };
+      fixturesCache[d] = s;
+      setData(s);
     } catch (e) {
       setData({ date: d, matches: [], stale: true, errors: [String(e)] });
     } finally {
@@ -51,7 +56,10 @@ export default function Matchday() {
     }
   }, []);
 
-  useEffect(() => { fetchFixtures(date); }, [date, fetchFixtures]);
+  useEffect(() => {
+    if (fixturesCache[date]) setData(fixturesCache[date]);
+    else fetchFixtures(date);
+  }, [date, fetchFixtures]);
 
   const updateLayout = (n: MatchdayLayout) => { setLayout(n); saveLayout(n); };
   const onName = (id: string, v: string) => setNameOverrides((p) => { const next = { ...p, [id]: v }; saveNameOverrides(next); return next; });

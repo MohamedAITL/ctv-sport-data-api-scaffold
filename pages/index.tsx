@@ -33,6 +33,9 @@ interface StandingsState {
   error?: string | null;
 }
 
+// Cached across client-side navigation so switching pages does not refetch.
+let standingsCache: StandingsState | null = null;
+
 export default function Home() {
   const posterRef = useRef<HTMLDivElement>(null);
   const [layout, setLayout] = useState<LayoutConfig>(DEFAULT_LAYOUT);
@@ -50,39 +53,28 @@ export default function Home() {
     getTemplate().then((t) => t && setTemplateSrc(t));
   }, []);
 
+  const commit = useCallback((s: StandingsState) => { standingsCache = s; setData(s); }, []);
+
   const fetchStandings = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch("/api/standings");
       const json = await res.json();
       if (!res.ok && !json.rows) {
-        setData({
-          rows: [],
-          season: null,
-          warnings: [],
-          validation: { ok: false, errors: [json.error || "Request failed"], warnings: [] },
-          stale: true,
-          error: json.error,
-        });
+        commit({ rows: [], season: null, warnings: [], validation: { ok: false, errors: [json.error || "Request failed"], warnings: [] }, stale: true, error: json.error });
       } else {
-        setData(json);
+        commit(json);
       }
     } catch (e) {
-      setData({
-        rows: [],
-        season: null,
-        warnings: [],
-        validation: { ok: false, errors: [String(e)], warnings: [] },
-        stale: true,
-        error: String(e),
-      });
+      commit({ rows: [], season: null, warnings: [], validation: { ok: false, errors: [String(e)], warnings: [] }, stale: true, error: String(e) });
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [commit]);
 
   useEffect(() => {
-    fetchStandings();
+    if (standingsCache) setData(standingsCache);
+    else fetchStandings();
   }, [fetchStandings]);
 
   const updateLayout = (next: LayoutConfig) => {

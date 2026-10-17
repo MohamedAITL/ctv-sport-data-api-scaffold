@@ -29,7 +29,7 @@ export interface MatchdayLayout {
 export const DEFAULT_MATCHDAY_LAYOUT: MatchdayLayout = {
   width: 1080,
   height: 1350,
-  title: { show: true, text: "أبرز مباريات اليوم", x: 540, y: 95, fontSize: 54, color: "#ffffff" },
+  title: { show: false, text: "أبرز مباريات اليوم", x: 540, y: 95, fontSize: 54, color: "#ffffff" },
   dateLabel: { show: true, text: "", x: 540, y: 158, fontSize: 26, color: "#f6c744" },
   firstRowCenterY: 258,
   rowHeight: 104,
@@ -39,7 +39,7 @@ export const DEFAULT_MATCHDAY_LAYOUT: MatchdayLayout = {
   nameColor: "#ffffff",
   nameMaxWidth: 300,
   centerX: 540,
-  centerFontSize: 30,
+  centerFontSize: 46,
   centerColor: "#ffffff",
   homeBadgeX: 1002,
   homeNameRightX: 930,
