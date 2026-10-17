@@ -47,6 +47,7 @@ export default function MatchdayDesign({ layout, onChange }: Props) {
         <Color label="Name color" value={L.nameColor} onChange={(v) => up((n) => (n.nameColor = v))} />
         <Color label="Center color" value={L.centerColor} onChange={(v) => up((n) => (n.centerColor = v))} />
         <Num label="Row card opacity" value={L.rowBg.opacity} step={0.02} onChange={(v) => up((n) => (n.rowBg.opacity = v))} />
+        <Color label="Row card color" value={L.rowBg.color} onChange={(v) => up((n) => (n.rowBg.color = v))} />
       </div>
       <h4>Columns (X)</h4>
       <div className="grid">

@@ -33,7 +33,7 @@ export const DEFAULT_MATCHDAY_LAYOUT: MatchdayLayout = {
   dateLabel: { show: true, text: "", x: 540, y: 158, fontSize: 26, color: "#f6c744" },
   firstRowCenterY: 258,
   rowHeight: 104,
-  rowBg: { show: true, color: "#ffffff", opacity: 0.07, radius: 16, insetX: 40, height: 88 },
+  rowBg: { show: true, color: "#3b2a5e", opacity: 0.85, radius: 16, insetX: 40, height: 88 },
   badgeSize: 58,
   nameFontSize: 27,
   nameColor: "#ffffff",
