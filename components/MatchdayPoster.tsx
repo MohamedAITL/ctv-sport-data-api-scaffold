@@ -9,6 +9,7 @@ interface Props {
   templateSrc: string | null;
   nameOverrides: Record<string, string>;
   logoOverrides: Record<string, string>;
+  mode?: "fixtures" | "results";
 }
 
 const badgeStyle = (x: number, y: number, size: number): CSSProperties => ({
@@ -41,10 +42,12 @@ function groupByLeague(matches: Match[]): Group[] {
 }
 
 const MatchdayPoster = forwardRef<HTMLDivElement, Props>(function MatchdayPoster(
-  { matches, layout, templateSrc, nameOverrides, logoOverrides },
+  { matches, layout, templateSrc, nameOverrides, logoOverrides, mode = "fixtures" },
   ref
 ) {
   const L = layout;
+  const results = mode === "results";
+  const titleCfg = results ? L.resultsTitle : L.title;
   const arName = (id: string, fallback: string) => nameOverrides[id] || fallback;
   const badgeOf = (id: string, fallback: string | null) => logoOverrides[id] || fallback;
   const groups = groupByLeague(matches);
@@ -59,6 +62,30 @@ const MatchdayPoster = forwardRef<HTMLDivElement, Props>(function MatchdayPoster
   const headH = L.groupHeader.height * fit;
   const gap = L.groupGap * fit;
   const cardH = L.rowBg.height * fit;
+
+  // Centre of each card: kickoff time (Fixtures), or the score (Results).
+  // Home sits on the right and away on the left, so the away score goes on the
+  // left of the dash and the home score on the right. Unplayed matches keep their
+  // kickoff time, dimmed, so a half-finished day is never mistaken for a result.
+  const centre = (m: Match, rowY: number) => {
+    const base: CSSProperties = { position: "absolute", left: L.centerX, top: rowY, transform: "translate(-50%, -50%)", direction: "ltr", textAlign: "center", color: L.centerColor, fontSize: L.centerFontSize, fontWeight: 800, whiteSpace: "nowrap" };
+    const hasScore = (m.isFinished || m.isLive) && m.home.score !== null && m.away.score !== null;
+    if (!results || !hasScore) {
+      return <div style={{ ...base, opacity: results ? 0.5 : 1 }}>{m.time}</div>;
+    }
+    const pens = m.home.pen != null && m.away.pen != null;
+    return (
+      <div style={{ ...base, display: "flex", flexDirection: "column", alignItems: "center" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <span>{m.away.score}</span>
+          <span style={{ opacity: 0.6 }}>-</span>
+          <span>{m.home.score}</span>
+        </div>
+        {pens && <div style={{ fontSize: L.centerFontSize * 0.4, fontWeight: 700, opacity: 0.8 }}>({m.away.pen} - {m.home.pen})</div>}
+        {m.isLive && <div style={{ fontSize: L.centerFontSize * 0.4, fontWeight: 700, color: "#58d08b" }}>{m.statusLabel}</div>}
+      </div>
+    );
+  };
 
   // Lay out headers + rows top-to-bottom with a running y cursor.
   const nodes: React.ReactNode[] = [];
@@ -98,9 +125,7 @@ const MatchdayPoster = forwardRef<HTMLDivElement, Props>(function MatchdayPoster
             {arName(m.home.id, m.home.nameAr)}
           </div>
 
-          <div style={{ position: "absolute", left: L.centerX, top: rowY, transform: "translate(-50%, -50%)", direction: "ltr", textAlign: "center", color: L.centerColor, fontSize: L.centerFontSize, fontWeight: 800, whiteSpace: "nowrap" }}>
-            {m.statusLabel}
-          </div>
+          {centre(m, rowY)}
 
           {awayBadge ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -131,8 +156,8 @@ const MatchdayPoster = forwardRef<HTMLDivElement, Props>(function MatchdayPoster
         // eslint-disable-next-line @next/next/no-img-element
         <img src={templateSrc} alt="" width={L.width} height={L.height} style={{ position: "absolute", inset: 0, width: L.width, height: L.height, objectFit: "cover" }} />
       )}
-      {L.title.show && (
-        <div style={{ position: "absolute", left: L.title.x, top: L.title.y, transform: "translate(-50%, -50%)", direction: "rtl", color: L.title.color, fontSize: L.title.fontSize, fontWeight: 900, whiteSpace: "nowrap" }}>{L.title.text}</div>
+      {titleCfg.show && (
+        <div style={{ position: "absolute", left: titleCfg.x, top: titleCfg.y, transform: "translate(-50%, -50%)", direction: "rtl", color: titleCfg.color, fontSize: titleCfg.fontSize, fontWeight: 900, whiteSpace: "nowrap" }}>{titleCfg.text}</div>
       )}
       {L.dateLabel.show && L.dateLabel.text && (
         <div style={{ position: "absolute", left: L.dateLabel.x, top: L.dateLabel.y, transform: "translate(-50%, -50%)", direction: "rtl", color: L.dateLabel.color, fontSize: L.dateLabel.fontSize, fontWeight: 700, whiteSpace: "nowrap" }}>{L.dateLabel.text}</div>

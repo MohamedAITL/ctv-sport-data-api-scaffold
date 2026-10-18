@@ -126,3 +126,9 @@ html, body {
 .previewsticky { display: flex; flex-direction: column; gap: 10px; }
 .previewsticky h3 { margin: 0; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
 .previewbox { border: 1px solid var(--border); border-radius: 16px; overflow: hidden; background: #2b1a45; box-shadow: var(--shadow); }
+
+/* ---- segmented switch (fixtures / results) ---- */
+.seg { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; background: var(--bg-2); border: 1px solid var(--border); padding: 4px; border-radius: 12px; margin-bottom: 12px; }
+.seg-btn { font-family: inherit; font-size: 13px; font-weight: 700; padding: 8px 10px; border-radius: 9px; border: 0; background: transparent; color: var(--muted); cursor: pointer; transition: .15s; }
+.seg-btn:hover { color: var(--text); }
+.seg-btn.on { background: linear-gradient(135deg, var(--accent), #6f4bff); color: #fff; box-shadow: var(--shadow); }

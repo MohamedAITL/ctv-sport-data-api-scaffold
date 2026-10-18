@@ -57,7 +57,8 @@ export async function downloadPoster(
   a.click();
 }
 
-export function posterFilename(ext: "png" | "jpeg", base = "botola-pro-standings"): string {
-  const d = new Date().toISOString().slice(0, 10);
+export function posterFilename(ext: "png" | "jpeg", base = "botola-pro-standings", date?: string): string {
+  // Name the file after the data's date, not the day it was exported.
+  const d = date || new Date().toISOString().slice(0, 10);
   return `${base}-${d}.${ext === "jpeg" ? "jpg" : "png"}`;
 }

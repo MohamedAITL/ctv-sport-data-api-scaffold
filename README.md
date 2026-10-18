@@ -138,3 +138,19 @@ Note: the on-disk cache (`data/settings.json`, `data/matchday.json`) is not used
 on Netlify's read-only filesystem — the league is re-resolved via the id hint and
 data is fetched fresh each request (team names/logos still come from the bundled
 `data/botolaTeams.json` and your browser overrides).
+
+### Fixtures vs Results
+
+The matchday page has a **Fixtures / Results** switch (remembered per browser):
+
+- **Fixtures · المباريات** — kickoff times. Title overlay is off by default.
+- **Results · النتائج** — final scores, titled `نتائج مباريات اليوم`. The score
+  sits next to its own team (home is on the right, so the centre reads
+  `away - home` left-to-right). A penalty shootout adds `(away - home)` under the
+  score, and a live match shows its minute. Matches that have not finished keep
+  their kickoff time, dimmed, so a half-played day is never mistaken for results.
+  Export is blocked while nothing has finished yet.
+
+Both read the same `/api/fixtures` response — switching modes costs no API call.
+Exported files are named after the selected date
+(`choufsport-results-YYYY-MM-DD.png`).

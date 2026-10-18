@@ -7,18 +7,19 @@ interface Props {
   blocked?: string | null; // validation errors block export
   onResetDesign: () => void;
   fileBase?: string;
+  fileDate?: string; // defaults to today
 }
 
 // Download the 1080x1350 poster as PNG or JPEG. The preview IS the export node,
 // so what you see is what downloads (no separate "generate" step).
-export default function ExportControls({ posterRef, canExport, blocked, onResetDesign, fileBase = "botola-pro-standings" }: Props) {
+export default function ExportControls({ posterRef, canExport, blocked, onResetDesign, fileBase = "botola-pro-standings", fileDate }: Props) {
   const [busy, setBusy] = useState<string | null>(null);
 
   async function run(format: "png" | "jpeg") {
     if (!posterRef.current) return;
     setBusy(format);
     try {
-      await downloadPoster(posterRef.current, format, posterFilename(format, fileBase));
+      await downloadPoster(posterRef.current, format, posterFilename(format, fileBase, fileDate));
     } catch (e) {
       alert("Export failed: " + (e as Error).message);
     } finally {

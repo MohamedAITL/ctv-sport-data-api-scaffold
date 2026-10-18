@@ -7,6 +7,7 @@ export interface MatchdayLayout {
   width: number;
   height: number;
   title: MLText;
+  resultsTitle: MLText; // shown instead of `title` in Results mode
   dateLabel: MLText;
   firstRowCenterY: number; // y of the first element (group header or row)
   rowHeight: number;
@@ -30,6 +31,7 @@ export const DEFAULT_MATCHDAY_LAYOUT: MatchdayLayout = {
   width: 1080,
   height: 1350,
   title: { show: false, text: "أبرز مباريات اليوم", x: 540, y: 95, fontSize: 54, color: "#ffffff" },
+  resultsTitle: { show: true, text: "نتائج مباريات اليوم", x: 540, y: 92, fontSize: 54, color: "#ffffff" },
   dateLabel: { show: true, text: "", x: 540, y: 150, fontSize: 28, color: "#f6c744" },
   firstRowCenterY: 205,
   rowHeight: 78,

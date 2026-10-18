@@ -19,6 +19,8 @@ export interface RawFixture {
   awayTeamName?: string;
   awayTeamScore?: string | null;
   awayTeamFtScore?: string | null;
+  homeTeamPenaltyScore?: string | null;
+  awayTeamPenaltyScore?: string | null;
   teamHomeBadge?: string | null;
   teamAwayBadge?: string | null;
   matchRound?: string | null;
@@ -38,6 +40,7 @@ export interface MatchSide {
   nameAr: string; // Arabic override/seed, falls back to name
   badge: string | null;
   score: number | null;
+  pen?: number | null; // penalty-shootout score, when there was one
 }
 
 export interface Match {

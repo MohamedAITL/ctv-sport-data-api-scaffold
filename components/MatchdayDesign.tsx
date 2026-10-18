@@ -24,6 +24,7 @@ export default function MatchdayDesign({ layout, onChange }: Props) {
       <h4>Overlays (turn off when your template has them)</h4>
       <div className="grid">
         <Toggle label="Title" value={L.title.show} onChange={(v) => up((n) => (n.title.show = v))} />
+        <Toggle label="Results title" value={L.resultsTitle.show} onChange={(v) => up((n) => (n.resultsTitle.show = v))} />
         <Toggle label="Date label" value={L.dateLabel.show} onChange={(v) => up((n) => (n.dateLabel.show = v))} />
         <Toggle label="Row cards" value={L.rowBg.show} onChange={(v) => up((n) => (n.rowBg.show = v))} />
       </div>
@@ -33,6 +34,14 @@ export default function MatchdayDesign({ layout, onChange }: Props) {
           <Num label="Title size" value={L.title.fontSize} onChange={(v) => up((n) => (n.title.fontSize = v))} />
           <Num label="Title Y" value={L.title.y} onChange={(v) => up((n) => (n.title.y = v))} />
           <Color label="Title color" value={L.title.color} onChange={(v) => up((n) => (n.title.color = v))} />
+        </div>
+      )}
+      {L.resultsTitle.show && (
+        <div className="grid">
+          <Text label="Results title text" value={L.resultsTitle.text || ""} onChange={(v) => up((n) => (n.resultsTitle.text = v))} />
+          <Num label="Results title size" value={L.resultsTitle.fontSize} onChange={(v) => up((n) => (n.resultsTitle.fontSize = v))} />
+          <Num label="Results title Y" value={L.resultsTitle.y} onChange={(v) => up((n) => (n.resultsTitle.y = v))} />
+          <Color label="Results title color" value={L.resultsTitle.color} onChange={(v) => up((n) => (n.resultsTitle.color = v))} />
         </div>
       )}
       <h4>Competition headers</h4>

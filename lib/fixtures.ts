@@ -13,10 +13,11 @@ function side(
   name: string,
   badge: string | null,
   score: string | null | undefined,
-  nameMap: Record<string, string>
+  nameMap: Record<string, string>,
+  pen?: string | null
 ): MatchSide {
   const fc = famousClub(name);
-  return { id, name, nameAr: (id && nameMap[id]) || fc?.ar || name, badge, score: toInt(score) };
+  return { id, name, nameAr: (id && nameMap[id]) || fc?.ar || name, badge, score: toInt(score), pen: toInt(pen) };
 }
 
 const weight = (name: string): number => famousClub(name)?.w ?? BASE_WEIGHT;
@@ -33,8 +34,8 @@ export function normalizeFixtures(
     const period = f.matchPeriod || "";
     const isFinished = /FINISHED|FULL_TIME|\bFT\b|ENDED|AET|PEN/i.test(status + " " + period);
     const isLive = f.matchLive === "1" || /LIVE|HALF|1ST|2ND|PLAY|EXTRA/i.test(period) && !isFinished;
-    const home = side(f.homeTeamId || f.homeTeam?.id || "", homeName, f.teamHomeBadge ?? f.homeTeam?.badge ?? null, f.homeTeamScore ?? f.homeTeamFtScore, nameMap);
-    const away = side(f.awayTeamId || f.awayTeam?.id || "", awayName, f.teamAwayBadge ?? f.awayTeam?.badge ?? null, f.awayTeamScore ?? f.awayTeamFtScore, nameMap);
+    const home = side(f.homeTeamId || f.homeTeam?.id || "", homeName, f.teamHomeBadge ?? f.homeTeam?.badge ?? null, f.homeTeamScore ?? f.homeTeamFtScore, nameMap, f.homeTeamPenaltyScore);
+    const away = side(f.awayTeamId || f.awayTeam?.id || "", awayName, f.teamAwayBadge ?? f.awayTeam?.badge ?? null, f.awayTeamScore ?? f.awayTeamFtScore, nameMap, f.awayTeamPenaltyScore);
     const statusLabel =
       isFinished && home.score !== null && away.score !== null
         ? `${home.score} - ${away.score}`
