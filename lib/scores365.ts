@@ -1,11 +1,11 @@
-// Botola Pro standings from 365scores (competition 557). The public web API is
+// League standings from 365scores (by competition id). The public web API is
 // not Cloudflare-blocked, needs no key, and returns Arabic team names natively,
 // so it fetches directly server-side. Logos come from 365scores' image CDN, keyed
-// by competitor id + imageVersion. Used as the primary standings source; the
+// by competitor id + imageVersion. Primary standings source; for Botola the
 // caller falls back to the GOAL API if this throws.
 import type { NormalizedStandings, TeamRow } from "@/types/standings";
+import { BOTOLA_LEAGUE } from "@/config/standingsLeagues";
 
-const COMPETITION = 557;
 const API = "https://webws.365scores.com/web/standings/";
 const IMG = "https://imagecache.365scores.com/image/upload/f_png,w_100,h_100,c_limit,q_auto";
 
@@ -29,10 +29,11 @@ interface S365Resp {
   standings?: Array<{ rows?: S365Row[]; seasonNum?: number }>;
 }
 
-export async function fetchBotolaStandings(
+export async function fetch365Standings(
+  competitionId: number = BOTOLA_LEAGUE,
   nameMap: Record<string, string> = {}
 ): Promise<NormalizedStandings> {
-  const url = `${API}?appTypeId=5&langId=27&timezoneName=Africa/Casablanca&userCountryId=131&competitions=${COMPETITION}&live=false`;
+  const url = `${API}?appTypeId=5&langId=27&timezoneName=Africa/Casablanca&userCountryId=131&competitions=${competitionId}&live=false`;
   const r = await fetch(url, { headers: { Accept: "application/json" } });
   if (!r.ok) throw new Error(`365scores ${r.status}`);
   const data = (await r.json()) as S365Resp;

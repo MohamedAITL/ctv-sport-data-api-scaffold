@@ -1,11 +1,16 @@
 # Botola Pro — Standings Poster Generator (Chouf TV)
 
-Local app that regenerates the Chouf TV 1080×1350 Botola Pro standings poster
-from **live GOAL API data**, overwriting only the standings region of the
-original design and exporting a publication-ready PNG.
+Local app that regenerates the Chouf TV 1080×1350 standings poster from **live
+365scores data** (native Arabic club names), overwriting only the standings
+region of the design and exporting a publication-ready PNG. A league dropdown
+covers **Botola Pro, La Liga, Premier League, and the Champions League**; the
+table auto-fits from 16 up to 36 teams, and each league keeps its own template
+and layout. For Botola, the **GOAL API is the automatic fallback** if 365scores
+is unreachable.
 
-Stack: **Next.js 14 + TypeScript + Tailwind**. The GOAL API key stays server-side
-in a Next API route and is never shipped to the browser.
+Stack: **Next.js 14 + TypeScript + Tailwind**. 365scores needs no key; the GOAL
+API key (fallback only) stays server-side in a Next API route, never shipped to
+the browser.
 
 ## Verified (2026-10-17, against the live GOAL API)
 

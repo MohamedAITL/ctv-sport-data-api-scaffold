@@ -8,6 +8,7 @@ import TeamMappingEditor from "@/components/TeamMappingEditor";
 import DesignSettings from "@/components/DesignSettings";
 import ExportControls from "@/components/ExportControls";
 import { DEFAULT_LAYOUT, type LayoutConfig } from "@/config/defaultLayout";
+import { DEFAULT_LEAGUE, BOTOLA_LEAGUE, leagueById } from "@/config/standingsLeagues";
 import type { TeamRow } from "@/types/standings";
 import { loadLayout, saveLayout, loadNameOverrides, saveNameOverrides } from "@/lib/persist";
 import {
@@ -19,7 +20,12 @@ import {
   clearTemplate,
 } from "@/lib/db";
 
-const DEFAULT_TEMPLATE = "/templates/botola.jpg";
+const BOTOLA_TEMPLATE = "/templates/botola.jpg";
+// Only Botola ships with a bundled template; other leagues start on a plain
+// background until the user uploads their own.
+const defaultTemplateFor = (league: number) => (league === BOTOLA_LEAGUE ? BOTOLA_TEMPLATE : "");
+const templateKey = (league: number) => `standings:${league}`;
+const LEAGUE_KEY = "botola.league";
 const PREVIEW_W = 480;
 
 interface StandingsState {
@@ -33,53 +39,66 @@ interface StandingsState {
   error?: string | null;
 }
 
-// Cached across client-side navigation so switching pages does not refetch.
-let standingsCache: StandingsState | null = null;
+// Cached per league across navigation so switching pages / leagues does not refetch.
+const standingsCache: Record<number, StandingsState> = {};
 
 export default function Home() {
   const posterRef = useRef<HTMLDivElement>(null);
+  const [league, setLeague] = useState<number>(DEFAULT_LEAGUE);
   const [layout, setLayout] = useState<LayoutConfig>(DEFAULT_LAYOUT);
   const [nameOverrides, setNameOverrides] = useState<Record<string, string>>({});
   const [logoOverrides, setLogoOverrides] = useState<Record<string, string>>({});
-  const [templateSrc, setTemplateSrc] = useState<string>(DEFAULT_TEMPLATE);
+  const [templateSrc, setTemplateSrc] = useState<string>(BOTOLA_TEMPLATE);
   const [data, setData] = useState<StandingsState | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Load persisted state on mount (client-only).
+  // Load persisted state for the current league (client-only).
   useEffect(() => {
-    setLayout(loadLayout(DEFAULT_LAYOUT));
+    let initial = DEFAULT_LEAGUE;
+    try { const s = localStorage.getItem(LEAGUE_KEY); if (s) initial = Number(s); } catch { /* ignore */ }
+    setLeague(initial);
+    setLayout(loadLayout(DEFAULT_LAYOUT, String(initial)));
     setNameOverrides(loadNameOverrides());
     getLogoOverrides().then(setLogoOverrides);
-    getTemplate().then((t) => t && setTemplateSrc(t));
+    getTemplate(templateKey(initial)).then((t) => setTemplateSrc(t || defaultTemplateFor(initial)));
   }, []);
 
-  const commit = useCallback((s: StandingsState) => { standingsCache = s; setData(s); }, []);
+  const commit = useCallback((lg: number, s: StandingsState) => { standingsCache[lg] = s; setData(s); }, []);
 
-  const fetchStandings = useCallback(async () => {
+  const fetchStandings = useCallback(async (lg: number) => {
     setLoading(true);
     try {
-      const res = await fetch("/api/standings");
+      const res = await fetch(`/api/standings?competition=${lg}`);
       const json = await res.json();
       if (!res.ok && !json.rows) {
-        commit({ rows: [], season: null, warnings: [], validation: { ok: false, errors: [json.error || "Request failed"], warnings: [] }, stale: true, error: json.error });
+        commit(lg, { rows: [], season: null, warnings: [], validation: { ok: false, errors: [json.error || "Request failed"], warnings: [] }, stale: true, error: json.error });
       } else {
-        commit(json);
+        commit(lg, json);
       }
     } catch (e) {
-      commit({ rows: [], season: null, warnings: [], validation: { ok: false, errors: [String(e)], warnings: [] }, stale: true, error: String(e) });
+      commit(lg, { rows: [], season: null, warnings: [], validation: { ok: false, errors: [String(e)], warnings: [] }, stale: true, error: String(e) });
     } finally {
       setLoading(false);
     }
   }, [commit]);
 
   useEffect(() => {
-    if (standingsCache) setData(standingsCache);
-    else fetchStandings();
-  }, [fetchStandings]);
+    if (standingsCache[league]) setData(standingsCache[league]);
+    else fetchStandings(league);
+  }, [league, fetchStandings]);
+
+  const onLeague = (id: number) => {
+    if (id === league) return;
+    try { localStorage.setItem(LEAGUE_KEY, String(id)); } catch { /* ignore */ }
+    setLayout(loadLayout(DEFAULT_LAYOUT, String(id)));
+    getTemplate(templateKey(id)).then((t) => setTemplateSrc(t || defaultTemplateFor(id)));
+    setData(standingsCache[id] ?? null);
+    setLeague(id);
+  };
 
   const updateLayout = (next: LayoutConfig) => {
     setLayout(next);
-    saveLayout(next);
+    saveLayout(next, String(league));
   };
   const resetDesign = () => updateLayout(DEFAULT_LAYOUT);
 
@@ -105,10 +124,10 @@ export default function Home() {
   const onTemplate = (dataUrl: string | null) => {
     if (dataUrl) {
       setTemplateSrc(dataUrl);
-      setTemplate(dataUrl);
+      setTemplate(dataUrl, templateKey(league));
     } else {
-      setTemplateSrc(DEFAULT_TEMPLATE);
-      clearTemplate();
+      setTemplateSrc(defaultTemplateFor(league));
+      clearTemplate(templateKey(league));
     }
   };
 
@@ -128,7 +147,7 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>Botola Pro Standings Poster — Chouf TV</title>
+        <title>Standings Poster — Chouf TV</title>
       </Head>
       <main className="app">
         <header className="topbar">
@@ -137,20 +156,21 @@ export default function Home() {
         </header>
         <div className="pagehead">
           <h1>Standings Poster</h1>
-          <span className="muted">Botola Pro · live 365scores table · exports 1080×1350 PNG</span>
+          <span className="muted">{leagueById(league)?.name ?? "League"} · live 365scores table · exports 1080×1350 PNG</span>
         </div>
 
         <div className="layout">
           <section className="controls">
             <CompetitionSelector
-              leagueName={data?.league?.name}
+              league={league}
+              onLeague={onLeague}
               season={data?.season}
               count={rows.length}
               fetchedAt={data?.fetchedAt}
               stale={Boolean(data?.stale)}
               error={data?.error}
               loading={loading}
-              onRefresh={fetchStandings}
+              onRefresh={() => fetchStandings(league)}
             />
             {data && data.validation.warnings.length > 0 && (
               <div className="card">
@@ -162,7 +182,7 @@ export default function Home() {
                 </ul>
               </div>
             )}
-            <TemplateUploader isCustom={templateSrc !== DEFAULT_TEMPLATE} onTemplate={onTemplate} />
+            <TemplateUploader isCustom={templateSrc !== defaultTemplateFor(league)} onTemplate={onTemplate} />
             <ExportControls posterRef={posterRef} canExport={rows.length > 0} blocked={blocked} onResetDesign={resetDesign} />
             <TeamMappingEditor
               rows={rows}

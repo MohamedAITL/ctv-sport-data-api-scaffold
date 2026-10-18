@@ -7,18 +7,21 @@ import type { TeamRow } from "@/types/standings";
 
 const FILE = path.join(process.cwd(), "data", "settings.json");
 
+export interface LastStandings {
+  rows: TeamRow[];
+  season: string | null;
+  warnings: string[];
+  fetchedAt: string;
+}
+
 export interface AppSettings {
   leagueId?: string;
   leagueName?: string;
   countryName?: string;
   season?: string | null;
   resolvedAt?: string;
-  lastStandings?: {
-    rows: TeamRow[];
-    season: string | null;
-    warnings: string[];
-    fetchedAt: string;
-  };
+  // Last-good standings per 365scores competition id (stale fallback).
+  lastByLeague?: Record<string, LastStandings>;
 }
 
 export async function readSettings(): Promise<AppSettings> {

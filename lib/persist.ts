@@ -22,17 +22,18 @@ export function deepMerge<T>(base: T, override: unknown): T {
   return out as T;
 }
 
-export function loadLayout(fallback: LayoutConfig): LayoutConfig {
+// `key` scopes the layout per league (each remembers its own tuning).
+export function loadLayout(fallback: LayoutConfig, key = ""): LayoutConfig {
   if (typeof localStorage === "undefined") return fallback;
   try {
-    const raw = localStorage.getItem(LAYOUT_KEY);
+    const raw = localStorage.getItem(LAYOUT_KEY + (key ? ":" + key : ""));
     return raw ? deepMerge(fallback, JSON.parse(raw)) : fallback;
   } catch {
     return fallback;
   }
 }
-export function saveLayout(layout: LayoutConfig) {
-  try { localStorage.setItem(LAYOUT_KEY, JSON.stringify(layout)); } catch { /* ignore */ }
+export function saveLayout(layout: LayoutConfig, key = "") {
+  try { localStorage.setItem(LAYOUT_KEY + (key ? ":" + key : ""), JSON.stringify(layout)); } catch { /* ignore */ }
 }
 
 export function loadNameOverrides(): Record<string, string> {

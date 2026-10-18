@@ -1,5 +1,8 @@
+import { STANDINGS_LEAGUES } from "@/config/standingsLeagues";
+
 interface Props {
-  leagueName?: string;
+  league: number;
+  onLeague: (id: number) => void;
   season?: string | null;
   count: number;
   fetchedAt?: string;
@@ -9,10 +12,10 @@ interface Props {
   onRefresh: () => void;
 }
 
-// Competition + season + connection status + last fetch + club count + Refresh.
-// (Single current season per the live API, so no season dropdown — see README.)
+// League picker + season + connection status + last fetch + club count + Refresh.
 export default function CompetitionSelector({
-  leagueName,
+  league,
+  onLeague,
   season,
   count,
   fetchedAt,
@@ -33,7 +36,14 @@ export default function CompetitionSelector({
   return (
     <div className="card">
       <h3>Competition</h3>
-      <div className="kv"><span>League</span><b>{leagueName || "Botola Pro (Morocco)"}</b></div>
+      <label className="field wide">
+        <span>League</span>
+        <select value={league} onChange={(e) => onLeague(Number(e.target.value))} disabled={loading}>
+          {STANDINGS_LEAGUES.map((l) => (
+            <option key={l.id} value={l.id}>{l.name} · {l.ar}</option>
+          ))}
+        </select>
+      </label>
       <div className="kv"><span>Season</span><b>{season || "—"}</b></div>
       <div className="kv"><span>Clubs received</span><b>{count}</b></div>
       <div className="kv"><span>Last refresh</span><b>{fetchedAt ? new Date(fetchedAt).toLocaleString() : "—"}</b></div>
