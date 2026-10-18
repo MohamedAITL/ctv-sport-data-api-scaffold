@@ -1,10 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { goalFetch, GoalApiError, hasApiKey } from "@/lib/goalApi";
+import { goalFetch, GoalApiError } from "@/lib/goalApi";
 import { discoverBotola } from "@/lib/discovery";
 import { normalizeStandings } from "@/lib/normalize";
+import { fetchBotolaStandings } from "@/lib/sofascore";
 import { validateStandings } from "@/lib/validate";
 import { readSettings, writeSettings } from "@/lib/settings";
-import type { RawStandingsResponse, TeamRow } from "@/types/standings";
+import type { NormalizedStandings, RawStandingsResponse, TeamRow } from "@/types/standings";
 import seedNames from "@/data/botolaTeams.json";
 
 function nameMap(): Record<string, string> {
@@ -34,33 +35,53 @@ async function inlineLogos(rows: TeamRow[]): Promise<TeamRow[]> {
   );
 }
 
-// GET /api/standings — resolve league, fetch live standings, normalize, inline
-// logos, validate, cache. On failure, serve the last-good cache marked stale.
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (!hasApiKey())
-    return res.status(500).json({ error: "GOAL_API_KEY is not set in .env.local" });
+// Fetch from GOAL API (fallback source) — league discovery + normalize.
+async function fromGoal(settings: Awaited<ReturnType<typeof readSettings>>): Promise<{
+  normalized: NormalizedStandings;
+  leagueId?: string;
+  leagueName?: string;
+}> {
+  let leagueId = settings.leagueId;
+  let leagueName = settings.leagueName;
+  if (!leagueId) {
+    const league = await discoverBotola();
+    leagueId = league.id;
+    leagueName = league.name;
+    await writeSettings({
+      leagueId,
+      leagueName,
+      countryName: league.countryName,
+      season: league.season ?? null,
+      resolvedAt: new Date().toISOString(),
+    });
+  }
+  const raw = await goalFetch<RawStandingsResponse>(`/leagues/${leagueId}/standings`);
+  return { normalized: normalizeStandings(raw, nameMap()), leagueId, leagueName };
+}
 
+// GET /api/standings — fetch live standings (SofaScore first, GOAL API as
+// fallback), inline logos, validate, cache. If both sources fail, serve the
+// last-good cache marked stale. Never a silent failure.
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const settings = await readSettings();
+  let source: "sofascore" | "goal" = "sofascore";
+  let leagueId = settings.leagueId;
+  let leagueName = settings.leagueName;
   try {
-    let leagueId = settings.leagueId;
-    let leagueName = settings.leagueName;
-    let season = settings.season;
-    if (!leagueId) {
-      const league = await discoverBotola();
-      leagueId = league.id;
-      leagueName = league.name;
-      season = league.season ?? null;
-      await writeSettings({
-        leagueId,
-        leagueName,
-        countryName: league.countryName,
-        season,
-        resolvedAt: new Date().toISOString(),
-      });
+    let normalized: NormalizedStandings;
+    try {
+      normalized = await fetchBotolaStandings(nameMap());
+      if (normalized.rows.length === 0) throw new Error("SofaScore returned no rows");
+    } catch (sofaErr) {
+      // SofaScore unreachable (no proxy / Cloudflare) — fall back to GOAL API.
+      source = "goal";
+      const g = await fromGoal(settings);
+      normalized = g.normalized;
+      leagueId = g.leagueId;
+      leagueName = g.leagueName;
+      void sofaErr;
     }
 
-    const raw = await goalFetch<RawStandingsResponse>(`/leagues/${leagueId}/standings`);
-    const normalized = normalizeStandings(raw, nameMap());
     normalized.rows = await inlineLogos(normalized.rows);
     const validation = validateStandings(normalized.rows);
     const fetchedAt = new Date().toISOString();
@@ -76,10 +97,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     return res.status(200).json({
       rows: normalized.rows,
-      season: normalized.season ?? season ?? null,
+      season: normalized.season ?? settings.season ?? null,
       league: { id: leagueId, name: leagueName },
       warnings: normalized.warnings,
       validation,
+      source,
       fetchedAt,
       stale: false,
     });
