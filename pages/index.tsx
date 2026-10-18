@@ -137,7 +137,7 @@ export default function Home() {
         </header>
         <div className="pagehead">
           <h1>Standings Poster</h1>
-          <span className="muted">Botola Pro · official table · live GOAL API · exports 1080×1350 PNG</span>
+          <span className="muted">Botola Pro · live 365scores table · exports 1080×1350 PNG</span>
         </div>
 
         <div className="layout">

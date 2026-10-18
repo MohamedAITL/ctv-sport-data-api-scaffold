@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { goalFetch, GoalApiError } from "@/lib/goalApi";
 import { discoverBotola } from "@/lib/discovery";
 import { normalizeStandings } from "@/lib/normalize";
-import { fetchBotolaStandings } from "@/lib/sofascore";
+import { fetchBotolaStandings } from "@/lib/scores365";
 import { validateStandings } from "@/lib/validate";
 import { readSettings, writeSettings } from "@/lib/settings";
 import type { NormalizedStandings, RawStandingsResponse, TeamRow } from "@/types/standings";
@@ -64,22 +64,22 @@ async function fromGoal(settings: Awaited<ReturnType<typeof readSettings>>): Pro
 // last-good cache marked stale. Never a silent failure.
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const settings = await readSettings();
-  let source: "sofascore" | "goal" = "sofascore";
+  let source: "365scores" | "goal" = "365scores";
   let leagueId = settings.leagueId;
   let leagueName = settings.leagueName;
   try {
     let normalized: NormalizedStandings;
     try {
       normalized = await fetchBotolaStandings(nameMap());
-      if (normalized.rows.length === 0) throw new Error("SofaScore returned no rows");
-    } catch (sofaErr) {
-      // SofaScore unreachable (no proxy / Cloudflare) — fall back to GOAL API.
+      if (normalized.rows.length === 0) throw new Error("365scores returned no rows");
+    } catch (primaryErr) {
+      // 365scores unreachable — fall back to the GOAL API.
       source = "goal";
       const g = await fromGoal(settings);
       normalized = g.normalized;
       leagueId = g.leagueId;
       leagueName = g.leagueName;
-      void sofaErr;
+      void primaryErr;
     }
 
     normalized.rows = await inlineLogos(normalized.rows);
