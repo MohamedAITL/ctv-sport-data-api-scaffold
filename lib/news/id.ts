@@ -9,6 +9,7 @@ import type { NewsSourceKey } from "@/types/news";
 const ALLOWED_HOSTS = [
   "hesport.com",
   "elbotola.com",
+  "kooora.com",
   "365scores.com",
 ];
 
@@ -41,6 +42,7 @@ export function sourceOfUrl(url: string): NewsSourceKey | null {
   const h = (() => { try { return new URL(url).hostname.toLowerCase(); } catch { return ""; } })();
   if (h.endsWith("hesport.com")) return "hesport";
   if (h.endsWith("elbotola.com")) return "elbotola";
+  if (h.endsWith("kooora.com")) return "kooora";
   if (h.endsWith("365scores.com")) return "scores365";
   return null;
 }

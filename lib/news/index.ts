@@ -3,6 +3,7 @@ import type { NewsItem, NewsSourceKey } from "@/types/news";
 import { fetchHesport } from "./hesport";
 import { fetchElbotola, fetchElbotolaArticle } from "./elbotola";
 import { fetchScores365News } from "./scores365";
+import { fetchKooora, fetchKoooraArticle } from "./kooora";
 import { articleFromJsonLd } from "./jsonld";
 import { decodeNewsId, sourceOfUrl } from "./id";
 
@@ -14,15 +15,19 @@ export interface NewsFeed {
   failed: NewsSourceKey[]; // sources that did not answer, surfaced in the UI
 }
 
-export async function fetchNews(page = 1): Promise<NewsFeed> {
+// `refresh` skips the TTL so the button really re-reads the publishers; the
+// cache still serves ordinary browsing and the "load more" paging.
+export async function fetchNews(page = 1, refresh = false): Promise<NewsFeed> {
   const key = `page:${page}`;
   const hit = cache.get(key);
-  if (hit && Date.now() - hit.at < TTL_MS) return { items: hit.items, failed: [] };
+  if (!refresh && hit && Date.now() - hit.at < TTL_MS) return { items: hit.items, failed: [] };
 
-  // One dead publisher must not blank the page.
-  const [he, eb, s3] = await Promise.allSettled([
+  // One dead publisher must not blank the page. hesport and 365scores only
+  // publish a first page, so deeper pages come from the paginated sources.
+  const [he, eb, ko, s3] = await Promise.allSettled([
     page === 1 ? fetchHesport() : Promise.resolve([]),
     fetchElbotola(page),
+    fetchKooora(page),
     page === 1 ? fetchScores365News() : Promise.resolve([]),
   ]);
 
@@ -36,6 +41,7 @@ export async function fetchNews(page = 1): Promise<NewsFeed> {
   const all = [
     ...take(he, "hesport"),
     ...take(eb, "elbotola"),
+    ...take(ko, "kooora"),
     ...take(s3, "scores365"),
   ];
 
@@ -76,7 +82,12 @@ export async function fetchNewsItem(id: string): Promise<NewsItem | null> {
   if (base.body) return base;
 
   try {
-    const extra = source === "elbotola" ? await fetchElbotolaArticle(url) : await articleFromJsonLd(url);
+    const extra =
+      source === "kooora"
+        ? { ...(await articleFromJsonLd(url).catch(() => ({}))), ...(await fetchKoooraArticle(url)) }
+        : source === "elbotola"
+        ? await fetchElbotolaArticle(url)
+        : await articleFromJsonLd(url);
     return { ...base, ...extra, title: base.title || extra.summary?.slice(0, 80) || base.title };
   } catch {
     return base; // body unavailable — the page links to the source instead

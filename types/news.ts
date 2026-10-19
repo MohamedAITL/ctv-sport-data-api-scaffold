@@ -1,4 +1,4 @@
-export type NewsSourceKey = "hesport" | "elbotola" | "scores365";
+export type NewsSourceKey = "hesport" | "elbotola" | "kooora" | "scores365";
 
 export interface NewsTag {
   name: string;
@@ -32,6 +32,7 @@ export interface NewsSourceMeta {
 export const NEWS_SOURCES: NewsSourceMeta[] = [
   { key: "hesport", name: "هسبورت", site: "https://www.hesport.com" },
   { key: "elbotola", name: "البطولة", site: "https://www.elbotola.com" },
+  { key: "kooora", name: "كووورة", site: "https://www.kooora.com" },
   { key: "scores365", name: "365scores", site: "https://www.365scores.com" },
 ];
 

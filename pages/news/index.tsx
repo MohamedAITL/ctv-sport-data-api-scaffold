@@ -22,17 +22,28 @@ export default function NewsPage() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [fresh, setFresh] = useState<number | null>(null);
 
-  const load = useCallback(async (p: number, append: boolean) => {
-    setLoading(true);
+  const load = useCallback(async (p: number, append: boolean, refresh = false) => {
+    if (refresh) setRefreshing(true); else setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/news?page=${p}`);
+      const res = await fetch(`/api/news?page=${p}${refresh ? "&refresh=1" : ""}`);
       const json = await res.json();
       if (json.error) setError(json.error);
       setFailed(json.failed ?? []);
       setItems((prev) => {
-        const next = append ? [...prev, ...(json.items ?? [])] : (json.items ?? []);
+        const incoming: NewsItem[] = json.items ?? [];
+        // A refresh keeps what is already loaded and puts anything newly
+        // published on top, so the list grows instead of resetting.
+        if (refresh) {
+          const known = new Set(prev.map((i) => i.id));
+          const added = incoming.filter((i) => !known.has(i.id));
+          setFresh(added.length);
+          return [...added, ...prev].sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
+        }
+        const next = append ? [...prev, ...incoming] : incoming;
         // Appending a later page can repeat a story; keep the first occurrence.
         const seen = new Set<string>();
         return next.filter((i: NewsItem) => (seen.has(i.id) ? false : (seen.add(i.id), true)));
@@ -41,6 +52,7 @@ export default function NewsPage() {
       setError(String(e));
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }, []);
 
@@ -56,9 +68,21 @@ export default function NewsPage() {
           <div className="brand"><span className="brandmark">شوف<b>TV</b></span> Poster Studio</div>
           <Nav />
         </header>
-        <div className="pagehead">
-          <h1>News</h1>
-          <span className="muted" dir="rtl">آخر الأخبار من هسبورت والبطولة و365scores</span>
+        <div className="pagehead newshead">
+          <div>
+            <h1>News</h1>
+            <span className="muted" dir="rtl">آخر الأخبار من هسبورت والبطولة وكووورة و365scores</span>
+          </div>
+          <div className="newshead-actions">
+            {fresh !== null && (
+              <span className={fresh > 0 ? "pill ok" : "pill"} dir="rtl">
+                {fresh > 0 ? `${fresh} خبر جديد` : "لا جديد"}
+              </span>
+            )}
+            <button className="btn" disabled={refreshing} onClick={() => { setPage(1); load(1, false, true); }}>
+              {refreshing ? "جاري التحديث…" : "تحديث الأخبار"}
+            </button>
+          </div>
         </div>
 
         <div className="seg" role="tablist" aria-label="Source">

@@ -259,3 +259,7 @@ html, body {
   border-radius: 8px; padding: 5px 11px; transition: .15s;
 }
 .copybtn:hover { color: var(--text); border-color: var(--accent); }
+
+.newshead { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; justify-content: space-between; }
+.newshead-actions { display: flex; align-items: center; gap: 10px; }
+.newshead-actions .btn { width: auto; padding-inline: 20px; }

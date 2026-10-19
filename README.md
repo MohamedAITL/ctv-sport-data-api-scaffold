@@ -28,10 +28,12 @@ table until a group stage runs, and some competitions publish no stats — so ev
 page asks the API and says plainly when there is nothing to show, rather than
 rendering an empty poster.
 
-**News** is aggregated from **hesport.com** (RSS), **elbotola.com** (public JSON
-feed) and **365scores**. Each article has its own page; the body is shown only
-where the publisher syndicates it (hesport's feed, elbotola's JSON-LD), 365scores
-gets a summary, and every page credits the source and links to the original.
+**News** is aggregated from **kooora.com** (30 items/page), **hesport.com**
+(RSS), **elbotola.com** (public JSON feed) and **365scores**. A refresh button
+re-reads the publishers and reports how many stories are new, keeping what is
+already on screen; "المزيد" pages deeper into the paginated sources. Each article has its own page; the body is shown only
+where the publisher syndicates it (hesport's feed, kooora's and elbotola's own
+page data), 365scores gets a summary, and every page credits the source and links to the original.
 A button suggests short Arabic headlines for social posts — cut from the
 article's own wording by default, or written by Claude if `ANTHROPIC_API_KEY`
 is set.
