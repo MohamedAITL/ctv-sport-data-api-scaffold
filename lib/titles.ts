@@ -11,7 +11,7 @@ const SYSTEM = `أنت محرر عناوين في قناة رياضية مغرب
 اكتب عناوين قصيرة وجذابة بالعربية الفصحى لنشرها على مواقع التواصل الاجتماعي.
 
 القواعد:
-- اكتب 5 عناوين مختلفة.
+- اكتب 10 عناوين مختلفة.
 - كل عنوان في سطر مستقل، بدون ترقيم وبدون شرطات وبدون علامات اقتباس.
 - كل عنوان أقل من 70 حرفا.
 - بدون هاشتاغ وبدون إيموجي.
@@ -33,7 +33,7 @@ export async function generateTitles(article: {
   const client = new Anthropic();
   const res = await client.messages.create({
     model: MODEL,
-    max_tokens: 1000,
+    max_tokens: 1600,
     output_config: { effort: "low" }, // a headline is not a reasoning task
     system: SYSTEM,
     messages: [{ role: "user", content: source }],
@@ -49,5 +49,5 @@ export async function generateTitles(article: {
     .split("\n")
     .map((l) => l.replace(/^\s*(?:[-*•]|\d+[.)])\s*/, "").replace(/^["'«»]|["'«»]$/g, "").trim())
     .filter((l) => l.length > 8 && l.length < 160)
-    .slice(0, 5);
+    .slice(0, 10);
 }
