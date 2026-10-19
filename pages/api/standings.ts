@@ -3,6 +3,7 @@ import { goalFetch, GoalApiError } from "@/lib/goalApi";
 import { discoverBotola } from "@/lib/discovery";
 import { normalizeStandings } from "@/lib/normalize";
 import { fetch365Standings } from "@/lib/scores365";
+import { inlineImages } from "@/lib/inlineImage";
 import { validateStandings } from "@/lib/validate";
 import { readSettings, writeSettings } from "@/lib/settings";
 import { BOTOLA_LEAGUE, DEFAULT_LEAGUE, isStandingsLeague, leagueById } from "@/config/standingsLeagues";
@@ -15,25 +16,8 @@ function nameMap(): Record<string, string> {
   return rest;
 }
 
-// Fetch a remote logo server-side and inline it as a data URL, so html-to-image
-// can embed it in the client export without a tainted canvas / CORS error.
-async function toDataUrl(url: string | null): Promise<string | null> {
-  if (!url) return null;
-  try {
-    const r = await fetch(url);
-    if (!r.ok) return null;
-    const ct = r.headers.get("content-type") || "image/png";
-    const buf = Buffer.from(await r.arrayBuffer());
-    return `data:${ct};base64,${buf.toString("base64")}`;
-  } catch {
-    return null;
-  }
-}
-
 async function inlineLogos(rows: TeamRow[]): Promise<TeamRow[]> {
-  return Promise.all(
-    rows.map(async (r) => ({ ...r, logo: await toDataUrl(r.logo) }))
-  );
+  return inlineImages(rows, (r) => r.logo, (r, logo) => ({ ...r, logo }));
 }
 
 // Fetch from GOAL API (fallback source) — league discovery + normalize.

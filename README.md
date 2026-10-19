@@ -1,16 +1,29 @@
-# Botola Pro — Standings Poster Generator (Chouf TV)
+# Chouf TV — Sports Poster Studio
 
-Local app that regenerates the Chouf TV 1080×1350 standings poster from **live
-365scores data** (native Arabic club names), overwriting only the standings
-region of the design and exporting a publication-ready PNG. A league dropdown
-covers **Botola Pro, La Liga, Premier League, and the Champions League**; the
-table auto-fits from 16 up to 36 teams, and each league keeps its own template
-and layout. For Botola, the **GOAL API is the automatic fallback** if 365scores
-is unreachable.
+Local app that builds Chouf TV's 1080×1350 sports posters from **live 365scores
+data** (native Arabic club and player names) and exports publication-ready PNGs.
+
+Four posters, one per page:
+
+| Page | Poster | Leagues |
+| --- | --- | --- |
+| `/` | **Standings** table | Botola Pro, **Botola 2**, La Liga, Premier League, Champions League |
+| `/round` | **Matches of a round** (الجولة) — fixtures or results | Botola Pro, Botola 2 |
+| `/matchday` | Best matches of a given day, and their results | multi-league (GOAL API) |
+| `/stats` | **Leaderboards** — 16 Arabic stat categories (8 player, 8 team) | Botola Pro (any listed league) |
+
+Standings adapt to table size: 16-team Botola keeps the bundled template's panel
+layout, 20-team leagues use the full canvas at full row size, and the 36-team
+Champions League league phase is split into **two readable columns** instead of
+being shrunk to fit. Each league keeps its own template and layout.
+
+A round with no published schedule is reported as such — 365scores publishes
+fixtures only once a round is announced, and games scheduled before a round is
+assigned appear under **مباريات قادمة**. The poster is never exported empty.
 
 Stack: **Next.js 14 + TypeScript + Tailwind**. 365scores needs no key; the GOAL
-API key (fallback only) stays server-side in a Next API route, never shipped to
-the browser.
+API key (Botola standings fallback + the matchday page) stays server-side in a
+Next API route, never shipped to the browser.
 
 ## Verified (2026-10-17, against the live GOAL API)
 

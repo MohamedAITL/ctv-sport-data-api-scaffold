@@ -7,6 +7,8 @@
 // the column headers (نقاط فوز لعب) are static, so they stay as the original
 // template pixels unless their overlay is switched on.
 
+import { MOROCCAN_LEAGUES } from "@/config/standingsLeagues";
+
 export interface TextStyle {
   show: boolean;
   text?: string;
@@ -45,6 +47,16 @@ export interface LayoutConfig {
     nameRightX: number; // right edge (name is right-aligned)
     logoCenterX: number;
     rankX: number; // center
+    // Horizontal extent a row occupies; used to remap anchors into side-by-side
+    // columns so a big table stays readable instead of shrinking to fit.
+    spanLeft: number;
+    spanRight: number;
+    columns: 1 | 2 | "auto"; // "auto" -> 2 columns past `twoColFrom` rows
+    twoColFrom: number;
+    columnGap: number;
+    twoColScale: number; // type/logo scale inside a half-width column
+    minFontSize: number; // auto-fit never shrinks the name below this
+    bottomY: number; // last row must stay above this
   };
 
   // Zone colouring applied to the rank number and points value.
@@ -89,6 +101,14 @@ export const DEFAULT_LAYOUT: LayoutConfig = {
     nameRightX: 905,
     logoCenterX: 948,
     rankX: 1012,
+    spanLeft: 432,
+    spanRight: 1050,
+    columns: "auto",
+    twoColFrom: 23,
+    columnGap: 40,
+    twoColScale: 0.82,
+    minFontSize: 15,
+    bottomY: 1230,
   },
 
   zones: {
@@ -99,6 +119,37 @@ export const DEFAULT_LAYOUT: LayoutConfig = {
     bottomColor: "#f0564b",
   },
 };
+
+// Layout for leagues with no bundled Chouf TV template: the rows get the whole
+// canvas instead of the narrow right-hand panel the Botola poster reserves for
+// the player cutout. That alone keeps a 20-team table at full row size, and the
+// heading/column headers are drawn because no template supplies them.
+export const FULL_CANVAS_LAYOUT: LayoutConfig = {
+  ...DEFAULT_LAYOUT,
+  mask: { ...DEFAULT_LAYOUT.mask, show: false },
+  heading: { show: true, text: "", x: 540, y: 86, fontSize: 52, color: "#ffffff" },
+  columnHeaders: { show: true, y: 168, fontSize: 24, color: "#c3b4e6" },
+  seasonLabel: { ...DEFAULT_LAYOUT.seasonLabel, show: false, x: 540, y: 132 },
+  updatedLabel: { ...DEFAULT_LAYOUT.updatedLabel, x: 540 },
+  table: {
+    ...DEFAULT_LAYOUT.table,
+    firstRowCenterY: 225,
+    rowHeight: 57,
+    pointsX: 110,
+    winsX: 200,
+    playedX: 300,
+    nameRightX: 910,
+    logoCenterX: 960,
+    rankX: 1030,
+    spanLeft: 40,
+    spanRight: 1050,
+    bottomY: 1285,
+  },
+};
+
+export function defaultLayoutFor(leagueId: number): LayoutConfig {
+  return MOROCCAN_LEAGUES.includes(leagueId) ? DEFAULT_LAYOUT : FULL_CANVAS_LAYOUT;
+}
 
 // Colour for a given 1-based rank, used for the rank number and points value.
 export function zoneColor(rank: number, total: number, z: LayoutConfig["zones"]): string {

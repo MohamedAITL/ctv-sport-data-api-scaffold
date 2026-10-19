@@ -9,7 +9,9 @@ export default function Nav() {
   return (
     <nav className="nav">
       {link("/", "Standings")}
+      {link("/round", "Round")}
       {link("/matchday", "Matchday")}
+      {link("/stats", "Stats")}
     </nav>
   );
 }

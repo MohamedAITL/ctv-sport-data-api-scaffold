@@ -7,7 +7,7 @@ import CompetitionSelector from "@/components/CompetitionSelector";
 import TeamMappingEditor from "@/components/TeamMappingEditor";
 import DesignSettings from "@/components/DesignSettings";
 import ExportControls from "@/components/ExportControls";
-import { DEFAULT_LAYOUT, type LayoutConfig } from "@/config/defaultLayout";
+import { DEFAULT_LAYOUT, defaultLayoutFor, type LayoutConfig } from "@/config/defaultLayout";
 import { DEFAULT_LEAGUE, BOTOLA_LEAGUE, leagueById } from "@/config/standingsLeagues";
 import type { TeamRow } from "@/types/standings";
 import { loadLayout, saveLayout, loadNameOverrides, saveNameOverrides } from "@/lib/persist";
@@ -57,7 +57,7 @@ export default function Home() {
     let initial = DEFAULT_LEAGUE;
     try { const s = localStorage.getItem(LEAGUE_KEY); if (s) initial = Number(s); } catch { /* ignore */ }
     setLeague(initial);
-    setLayout(loadLayout(DEFAULT_LAYOUT, String(initial)));
+    setLayout(loadLayout(defaultLayoutFor(initial), String(initial)));
     setNameOverrides(loadNameOverrides());
     getLogoOverrides().then(setLogoOverrides);
     getTemplate(templateKey(initial)).then((t) => setTemplateSrc(t || defaultTemplateFor(initial)));
@@ -90,7 +90,7 @@ export default function Home() {
   const onLeague = (id: number) => {
     if (id === league) return;
     try { localStorage.setItem(LEAGUE_KEY, String(id)); } catch { /* ignore */ }
-    setLayout(loadLayout(DEFAULT_LAYOUT, String(id)));
+    setLayout(loadLayout(defaultLayoutFor(id), String(id)));
     getTemplate(templateKey(id)).then((t) => setTemplateSrc(t || defaultTemplateFor(id)));
     setData(standingsCache[id] ?? null);
     setLeague(id);
@@ -100,7 +100,7 @@ export default function Home() {
     setLayout(next);
     saveLayout(next, String(league));
   };
-  const resetDesign = () => updateLayout(DEFAULT_LAYOUT);
+  const resetDesign = () => updateLayout(defaultLayoutFor(league));
 
   const onName = (teamId: string, value: string) => {
     setNameOverrides((prev) => {
@@ -140,6 +140,13 @@ export default function Home() {
       })),
     [data, nameOverrides]
   );
+
+  // The full-canvas preset ships a blank heading; fill it with the league's
+  // Arabic name, since no template supplies one for those leagues.
+  const effLayout = useMemo(() => {
+    if (layout.heading.text) return layout;
+    return { ...layout, heading: { ...layout.heading, text: leagueById(league)?.ar ?? "" } };
+  }, [layout, league]);
 
   const blocked = data && !data.validation.ok ? data.validation.errors.join("; ") : null;
   const scale = PREVIEW_W / layout.width;
@@ -200,7 +207,7 @@ export default function Home() {
               <h3 className="muted">Live preview</h3>
               <div className="previewbox" style={{ width: PREVIEW_W, height: layout.height * scale }}>
                 <div style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}>
-                  <Poster ref={posterRef} rows={rows} layout={layout} templateSrc={templateSrc} logoOverrides={logoOverrides} />
+                  <Poster ref={posterRef} rows={rows} layout={effLayout} templateSrc={templateSrc} logoOverrides={logoOverrides} />
                 </div>
               </div>
             </div>

@@ -29,19 +29,35 @@ const Poster = forwardRef<HTMLDivElement, PosterProps>(function Poster(
   const T = L.table;
   const total = rows.length;
 
-  // Auto-fit: compress the row grid so any table (16 Botola rows up to 36 UCL
-  // league-phase rows) fits between the first row and the footer. Scaling row
-  // spacing, logo and fonts together keeps proportions and avoids overlap. For a
-  // table that already fits (<=16 rows) fit is 1, so Botola is unchanged.
-  const bottomY = L.height - 120;
-  const avail = bottomY - T.firstRowCenterY;
-  const needed = Math.max(0, total - 1) * T.rowHeight;
-  const fit = needed > avail && needed > 0 ? avail / needed : 1;
-  const rowHeight = T.rowHeight * fit;
-  const logoSize = T.logoSize * fit;
-  const fsName = T.fontSizeName * fit;
-  const fsStat = T.fontSizeStat * fit;
-  const fsRank = T.fontSizeRank * fit;
+  // A long table (20-team leagues, 36-team UCL league phase) is split into two
+  // side-by-side columns rather than squeezed into one, so every row keeps a
+  // readable size. Botola's 16 rows stay in one column, unchanged.
+  const cols =
+    T.columns === "auto" ? (total > T.twoColFrom ? 2 : 1) : T.columns;
+  const perCol = Math.ceil(total / cols);
+
+  // Auto-fit is the safety net for whatever a column still can't hold, but it
+  // never shrinks the name below `minFontSize` — unreadable is worse than tight.
+  const avail = T.bottomY - T.firstRowCenterY;
+  const needed = Math.max(0, perCol - 1) * T.rowHeight;
+  const rawFit = needed > avail && needed > 0 ? avail / needed : 1;
+  const colScale = cols === 2 ? T.twoColScale : 1;
+  const fit = Math.max(rawFit, T.minFontSize / Math.max(1, T.fontSizeName * colScale));
+
+  const rowHeight = T.rowHeight * Math.min(rawFit, fit);
+  const logoSize = T.logoSize * fit * colScale;
+  const fsName = T.fontSizeName * fit * colScale;
+  const fsStat = T.fontSizeStat * fit * colScale;
+  const fsRank = T.fontSizeRank * fit * colScale;
+
+  // Remap a full-width x anchor into column `c` (0 = right-hand column, RTL).
+  const span = Math.max(1, T.spanRight - T.spanLeft);
+  const colWidth = cols === 2 ? (span - T.columnGap) / 2 : span;
+  const xIn = (x: number, c: number) => {
+    if (cols === 1) return x;
+    const start = c === 0 ? T.spanRight - colWidth : T.spanLeft;
+    return start + ((x - T.spanLeft) / span) * colWidth;
+  };
 
   return (
     <div
@@ -96,22 +112,30 @@ const Poster = forwardRef<HTMLDivElement, PosterProps>(function Poster(
           {L.updatedLabel.text}
         </div>
       )}
-      {L.columnHeaders.show && (
-        <>
-          <div style={{ ...centered(T.pointsX, L.columnHeaders.y), direction: "rtl", color: L.columnHeaders.color, fontSize: L.columnHeaders.fontSize, fontWeight: 700 }}>نقاط</div>
-          <div style={{ ...centered(T.winsX, L.columnHeaders.y), direction: "rtl", color: L.columnHeaders.color, fontSize: L.columnHeaders.fontSize, fontWeight: 700 }}>فوز</div>
-          <div style={{ ...centered(T.playedX, L.columnHeaders.y), direction: "rtl", color: L.columnHeaders.color, fontSize: L.columnHeaders.fontSize, fontWeight: 700 }}>لعب</div>
-        </>
-      )}
+      {L.columnHeaders.show &&
+        Array.from({ length: cols }, (_, c) => {
+          const hs = { direction: "rtl" as const, color: L.columnHeaders.color, fontSize: L.columnHeaders.fontSize * colScale, fontWeight: 700 };
+          return (
+            <div key={"ch" + c}>
+              <div style={{ ...centered(xIn(T.pointsX, c), L.columnHeaders.y), ...hs }}>نقاط</div>
+              <div style={{ ...centered(xIn(T.winsX, c), L.columnHeaders.y), ...hs }}>فوز</div>
+              <div style={{ ...centered(xIn(T.playedX, c), L.columnHeaders.y), ...hs }}>لعب</div>
+            </div>
+          );
+        })}
 
       {/* Rows */}
       {rows.map((r, i) => {
-        const y = T.firstRowCenterY + i * rowHeight;
+        const c = Math.floor(i / perCol);
+        const y = T.firstRowCenterY + (i % perCol) * rowHeight;
         const zc = zoneColor(r.rank, total, L.zones);
         const logo = logoOverrides[r.teamId] || r.logo;
+        const logoX = xIn(T.logoCenterX, c);
+        const nameRight = L.width - xIn(T.nameRightX, c);
+        const nameMax = Math.max(60, colWidth * 0.52);
         return (
           <div key={r.teamId || i}>
-            <div style={{ ...centered(T.rankX, y), color: zc, fontSize: fsRank, fontWeight: 800 }}>{r.rank}</div>
+            <div style={{ ...centered(xIn(T.rankX, c), y), color: zc, fontSize: fsRank, fontWeight: 800 }}>{r.rank}</div>
 
             {logo ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -120,25 +144,25 @@ const Poster = forwardRef<HTMLDivElement, PosterProps>(function Poster(
                 alt=""
                 width={logoSize}
                 height={logoSize}
-                style={{ position: "absolute", left: T.logoCenterX, top: y, transform: "translate(-50%, -50%)", width: logoSize, height: logoSize, borderRadius: "50%", objectFit: "cover" }}
+                style={{ position: "absolute", left: logoX, top: y, transform: "translate(-50%, -50%)", width: logoSize, height: logoSize, borderRadius: "50%", objectFit: "cover" }}
               />
             ) : (
               <div
-                style={{ position: "absolute", left: T.logoCenterX, top: y, transform: "translate(-50%, -50%)", width: logoSize, height: logoSize, borderRadius: "50%", background: "#4b3a6e", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: logoSize * 0.42, fontWeight: 800 }}
+                style={{ position: "absolute", left: logoX, top: y, transform: "translate(-50%, -50%)", width: logoSize, height: logoSize, borderRadius: "50%", background: "#4b3a6e", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: logoSize * 0.42, fontWeight: 800 }}
               >
                 {(r.nameOriginal || "?").trim().charAt(0).toUpperCase()}
               </div>
             )}
 
             <div
-              style={{ position: "absolute", top: y, right: L.width - T.nameRightX, transform: "translateY(-50%)", direction: "rtl", textAlign: "right", color: T.nameColor, fontSize: fsName, fontWeight: 700, whiteSpace: "nowrap" }}
+              style={{ position: "absolute", top: y, right: nameRight, transform: "translateY(-50%)", direction: "rtl", textAlign: "right", color: T.nameColor, fontSize: fsName, fontWeight: 700, whiteSpace: "nowrap", maxWidth: nameMax, overflow: "hidden", textOverflow: "ellipsis" }}
             >
               {r.nameAr}
             </div>
 
-            <div style={{ ...centered(T.playedX, y), color: "#ffffff", fontSize: fsStat, fontWeight: 800 }}>{r.played}</div>
-            <div style={{ ...centered(T.winsX, y), color: "#ffffff", fontSize: fsStat, fontWeight: 800 }}>{r.wins}</div>
-            <div style={{ ...centered(T.pointsX, y), color: zc, fontSize: fsStat, fontWeight: 800 }}>{r.points}</div>
+            <div style={{ ...centered(xIn(T.playedX, c), y), color: "#ffffff", fontSize: fsStat, fontWeight: 800 }}>{r.played}</div>
+            <div style={{ ...centered(xIn(T.winsX, c), y), color: "#ffffff", fontSize: fsStat, fontWeight: 800 }}>{r.wins}</div>
+            <div style={{ ...centered(xIn(T.pointsX, c), y), color: zc, fontSize: fsStat, fontWeight: 800 }}>{r.points}</div>
           </div>
         );
       })}

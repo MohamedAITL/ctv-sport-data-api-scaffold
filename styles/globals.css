@@ -121,6 +121,54 @@ html, body {
 .field input[type="color"] { width: 42px; height: 30px; padding: 0; border: 1px solid var(--border); border-radius: 7px; background: none; cursor: pointer; }
 .field input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent); }
 
+/* Dropdowns are the main controls now (league / round / stat), so they get a
+   real control treatment instead of the unstyled browser default. */
+.field select {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  min-width: 150px;
+  background-color: var(--panel-2);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a99fc7' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 14px;
+  border: 1px solid var(--border-2);
+  border-radius: 10px;
+  color: var(--text);
+  padding: 10px 36px 10px 12px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+.field select:hover:not(:disabled) { border-color: var(--accent); background-color: #2f2450; }
+.field select:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(139, 109, 255, 0.28);
+}
+.field select:disabled { opacity: 0.5; cursor: not-allowed; }
+.field select option { background: #221a3b; color: var(--text); font-weight: 600; }
+.field select optgroup {
+  background: #181130;
+  color: var(--muted);
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+/* A full-width picker reads better with its label stacked above the control. */
+.field.wide:has(select) { flex-direction: column; align-items: stretch; gap: 7px; }
+.field.wide:has(select) > span {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--muted);
+}
+
 /* ---- preview ---- */
 .previewpane { position: sticky; top: 16px; }
 .previewsticky { display: flex; flex-direction: column; gap: 10px; }
