@@ -1,4 +1,4 @@
-import { toMatch, pairStats, fetchLiveMatches, fetchLiveDetail } from "@/lib/live365";
+import { toMatch, pairStats, fetchLiveMatches, fetchLiveDetail, toApiDate } from "@/lib/live365";
 
 const game = (over: Record<string, unknown> = {}) => ({
   id: 100, sportId: 1, competitionId: 11, competitionDisplayName: "الدوري الإسباني",
@@ -26,6 +26,7 @@ describe("toMatch", () => {
     expect(m.clock).toBe("45'");
     expect(m.home.score).toBe(1);
     expect(m.home.logo).toContain("/v3/Competitors/140");
+    expect(m.home.logo).toContain("d_Competitors:default1.png");
   });
 
   it("treats -1 as no score yet", () => {
@@ -35,6 +36,13 @@ describe("toMatch", () => {
 
   it("skips a game with no competitors rather than emitting a broken row", () => {
     expect(toMatch({ id: 1, homeCompetitor: {}, awayCompetitor: {} })).toBeNull();
+  });
+});
+
+describe("toApiDate", () => {
+  // allScores ignores `date=`/`dates=`; only startDate/endDate as DD/MM/YYYY work.
+  it("formats an ISO date the way the source expects", () => {
+    expect(toApiDate("2026-10-18")).toBe("18/10/2026");
   });
 });
 
@@ -50,7 +58,41 @@ describe("fetchLiveMatches", () => {
       game({ id: 4, statusGroup: 3 }),                       // live
     ] }));
     const out = await fetchLiveMatches();
-    expect(out.map((m) => m.id)).toEqual([4, 3, 1]);
+    expect(out.map((m) => m.id)).toEqual([4, 1, 3]);
+  });
+
+  // 180+ matches a day are mostly minor leagues; the rail must not open on them.
+  it("ranks competitions from the app's catalog above the rest in each band", async () => {
+    const minor = { competitionId: 99999, competitionDisplayName: "دوري صغير" };
+    mock(() => ({ games: [
+      game({ id: 1, statusGroup: 3, ...minor }),             // live, minor
+      game({ id: 2, statusGroup: 4, ...minor }),             // finished, minor
+      game({ id: 3, statusGroup: 4 }),                       // finished, La Liga
+      game({ id: 4, statusGroup: 3 }),                       // live, La Liga
+    ] }));
+    const out = await fetchLiveMatches();
+    expect(out.map((m) => m.id)).toEqual([4, 1, 3, 2]);
+  });
+
+  it("asks for a past day with startDate/endDate", async () => {
+    const seen: string[] = [];
+    global.fetch = jest.fn(async (url: string) => {
+      seen.push(url);
+      return { ok: true, json: async () => ({ games: [] }) };
+    }) as unknown as typeof fetch;
+    await fetchLiveMatches("2026-10-18");
+    expect(seen[0]).toContain("startDate=18%2F10%2F2026");
+    expect(seen[0]).toContain("endDate=18%2F10%2F2026");
+  });
+
+  it("asks for today when no date is given", async () => {
+    const seen: string[] = [];
+    global.fetch = jest.fn(async (url: string) => {
+      seen.push(url);
+      return { ok: true, json: async () => ({ games: [] }) };
+    }) as unknown as typeof fetch;
+    await fetchLiveMatches();
+    expect(seen[0]).not.toContain("startDate");
   });
 });
 
@@ -108,6 +150,8 @@ describe("fetchLiveDetail", () => {
     expect(gk.number).toBe(13);
     expect(gk.shortName).toBe("سوريا");
     expect(gk.photo).toContain("/Athletes/14641");
+    // a CDN default keeps a missing photo from 404-ing on the wall display
+    expect(gk.photo).toContain("d_Athletes:default.png");
     expect([gk.line, gk.side]).toEqual([0, 50]);
     expect(d.events[0].player).toBe("دافيد سوريا"); // resolved via members
     expect(d.referee).toBe("Gustavo Correia");

@@ -1,4 +1,14 @@
-import type { LiveMatch } from "@/types/live";
+import { useState } from "react";
+import type { LiveMatch, LiveTeam } from "@/types/live";
+
+// Crests 404 when the payload carried no imageVersion; show nothing rather than
+// a broken-image icon on a wall display.
+function Crest({ team }: { team: LiveTeam }) {
+  const [broken, setBroken] = useState(false);
+  if (!team.logo || broken) return <span className="kl-crest" />;
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src={team.logo} alt="" onError={() => setBroken(true)} />;
+}
 
 interface Props {
   matches: LiveMatch[];
@@ -27,14 +37,12 @@ export default function LiveList({ matches, selectedId, onSelect }: Props) {
             )}
           </div>
           <div className="kl-team">
-            {m.home.logo && /* eslint-disable-next-line @next/next/no-img-element */
-              <img src={m.home.logo} alt="" />}
+            <Crest team={m.home} />
             <span className="kl-name">{m.home.name}</span>
             <span className="kl-score">{m.home.score ?? "-"}</span>
           </div>
           <div className="kl-team">
-            {m.away.logo && /* eslint-disable-next-line @next/next/no-img-element */
-              <img src={m.away.logo} alt="" />}
+            <Crest team={m.away} />
             <span className="kl-name">{m.away.name}</span>
             <span className="kl-score">{m.away.score ?? "-"}</span>
           </div>

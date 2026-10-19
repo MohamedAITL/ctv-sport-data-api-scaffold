@@ -9,7 +9,16 @@ import type { LiveDetail, LiveMatch } from "@/types/live";
 
 const POLL_MS = 15_000; // the source itself caches for 5s
 type Tab = "lineup" | "stats" | "events";
-type Filter = "live" | "all";
+type Filter = "live" | "done" | "all";
+
+const isoToday = () => new Date().toISOString().slice(0, 10);
+const shiftDay = (iso: string, days: number) => {
+  const d = new Date(iso + "T12:00:00Z");
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+};
+const arDay = (iso: string) =>
+  iso === isoToday() ? "اليوم" : new Date(iso + "T12:00:00Z").toLocaleDateString("ar-MA", { weekday: "long", day: "numeric", month: "long" });
 
 export default function LivePage() {
   const [matches, setMatches] = useState<LiveMatch[]>([]);
@@ -17,6 +26,7 @@ export default function LivePage() {
   const [detail, setDetail] = useState<LiveDetail | null>(null);
   const [tab, setTab] = useState<Tab>("lineup");
   const [filter, setFilter] = useState<Filter>("live");
+  const [date, setDate] = useState<string>(isoToday());
   const [updatedAt, setUpdatedAt] = useState<string>("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,9 +35,16 @@ export default function LivePage() {
   // re-render that would move the screen under someone's finger.
   const selectedRef = useRef<LiveMatch | null>(null);
   selectedRef.current = selected;
+  const dateRef = useRef<string>(date);
+  dateRef.current = date;
+  const railRef = useRef<HTMLDivElement>(null);
 
   const loadList = useCallback(async (refresh = false) => {
-    const res = await fetch(`/api/live${refresh ? "?refresh=1" : ""}`);
+    const day = dateRef.current;
+    const qs = new URLSearchParams();
+    if (day !== isoToday()) qs.set("date", day);
+    if (refresh) qs.set("refresh", "1");
+    const res = await fetch(`/api/live${qs.toString() ? `?${qs}` : ""}`);
     const json = await res.json();
     if (json.error && !json.matches?.length) throw new Error(json.error);
     const list: LiveMatch[] = json.matches ?? [];
@@ -38,6 +55,8 @@ export default function LivePage() {
     const cur = selectedRef.current;
     const next = cur ? list.find((m) => m.id === cur.id) ?? cur : list.find((m) => m.isLive) ?? list[0] ?? null;
     if (next) setSelected(next);
+    // An empty "مباشر" rail looks broken when the day's games have all finished.
+    if (!cur && list.length > 0 && !list.some((m) => m.isLive)) setFilter("done");
     return list;
   }, []);
 
@@ -66,18 +85,37 @@ export default function LivePage() {
   // Poll, but never while the screen is not being shown.
   useEffect(() => {
     let timer: ReturnType<typeof setInterval> | null = null;
-    const start = () => { if (!timer) timer = setInterval(() => refreshAll(), POLL_MS); };
+    // A finished day never changes, so only today is polled.
+    const start = () => { if (!timer && dateRef.current === isoToday()) timer = setInterval(() => refreshAll(), POLL_MS); };
     const stop = () => { if (timer) { clearInterval(timer); timer = null; } };
     const onVis = () => (document.hidden ? stop() : (refreshAll(), start()));
     if (!document.hidden) start();
     document.addEventListener("visibilitychange", onVis);
     return () => { stop(); document.removeEventListener("visibilitychange", onVis); };
-  }, [refreshAll]);
+  }, [refreshAll, date]);
 
   const pick = (m: LiveMatch) => { setSelected(m); setDetail(null); loadDetail(m); };
 
-  const shown = filter === "live" ? matches.filter((m) => m.isLive) : matches;
+  // Live matches head both filters, so without this the rail looks unchanged
+  // when you switch — which read as "the button does nothing".
+  const toTop = () => { if (railRef.current) railRef.current.scrollTop = 0; };
+  const pickFilter = (f: Filter) => { setFilter(f); toTop(); };
+  const goDay = (iso: string) => {
+    setDate(iso);
+    dateRef.current = iso;
+    setSelected(null); selectedRef.current = null;
+    setDetail(null); setMatches([]);
+    setFilter(iso === isoToday() ? "live" : "done");
+    toTop();
+    refreshAll(true);
+  };
+
+  const shown =
+    filter === "live" ? matches.filter((m) => m.isLive)
+    : filter === "done" ? matches.filter((m) => m.isFinished)
+    : matches;
   const liveCount = matches.filter((m) => m.isLive).length;
+  const doneCount = matches.filter((m) => m.isFinished).length;
   const clock = updatedAt ? new Date(updatedAt).toLocaleTimeString("ar-MA", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "—";
 
   return (
@@ -92,12 +130,20 @@ export default function LivePage() {
         <aside className="kiosk-rail">
           <div className="kiosk-railhead">
             <div className="kiosk-brand"><span className="brandmark">شوف<b>TV</b></span></div>
-            <div className="kiosk-seg">
-              <button type="button" className={filter === "live" ? "on" : ""} onClick={() => setFilter("live")}>مباشر ({liveCount})</button>
-              <button type="button" className={filter === "all" ? "on" : ""} onClick={() => setFilter("all")}>اليوم ({matches.length})</button>
+            <div className="kiosk-day">
+              <button type="button" aria-label="اليوم السابق" onClick={() => goDay(shiftDay(date, -1))}>‹</button>
+              <button type="button" className="kiosk-daylabel" onClick={() => goDay(isoToday())}>{arDay(date)}</button>
+              <button type="button" aria-label="اليوم التالي" disabled={date >= isoToday()} onClick={() => goDay(shiftDay(date, 1))}>›</button>
+            </div>
+            <div className="kiosk-seg three">
+              <button type="button" className={filter === "live" ? "on" : ""} onClick={() => pickFilter("live")}>مباشر ({liveCount})</button>
+              <button type="button" className={filter === "done" ? "on" : ""} onClick={() => pickFilter("done")}>النتائج ({doneCount})</button>
+              <button type="button" className={filter === "all" ? "on" : ""} onClick={() => pickFilter("all")}>الكل ({matches.length})</button>
             </div>
           </div>
-          <LiveList matches={shown} selectedId={selected?.id ?? null} onSelect={pick} />
+          <div className="kl-scroll" ref={railRef}>
+            <LiveList matches={shown} selectedId={selected?.id ?? null} onSelect={pick} />
+          </div>
         </aside>
 
         <main className="kiosk-main">

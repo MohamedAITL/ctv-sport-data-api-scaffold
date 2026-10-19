@@ -277,12 +277,14 @@ html, body {
 .kiosk-rail { display: flex; flex-direction: column; border-left: 1px solid var(--border); background: var(--bg-2); min-height: 0; }
 .kiosk-railhead { padding: 16px; border-bottom: 1px solid var(--border); }
 .kiosk-brand { margin-bottom: 12px; }
+.kiosk-seg.three { grid-template-columns: repeat(3, 1fr); }
 .kiosk-seg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: var(--panel); border-radius: 12px; padding: 5px; }
-.kiosk-seg button { min-height: 64px; border: 0; border-radius: 9px; background: transparent; color: var(--muted); font-size: 17px; font-weight: 800; cursor: pointer; }
+.kiosk-seg button { min-height: 64px; border: 0; border-radius: 9px; background: transparent; color: var(--muted); font-size: 15px; font-weight: 800; cursor: pointer; }
 .kiosk-seg button.on { background: var(--accent); color: #fff; }
 .kiosk-seg button:active { transform: scale(0.98); }
 
-.kl-list { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 10px; }
+.kl-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; min-height: 0; }
+.kl-list { padding: 10px; }
 .kl-row {
   display: block; width: 100%; text-align: inherit; min-height: 104px;
   background: var(--panel); border: 1.5px solid transparent; border-radius: 14px;
@@ -348,14 +350,15 @@ html, body {
 .kp-bench h4 { margin: 0 0 10px; font-size: 17px; }
 .kp-bench h5 { margin: 12px 0 6px; font-size: 14px; color: var(--muted); }
 .kp-bench ul { list-style: none; margin: 0; padding: 0; }
-.kp-bench li { padding: 7px 0; font-size: 16px; border-bottom: 1px dashed var(--border); }
+.kp-bench li { display: flex; align-items: center; gap: 10px; padding: 7px 0; font-size: 16px; border-bottom: 1px dashed var(--border); }
 .kp-bench li b { display: inline-block; min-width: 30px; color: var(--muted); }
 .kp-out li { color: var(--muted); }
 .kp-coach { margin: 10px 0 0; color: var(--muted); font-size: 15px; }
 .kp-xi { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
 .kp-xi > div { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; }
 .kp-xi ul { list-style: none; margin: 0; padding: 0; }
-.kp-xi li { padding: 8px 0; font-size: 16px; border-bottom: 1px dashed var(--border); }
+.kp-xi li { display: flex; align-items: center; gap: 10px; padding: 8px 0; font-size: 16px; border-bottom: 1px dashed var(--border); }
+.kp-xi li span { flex: 1; }
 .kp-xi li b { display: inline-block; min-width: 30px; color: var(--muted); }
 .kp-xi li em { color: var(--muted); font-size: 13px; font-style: normal; }
 .kp-none { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 60px 20px; color: var(--muted); }
@@ -393,3 +396,55 @@ html, body {
   .kiosk { grid-template-columns: 320px 1fr; }
   .kh-nums { font-size: 54px; }
 }
+
+/* ---- live: date control, player photos, drag, fullscreen ---- */
+.kiosk-day { display: grid; grid-template-columns: 64px 1fr 64px; gap: 6px; margin-bottom: 10px; }
+.kiosk-day button {
+  min-height: 64px; border: 1.5px solid var(--border-2); border-radius: 12px;
+  background: var(--panel); color: var(--text); font-size: 22px; font-weight: 900; cursor: pointer;
+}
+.kiosk-day .kiosk-daylabel { font-size: 17px; }
+.kiosk-day button:active { transform: scale(0.98); }
+.kiosk-day button:disabled { opacity: .35; }
+
+.kl-crest { width: 28px; height: 28px; border-radius: 50%; background: var(--panel-2); flex: none; }
+
+/* A shirt must own the gesture, or the browser pans the pane instead of moving
+   the player — this is what makes dragging work on a touchscreen. */
+.kp-man { touch-action: none; cursor: grab; }
+.kp-man:active { cursor: grabbing; }
+.kp-man.moved .kp-face, .kp-man.moved .kp-num { box-shadow: 0 0 0 3px var(--accent-2); }
+.kp-face { position: relative; display: block; border-radius: 50%; overflow: visible; }
+.kp-face img {
+  width: 100%; height: 100%; object-fit: cover; border-radius: 50%;
+  background: #4b3a6e; border: 3px solid #fff; display: block; pointer-events: none;
+}
+.kp-man.home .kp-face img { border-color: #4f7cff; }
+.kp-man.away .kp-face img { border-color: #e0564f; }
+.kp-face b {
+  position: absolute; inset-inline-end: -4px; bottom: -4px;
+  min-width: 26px; height: 26px; padding: 0 5px; border-radius: 13px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 900; color: #fff; border: 2px solid rgba(0,0,0,.35);
+}
+.kp-man.home .kp-face b { background: #4f7cff; }
+.kp-man.away .kp-face b { background: #e0564f; }
+.kp-bench .kp-face img, .kp-xi .kp-face img { border-width: 2px; }
+.kp-bench .kp-face b, .kp-xi .kp-face b { min-width: 20px; height: 20px; font-size: 11px; border-width: 1px; }
+
+.kp-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 12px; }
+.kp-tool {
+  min-height: 64px; padding: 0 22px; border-radius: 12px; border: 1.5px solid var(--border-2);
+  background: var(--panel); color: var(--text); font-size: 17px; font-weight: 800;
+  cursor: pointer; font-family: inherit; touch-action: manipulation;
+}
+.kp-tool:active { transform: scale(0.98); }
+.kp-hint { color: var(--muted); font-size: 14px; }
+
+/* Fullscreen: the pitch takes the display. `.cssfull` is the fallback for when
+   the Fullscreen API is unavailable or blocked. */
+.kp:fullscreen, .kp.cssfull { background: var(--bg); padding: 16px; overflow: auto; }
+.kp.cssfull { position: fixed; inset: 0; z-index: 9999; }
+.kp:fullscreen .kp-pitch, .kp.cssfull .kp-pitch { height: calc(100vh - 110px); aspect-ratio: auto; }
+.kp:fullscreen .kp-man, .kp.cssfull .kp-man { width: 120px; }
+.kp:fullscreen .kp-name, .kp.cssfull .kp-name { font-size: 17px; max-width: 120px; }

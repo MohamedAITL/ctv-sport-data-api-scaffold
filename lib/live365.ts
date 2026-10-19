@@ -10,10 +10,16 @@ import type {
   LineupPlayer, LineupRole, LiveDetail, LiveEvent, LiveMatch,
   StatFilter, StatRow, TeamLineup,
 } from "@/types/live";
+import { STANDINGS_LEAGUES } from "@/config/standingsLeagues";
 
 const B = "https://webws.365scores.com/web";
 const Q = "appTypeId=5&langId=27&timezoneName=Africa%2FCasablanca&userCountryId=127";
+// `d_…` is Cloudinary's default-image transform: 365scores serves its own
+// placeholder instead of a 404 when a crest or player photo is missing, which
+// keeps a wall display free of broken images and the console free of noise.
 const IMG = "https://imagecache.365scores.com/image/upload/f_png,w_120,h_120,c_limit,q_auto";
+const CREST_IMG = `${IMG},d_Competitors:default1.png`;
+const FACE_IMG = `${IMG},d_Athletes:default.png`;
 
 const FOOTBALL = 1;
 const STATUS_LIVE = 3;
@@ -26,7 +32,7 @@ async function get<T>(path: string): Promise<T> {
 }
 
 const crest = (id?: number, v?: number) =>
-  id ? `${IMG}/v${v ?? 1}/Competitors/${id}` : null;
+  id ? `${CREST_IMG}/v${v ?? 1}/Competitors/${id}` : null;
 
 // -1 is 365scores' "no score yet" sentinel.
 const score = (v?: number): number | null =>
@@ -65,14 +71,35 @@ export function toMatch(g: RawGame): LiveMatch | null {
   };
 }
 
-/** Football matches for today; live first, then upcoming, then finished. */
-export async function fetchLiveMatches(): Promise<LiveMatch[]> {
-  const d = await get<{ games?: RawGame[] }>(`/games/allScores/?${Q}&live=true`);
+// The competitions the rest of the app already cares about, so the 180+ match
+// day doesn't open on the Guatemalan second division.
+const MAJOR = new Set(STANDINGS_LEAGUES.map((l) => l.id));
+
+/** "2026-10-18" -> "18/10/2026", the only date format allScores honours. */
+export function toApiDate(iso: string): string {
+  const [y, m, d] = iso.split("-");
+  return `${d}/${m}/${y}`;
+}
+
+/**
+ * Football matches, live first, then the competitions we follow, then the rest.
+ * Pass an ISO date for a past day — `date=`/`dates=` are silently ignored by the
+ * source, only `startDate`/`endDate` work.
+ */
+export async function fetchLiveMatches(isoDate?: string): Promise<LiveMatch[]> {
+  const day = isoDate ? `&startDate=${encodeURIComponent(toApiDate(isoDate))}&endDate=${encodeURIComponent(toApiDate(isoDate))}` : "";
+  const d = await get<{ games?: RawGame[] }>(`/games/allScores/?${Q}&live=true${day}`);
   const all = (d.games ?? [])
     .filter((g) => g.sportId === FOOTBALL)
     .map(toMatch)
     .filter((m): m is LiveMatch => m !== null);
-  const rank = (m: LiveMatch) => (m.isLive ? 0 : m.isFinished ? 2 : 1);
+  // Live always outranks not-live; within each band the competitions the app
+  // follows come first, so the rail never opens on a third-division fixture.
+  const rank = (m: LiveMatch) => {
+    const major = MAJOR.has(m.competitionId) ? 0 : 1;
+    const state = m.isLive ? 0 : m.isFinished ? 1 : 2;
+    return state * 2 + major;
+  };
   return all.sort((x, y) => rank(x) - rank(y) || x.startTime.localeCompare(y.startTime));
 }
 
@@ -123,7 +150,7 @@ function buildLineup(lu: RawLineups | undefined, members: RawMember[]): TeamLine
       name: m.name ?? "",
       shortName: m.shortName || m.name || "",
       number: m.jerseyNumber ?? null,
-      photo: m.athleteId ? `${IMG}/v${m.imageVersion ?? 1}/Athletes/${m.athleteId}` : null,
+      photo: m.athleteId ? `${FACE_IMG}/v${m.imageVersion ?? 1}/Athletes/${m.athleteId}` : null,
       position: lm.position?.name ?? null,
       role: ROLE[lm.status ?? 0] ?? "substitute",
       line: lm.yardFormation?.fieldLine ?? null,

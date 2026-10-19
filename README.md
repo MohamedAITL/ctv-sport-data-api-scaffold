@@ -44,7 +44,11 @@ nav, a match rail beside the selected match, and everything 365scores exposes �
 score and clock, the lineup drawn on a pitch from the source's own coordinates,
 both teams' statistics, the event timeline, referee, venue and TV channels. It
 refreshes itself every 15s without disturbing the selection, tab or scroll
-position, and pauses while the tab is hidden. Not every competition publishes a
+position, and pauses while the tab is hidden. Players appear with their photos
+and shirt numbers and can be **dragged around the pitch by finger** — the
+arrangement is kept per match and survives the auto-refresh, with a reset
+button — and a fullscreen button hands the pitch the whole display. Day arrows
+browse **previous match days**, and a النتائج filter shows the day's results. Not every competition publishes a
 lineup, so the pitch degrades to a plain XI list and then to a clear message.
 
 Stack: **Next.js 14 + TypeScript + Tailwind**. 365scores needs no key; the GOAL
