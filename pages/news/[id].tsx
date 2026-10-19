@@ -29,6 +29,7 @@ export default function NewsDetail() {
   const [titlesLoading, setTitlesLoading] = useState(false);
   const [titlesError, setTitlesError] = useState<string | null>(null);
   const [copied, setCopied] = useState<number | null>(null);
+  const [engine, setEngine] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isReady || !id) return;
@@ -50,7 +51,7 @@ export default function NewsDetail() {
         body: JSON.stringify({ id }),
       });
       const j = await r.json();
-      if (j.titles?.length) setTitles(j.titles);
+      if (j.titles?.length) { setTitles(j.titles); setEngine(j.engine ?? null); }
       else setTitlesError(j.error || "تعذر توليد العناوين");
     } catch (e) {
       setTitlesError(String(e));
@@ -140,6 +141,11 @@ export default function NewsDetail() {
                 </button>
               </div>
               {titlesError && <p className="err">{titlesError}</p>}
+              {engine === "rules" && titles.length > 0 && (
+                <p className="muted" style={{ marginTop: 10, fontSize: 12 }}>
+                  مقتطعة من نص المقال. لصياغة عناوين جديدة، أضف ANTHROPIC_API_KEY.
+                </p>
+              )}
               {titles.length > 0 && (
                 <ul className="titlelist">
                   {titles.map((t, i) => (

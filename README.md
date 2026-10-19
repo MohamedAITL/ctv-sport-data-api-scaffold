@@ -32,8 +32,9 @@ rendering an empty poster.
 feed) and **365scores**. Each article has its own page; the body is shown only
 where the publisher syndicates it (hesport's feed, elbotola's JSON-LD), 365scores
 gets a summary, and every page credits the source and links to the original.
-With `ANTHROPIC_API_KEY` set, a button suggests short Arabic headlines for social
-posts.
+A button suggests short Arabic headlines for social posts — cut from the
+article's own wording by default, or written by Claude if `ANTHROPIC_API_KEY`
+is set.
 
 Stack: **Next.js 14 + TypeScript + Tailwind**. 365scores needs no key; the GOAL
 API key (Botola standings fallback + the matchday page) stays server-side in a
