@@ -334,7 +334,12 @@ html, body {
 
 /* pitch */
 .kp-pitch {
-  position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: 16px;
+  /* Cap the height to what is left under the header, tabs, tools and footer —
+     at 1080p a plain 16/9 box pushed the back line below the fold, and a wall
+     display is not something you scroll. Players are positioned in percentages,
+     so a slightly wider-than-16/9 pitch still places them correctly. */
+  position: relative; width: 100%; aspect-ratio: 16 / 9;
+  max-height: calc(100vh - 450px); min-height: 320px; border-radius: 16px;
   background: linear-gradient(90deg, #1b4332 0%, #216a45 50%, #1b4332 100%);
   border: 2px solid #2f7d55; overflow: hidden; margin-bottom: 16px;
 }
