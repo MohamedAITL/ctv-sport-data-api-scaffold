@@ -1,0 +1,134 @@
+import { toMatch, pairStats, fetchLiveMatches, fetchLiveDetail } from "@/lib/live365";
+
+const game = (over: Record<string, unknown> = {}) => ({
+  id: 100, sportId: 1, competitionId: 11, competitionDisplayName: "الدوري الإسباني",
+  startTime: "2026-10-19T20:00:00+00:00", statusGroup: 3, statusText: "الشوط الأول",
+  gameTimeDisplay: "45'",
+  homeCompetitor: { id: 140, name: "خيتافي", score: 1, imageVersion: 3 },
+  awayCompetitor: { id: 174, name: "رايو", score: 0, imageVersion: 5 },
+  ...over,
+});
+
+const mock = (fn: (url: string) => unknown) => {
+  global.fetch = jest.fn(async (url: string) => ({ ok: true, json: async () => fn(url) })) as unknown as typeof fetch;
+};
+
+describe("toMatch", () => {
+  it("builds the matchupId that unlocks lineups upstream", () => {
+    // /game/ returns no lineups/events without it, and it is never given to us.
+    expect(toMatch(game())!.matchupId).toBe("140-174-11");
+  });
+
+  it("maps status, clock, scores and crests", () => {
+    const m = toMatch(game())!;
+    expect(m.isLive).toBe(true);
+    expect(m.isFinished).toBe(false);
+    expect(m.clock).toBe("45'");
+    expect(m.home.score).toBe(1);
+    expect(m.home.logo).toContain("/v3/Competitors/140");
+  });
+
+  it("treats -1 as no score yet", () => {
+    const m = toMatch(game({ homeCompetitor: { id: 1, name: "a", score: -1 }, awayCompetitor: { id: 2, name: "b", score: -1 } }))!;
+    expect(m.home.score).toBeNull();
+  });
+
+  it("skips a game with no competitors rather than emitting a broken row", () => {
+    expect(toMatch({ id: 1, homeCompetitor: {}, awayCompetitor: {} })).toBeNull();
+  });
+});
+
+describe("fetchLiveMatches", () => {
+  const real = global.fetch;
+  afterEach(() => { global.fetch = real; });
+
+  it("keeps football only and puts live matches first", async () => {
+    mock(() => ({ games: [
+      game({ id: 1, statusGroup: 4 }),                       // finished football
+      game({ id: 2, sportId: 2 }),                           // basketball — dropped
+      game({ id: 3, statusGroup: 2, startTime: "2026-10-19T22:00:00+00:00" }), // upcoming
+      game({ id: 4, statusGroup: 3 }),                       // live
+    ] }));
+    const out = await fetchLiveMatches();
+    expect(out.map((m) => m.id)).toEqual([4, 3, 1]);
+  });
+});
+
+describe("pairStats", () => {
+  it("pairs each stat's two team rows into one row", () => {
+    const rows = pairStats([
+      { id: 10, name: "الاستحواذ", competitorId: 140, value: "60%", valuePercentage: 0.6, isMajor: true },
+      { id: 10, name: "الاستحواذ", competitorId: 174, value: "40%", valuePercentage: 0.4, isMajor: true },
+    ], 140, 174);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ name: "الاستحواذ", homeValue: "60%", awayValue: "40%", homePercent: 60, awayPercent: 40 });
+  });
+
+  it("drops a stat neither side reported", () => {
+    expect(pairStats([{ id: 9, name: "x", competitorId: 999, value: "1" }], 140, 174)).toHaveLength(0);
+  });
+});
+
+describe("fetchLiveDetail", () => {
+  const real = global.fetch;
+  afterEach(() => { global.fetch = real; });
+
+  const detailPayload = {
+    game: game({
+      members: [{ id: 5, name: "دافيد سوريا", shortName: "سوريا", jerseyNumber: 13, athleteId: 14641, imageVersion: 64 }],
+      events: [{ competitorId: 140, gameTimeDisplay: "25'", playerId: 5, eventType: { name: "بطاقة صفراء" }, isMajor: true, order: 1 }],
+      officials: [{ name: "Gustavo Correia" }],
+      venue: { name: "ملعب" },
+      tvNetworks: [{ name: "beIN 3" }],
+      homeCompetitor: {
+        id: 140, name: "خيتافي", score: 1, imageVersion: 3,
+        lineups: { formation: "4-4-2", hasFieldPositions: true, members: [
+          { id: 5, status: 1, position: { name: "حارس مرمى" }, yardFormation: { fieldLine: 0, fieldSide: 50 } },
+          { id: 6, status: 2 },
+          { id: 7, status: 3 },
+          { id: 8, status: 4 },
+        ] },
+      },
+      awayCompetitor: { id: 174, name: "رايو", score: 0, imageVersion: 5 },
+    }),
+  };
+
+  it("joins lineup entries to members and splits them by role", async () => {
+    mock((u) => (u.includes("/game/stats/")
+      ? { statistics: [], statisticsFilters: [{ filterId: -1, name: "المباراة" }] }
+      : detailPayload));
+    const d = (await fetchLiveDetail(100, "140-174-11"))!;
+    const h = d.homeLineup!;
+    expect(h.formation).toBe("4-4-2");
+    expect(h.starting).toHaveLength(1);
+    expect(h.bench).toHaveLength(1);
+    expect(h.missing).toHaveLength(1);
+    expect(h.coach).not.toBeNull();
+    const gk = h.starting[0];
+    expect(gk.number).toBe(13);
+    expect(gk.shortName).toBe("سوريا");
+    expect(gk.photo).toContain("/Athletes/14641");
+    expect([gk.line, gk.side]).toEqual([0, 50]);
+    expect(d.events[0].player).toBe("دافيد سوريا"); // resolved via members
+    expect(d.referee).toBe("Gustavo Correia");
+  });
+
+  // Verified live: lower-tier leagues publish no lineup at all.
+  it("returns a null lineup instead of throwing when none is published", async () => {
+    mock((u) => (u.includes("/game/stats/") ? { statistics: [] } : { game: game() }));
+    const d = (await fetchLiveDetail(100, "140-174-11"))!;
+    expect(d.homeLineup).toBeNull();
+    expect(d.awayLineup).toBeNull();
+    expect(d.match.home.name).toBe("خيتافي"); // the rest still renders
+  });
+
+  it("keeps the lineup when the stats call fails", async () => {
+    global.fetch = jest.fn(async (url: string) => {
+      if (url.includes("/game/stats/")) return { ok: false, status: 500, json: async () => ({}) };
+      return { ok: true, json: async () => detailPayload };
+    }) as unknown as typeof fetch;
+    const d = (await fetchLiveDetail(100, "140-174-11"))!;
+    expect(d.stats).toEqual([]);
+    expect(d.homeLineup?.starting).toHaveLength(1);
+  });
+});

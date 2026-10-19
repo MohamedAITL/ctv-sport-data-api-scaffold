@@ -12,6 +12,7 @@ Four posters, one per page:
 | `/matchday` | Best matches of a given day, and their results | multi-league (GOAL API) |
 | `/stats` | **Leaderboards** — Arabic player & team stat categories | every competition that publishes them |
 | `/news` | **News hub** — aggregated Arabic sports news, with a page per article | — |
+| `/live` | **Live match centre** for an interactive touchscreen — scores, lineups on a pitch, stats, events | every live football match |
 
 Standings adapt to table size: 16-team Botola keeps the bundled template's panel
 layout, 20-team leagues use the full canvas at full row size, and the 36-team
@@ -37,6 +38,14 @@ page data), 365scores gets a summary, and every page credits the source and link
 A button suggests short Arabic headlines for social posts — cut from the
 article's own wording by default, or written by Claude if `ANTHROPIC_API_KEY`
 is set.
+
+**Live** (`/live`) is a full-screen kiosk for a wall-mounted touchscreen: no app
+nav, a match rail beside the selected match, and everything 365scores exposes —
+score and clock, the lineup drawn on a pitch from the source's own coordinates,
+both teams' statistics, the event timeline, referee, venue and TV channels. It
+refreshes itself every 15s without disturbing the selection, tab or scroll
+position, and pauses while the tab is hidden. Not every competition publishes a
+lineup, so the pitch degrades to a plain XI list and then to a clear message.
 
 Stack: **Next.js 14 + TypeScript + Tailwind**. 365scores needs no key; the GOAL
 API key (Botola standings fallback + the matchday page) stays server-side in a

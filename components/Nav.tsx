@@ -13,6 +13,7 @@ export default function Nav() {
       {link("/matchday", "Matchday")}
       {link("/stats", "Stats")}
       {link("/news", "News")}
+      {link("/live", "Live")}
     </nav>
   );
 }
