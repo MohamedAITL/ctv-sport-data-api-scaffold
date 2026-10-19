@@ -1,0 +1,39 @@
+export type NewsSourceKey = "hesport" | "elbotola" | "scores365";
+
+export interface NewsTag {
+  name: string;
+  kind: string; // player | team | competition | ...
+  image: string | null;
+  url: string | null;
+}
+
+export interface NewsItem {
+  id: string; // base64url of the article URL — stateless, no server cache needed
+  source: NewsSourceKey;
+  title: string;
+  url: string; // the original article on the publisher's site
+  image: string | null;
+  publishedAt: string; // ISO
+  author?: string | null;
+  section?: string | null;
+  summary?: string | null;
+  tags?: NewsTag[];
+  /** Article text, only where the publisher syndicates it. HTML for hesport. */
+  body?: string | null;
+  bodyIsHtml?: boolean;
+}
+
+export interface NewsSourceMeta {
+  key: NewsSourceKey;
+  name: string; // Arabic label
+  site: string;
+}
+
+export const NEWS_SOURCES: NewsSourceMeta[] = [
+  { key: "hesport", name: "هسبورت", site: "https://www.hesport.com" },
+  { key: "elbotola", name: "البطولة", site: "https://www.elbotola.com" },
+  { key: "scores365", name: "365scores", site: "https://www.365scores.com" },
+];
+
+export const sourceName = (k: NewsSourceKey): string =>
+  NEWS_SOURCES.find((s) => s.key === k)?.name ?? k;

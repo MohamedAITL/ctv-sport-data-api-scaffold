@@ -12,7 +12,7 @@ export interface ValidationResult {
  */
 export function validateStandings(
   rows: TeamRow[],
-  expectedCount = 16
+  expectedCount?: number
 ): ValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
@@ -24,6 +24,9 @@ export function validateStandings(
 
   const seenTeams = new Set<string>();
   const seenRanks = new Set<number>();
+  // Multi-group competitions (Nations League, World Cup) restart the numbering in
+  // every group, so repeated ranks are expected there, not a data fault.
+  const grouped = rows.filter((r) => r.rank === 1).length > 1;
   for (const r of rows) {
     const who = r.nameAr || r.nameOriginal || r.teamId || "a row";
     if (!r.teamId) errors.push(`${who} has no team id`);
@@ -36,12 +39,13 @@ export function validateStandings(
       if (seenTeams.has(r.teamId)) errors.push(`${who} appears twice`);
       seenTeams.add(r.teamId);
     }
-    if (seenRanks.has(r.rank)) warnings.push(`Duplicate rank ${r.rank}`);
+    if (!grouped && seenRanks.has(r.rank)) warnings.push(`Duplicate rank ${r.rank}`);
     seenRanks.add(r.rank);
     if (!r.logo) warnings.push(`${who}: no logo (fallback will show)`);
   }
 
-  if (rows.length !== expectedCount)
+  // Cups and varying-size competitions have no expected size to check against.
+  if (expectedCount !== undefined && rows.length !== expectedCount)
     warnings.push(`Got ${rows.length} teams, expected ${expectedCount}`);
 
   return { ok: errors.length === 0, errors, warnings };

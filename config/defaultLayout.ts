@@ -51,10 +51,12 @@ export interface LayoutConfig {
     // columns so a big table stays readable instead of shrinking to fit.
     spanLeft: number;
     spanRight: number;
-    columns: 1 | 2 | "auto"; // "auto" -> 2 columns past `twoColFrom` rows
+    columns: 1 | 2 | 3 | "auto"; // "auto" -> 2 columns past `twoColFrom`, 3 past `threeColFrom`
     twoColFrom: number;
+    threeColFrom: number;
     columnGap: number;
     twoColScale: number; // type/logo scale inside a half-width column
+    threeColScale: number; // and inside a third-width column
     minFontSize: number; // auto-fit never shrinks the name below this
     bottomY: number; // last row must stay above this
   };
@@ -105,8 +107,10 @@ export const DEFAULT_LAYOUT: LayoutConfig = {
     spanRight: 1050,
     columns: "auto",
     twoColFrom: 23,
+    threeColFrom: 41,
     columnGap: 40,
     twoColScale: 0.82,
+    threeColScale: 0.62,
     minFontSize: 15,
     bottomY: 1230,
   },

@@ -5,7 +5,7 @@ import StatsPoster from "@/components/StatsPoster";
 import TemplateUploader from "@/components/TemplateUploader";
 import ExportControls from "@/components/ExportControls";
 import { DEFAULT_STATS_LAYOUT, type StatsLayout } from "@/config/statsLayout";
-import { STANDINGS_LEAGUES, BOTOLA_LEAGUE, leagueById } from "@/config/standingsLeagues";
+import { leaguesByGroup, BOTOLA_LEAGUE, leagueById } from "@/config/standingsLeagues";
 import type { StatCategory } from "@/lib/scores365Stats";
 import { deepMerge } from "@/lib/persist";
 import { getTemplate, setTemplate, clearTemplate } from "@/lib/db";
@@ -113,7 +113,11 @@ export default function StatsPage() {
               <label className="field wide">
                 <span>League</span>
                 <select value={league} onChange={(e) => pickLeague(Number(e.target.value))} disabled={loading}>
-                  {STANDINGS_LEAGUES.map((l) => <option key={l.id} value={l.id}>{l.name} · {l.ar}</option>)}
+                  {leaguesByGroup().map((g) => (
+                    <optgroup key={g.group} label={g.group}>
+                      {g.leagues.map((l) => <option key={l.id} value={l.id}>{l.name} · {l.ar}</option>)}
+                    </optgroup>
+                  ))}
                 </select>
               </label>
               <label className="field wide">

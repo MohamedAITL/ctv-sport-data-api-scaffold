@@ -10,7 +10,8 @@ Four posters, one per page:
 | `/` | **Standings** table | Botola Pro, **Botola 2**, La Liga, Premier League, Champions League |
 | `/round` | **Matches of a round** (الجولة) — fixtures or results | Botola Pro, Botola 2 |
 | `/matchday` | Best matches of a given day, and their results | multi-league (GOAL API) |
-| `/stats` | **Leaderboards** — 16 Arabic stat categories (8 player, 8 team) | Botola Pro (any listed league) |
+| `/stats` | **Leaderboards** — Arabic player & team stat categories | every competition that publishes them |
+| `/news` | **News hub** — aggregated Arabic sports news, with a page per article | — |
 
 Standings adapt to table size: 16-team Botola keeps the bundled template's panel
 layout, 20-team leagues use the full canvas at full row size, and the 36-team
@@ -20,6 +21,19 @@ being shrunk to fit. Each league keeps its own template and layout.
 A round with no published schedule is reported as such — 365scores publishes
 fixtures only once a round is announced, and games scheduled before a round is
 assigned appear under **مباريات قادمة**. The poster is never exported empty.
+
+**Competitions**: ~24 football competitions grouped by region (Morocco, Africa,
+Europe, International). Availability is seasonal — a knockout cup has no league
+table until a group stage runs, and some competitions publish no stats — so every
+page asks the API and says plainly when there is nothing to show, rather than
+rendering an empty poster.
+
+**News** is aggregated from **hesport.com** (RSS), **elbotola.com** (public JSON
+feed) and **365scores**. Each article has its own page; the body is shown only
+where the publisher syndicates it (hesport's feed, elbotola's JSON-LD), 365scores
+gets a summary, and every page credits the source and links to the original.
+With `ANTHROPIC_API_KEY` set, a button suggests short Arabic headlines for social
+posts.
 
 Stack: **Next.js 14 + TypeScript + Tailwind**. 365scores needs no key; the GOAL
 API key (Botola standings fallback + the matchday page) stays server-side in a

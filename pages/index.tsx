@@ -148,7 +148,15 @@ export default function Home() {
     return { ...layout, heading: { ...layout.heading, text: leagueById(league)?.ar ?? "" } };
   }, [layout, league]);
 
-  const blocked = data && !data.validation.ok ? data.validation.errors.join("; ") : null;
+  // A knockout cup, or a competition between seasons, simply has no table yet.
+  // That is a normal state, so say it plainly instead of surfacing the raw
+  // "Standings are empty" validation error.
+  const noTable = Boolean(data) && !loading && rows.length === 0;
+  const blocked = noTable
+    ? "no league table published for this competition right now"
+    : data && !data.validation.ok
+    ? data.validation.errors.join("; ")
+    : null;
   const scale = PREVIEW_W / layout.width;
 
   return (
@@ -179,6 +187,13 @@ export default function Home() {
               loading={loading}
               onRefresh={() => fetchStandings(league)}
             />
+            {noTable && (
+              <div className="card">
+                <h3>No table</h3>
+                <p className="err" style={{ direction: "rtl" }}>لا يوجد جدول ترتيب لهذه المسابقة حاليا</p>
+                <p className="muted">365scores publishes a table only once a league or group stage is running. Pick another competition, or come back when it starts.</p>
+              </div>
+            )}
             {data && data.validation.warnings.length > 0 && (
               <div className="card">
                 <h3>Data warnings</h3>

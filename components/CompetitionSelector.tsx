@@ -1,4 +1,4 @@
-import { STANDINGS_LEAGUES } from "@/config/standingsLeagues";
+import { leaguesByGroup } from "@/config/standingsLeagues";
 
 interface Props {
   league: number;
@@ -39,8 +39,12 @@ export default function CompetitionSelector({
       <label className="field wide">
         <span>League</span>
         <select value={league} onChange={(e) => onLeague(Number(e.target.value))} disabled={loading}>
-          {STANDINGS_LEAGUES.map((l) => (
-            <option key={l.id} value={l.id}>{l.name} · {l.ar}</option>
+          {leaguesByGroup().map((g) => (
+            <optgroup key={g.group} label={g.group}>
+              {g.leagues.map((l) => (
+                <option key={l.id} value={l.id}>{l.name} · {l.ar}</option>
+              ))}
+            </optgroup>
           ))}
         </select>
       </label>

@@ -33,7 +33,13 @@ const Poster = forwardRef<HTMLDivElement, PosterProps>(function Poster(
   // side-by-side columns rather than squeezed into one, so every row keeps a
   // readable size. Botola's 16 rows stay in one column, unchanged.
   const cols =
-    T.columns === "auto" ? (total > T.twoColFrom ? 2 : 1) : T.columns;
+    T.columns === "auto"
+      ? total > T.threeColFrom
+        ? 3
+        : total > T.twoColFrom
+        ? 2
+        : 1
+      : T.columns;
   const perCol = Math.ceil(total / cols);
 
   // Auto-fit is the safety net for whatever a column still can't hold, but it
@@ -41,7 +47,7 @@ const Poster = forwardRef<HTMLDivElement, PosterProps>(function Poster(
   const avail = T.bottomY - T.firstRowCenterY;
   const needed = Math.max(0, perCol - 1) * T.rowHeight;
   const rawFit = needed > avail && needed > 0 ? avail / needed : 1;
-  const colScale = cols === 2 ? T.twoColScale : 1;
+  const colScale = cols === 3 ? T.threeColScale : cols === 2 ? T.twoColScale : 1;
   const fit = Math.max(rawFit, T.minFontSize / Math.max(1, T.fontSizeName * colScale));
 
   const rowHeight = T.rowHeight * Math.min(rawFit, fit);
@@ -52,10 +58,11 @@ const Poster = forwardRef<HTMLDivElement, PosterProps>(function Poster(
 
   // Remap a full-width x anchor into column `c` (0 = right-hand column, RTL).
   const span = Math.max(1, T.spanRight - T.spanLeft);
-  const colWidth = cols === 2 ? (span - T.columnGap) / 2 : span;
+  const colWidth = (span - T.columnGap * (cols - 1)) / cols;
+  // Column 0 is the right-hand one (RTL), then each next column sits further left.
   const xIn = (x: number, c: number) => {
     if (cols === 1) return x;
-    const start = c === 0 ? T.spanRight - colWidth : T.spanLeft;
+    const start = T.spanRight - colWidth - c * (colWidth + T.columnGap);
     return start + ((x - T.spanLeft) / span) * colWidth;
   };
 

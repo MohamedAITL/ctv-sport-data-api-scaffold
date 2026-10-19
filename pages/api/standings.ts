@@ -59,7 +59,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     let normalized: NormalizedStandings;
     try {
       normalized = await fetch365Standings(competition, nameMap());
-      if (normalized.rows.length === 0) throw new Error("365scores returned no rows");
+      if (normalized.rows.length === 0) {
+        // Botola always has a table, so an empty one means the source failed and
+        // GOAL should answer. Any other competition legitimately has no table
+        // between seasons or before a group stage — report that, don't error.
+        if (competition === BOTOLA_LEAGUE) throw new Error("365scores returned no rows");
+        return res.status(200).json({
+          rows: [],
+          season: null,
+          league: { id: leagueId, name: leagueName },
+          warnings: [],
+          validation: validateStandings([], meta?.teams),
+          source,
+          empty: true,
+          fetchedAt: new Date().toISOString(),
+          stale: false,
+        });
+      }
     } catch (primaryErr) {
       // GOAL fallback only exists for Botola — other leagues have no GOAL table.
       if (competition !== BOTOLA_LEAGUE) throw primaryErr;

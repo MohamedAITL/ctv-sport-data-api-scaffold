@@ -12,6 +12,7 @@ export default function Nav() {
       {link("/round", "Round")}
       {link("/matchday", "Matchday")}
       {link("/stats", "Stats")}
+      {link("/news", "News")}
     </nav>
   );
 }
