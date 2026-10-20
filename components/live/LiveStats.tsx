@@ -27,8 +27,10 @@ function PerformerCard({ p, side }: { p: Performer | null; side: "home" | "away"
 // Paired comparison bars. `valuePercentage` already encodes each side's share,
 // so the bars are drawn straight from it.
 export default function LiveStats({ d }: { d: LiveDetail }) {
+  const [group, setGroup] = useState(0);
   const [majorOnly, setMajorOnly] = useState(false);
-  if (d.stats.length === 0) {
+
+  if (d.statGroups.length === 0) {
     if (d.topPerformers.length === 0) {
       return (
         <div className="kp-none" dir="rtl">
@@ -53,11 +55,22 @@ export default function LiveStats({ d }: { d: LiveDetail }) {
       </div>
     );
   }
-  const rows = majorOnly ? d.stats.filter((s) => s.isMajor) : d.stats;
+
+  const active = d.statGroups[Math.min(group, d.statGroups.length - 1)];
+  const rows = majorOnly ? active.rows.filter((s) => s.isMajor) : active.rows;
   return (
     <div className="ks" dir="rtl">
+      {d.statGroups.length > 1 && (
+        <div className="ks-periods">
+          {d.statGroups.map((g, i) => (
+            <button key={g.id} type="button" className={i === group ? "ks-period on" : "ks-period"} onClick={() => setGroup(i)}>
+              {g.name}
+            </button>
+          ))}
+        </div>
+      )}
       <div className="ks-toggle">
-        <button type="button" className={majorOnly ? "ks-btn" : "ks-btn on"} onClick={() => setMajorOnly(false)}>كل الإحصائيات</button>
+        <button type="button" className={majorOnly ? "ks-btn" : "ks-btn on"} onClick={() => setMajorOnly(false)}>كل الإحصائيات ({active.rows.length})</button>
         <button type="button" className={majorOnly ? "ks-btn on" : "ks-btn"} onClick={() => setMajorOnly(true)}>الأهم</button>
       </div>
       {rows.map((s) => (
@@ -73,6 +86,26 @@ export default function LiveStats({ d }: { d: LiveDetail }) {
           </div>
         </div>
       ))}
+
+      {d.facts.length > 0 && (
+        <div className="kf">
+          <h3>كيف مرّت المباراة</h3>
+          {d.facts.map((b) => (
+            <div key={b.title} className="kf-block">
+              <h4>{b.title}</h4>
+              <ul>
+                {b.rows.map((r) => (
+                  <li key={r.name} className={r.away === undefined ? undefined : "paired"}>
+                    <b>{r.value || "—"}</b>
+                    <span>{r.name}</span>
+                    {r.away !== undefined && <b>{r.away || "—"}</b>}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

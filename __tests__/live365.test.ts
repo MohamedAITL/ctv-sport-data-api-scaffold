@@ -1,4 +1,4 @@
-import { toMatch, pairStats, fetchLiveMatches, fetchLiveDetail, toApiDate, toTopPerformers } from "@/lib/live365";
+import { toMatch, pairStats, fetchLiveMatches, fetchLiveDetail, toApiDate, toTopPerformers, toFacts } from "@/lib/live365";
 
 const game = (over: Record<string, unknown> = {}) => ({
   id: 100, sportId: 1, competitionId: 11, competitionDisplayName: "الدوري الإسباني",
@@ -172,7 +172,7 @@ describe("fetchLiveDetail", () => {
       return { ok: true, json: async () => detailPayload };
     }) as unknown as typeof fetch;
     const d = (await fetchLiveDetail(100, "140-174-11"))!;
-    expect(d.stats).toEqual([]);
+    expect(d.statGroups).toEqual([]);
     expect(d.homeLineup?.starting).toHaveLength(1);
   });
 });
@@ -211,5 +211,64 @@ describe("toTopPerformers", () => {
   it("is empty when the source publishes none", () => {
     expect(toTopPerformers(undefined)).toEqual([]);
     expect(toTopPerformers({})).toEqual([]);
+  });
+});
+
+describe("statGroups", () => {
+  // The default response is the whole match; every other period the source
+  // advertises is its own call, which is the half-time data the UI was missing.
+  const stat = (id: number, name: string, home: string, away: string) => ([
+    { id, name, competitorId: 140, value: home, valuePercentage: 0.6, isMajor: true },
+    { id, name, competitorId: 174, value: away, valuePercentage: 0.4, isMajor: true },
+  ]);
+
+  it("fetches every published period and labels them", async () => {
+    const calls: string[] = [];
+    global.fetch = jest.fn(async (url: string) => {
+      calls.push(url);
+      if (url.includes("filterId=6")) return { ok: true, json: async () => ({ statistics: stat(10, "الاستحواذ", "68%", "32%") }) };
+      if (url.includes("/game/stats/")) {
+        return { ok: true, json: async () => ({
+          statistics: stat(10, "الاستحواذ", "66%", "34%"),
+          statisticsFilters: [{ filterId: -1, name: "المباراة" }, { filterId: 6, name: "الشوط الأول" }],
+        }) };
+      }
+      return { ok: true, json: async () => ({ game: { id: 100, sportId: 1, competitionId: 11, statusGroup: 3,
+        homeCompetitor: { id: 140, name: "خيتافي" }, awayCompetitor: { id: 174, name: "رايو" } } }) };
+    }) as unknown as typeof fetch;
+
+    const d = (await fetchLiveDetail(100, "140-174-11"))!;
+    expect(d.statGroups.map((g) => g.name)).toEqual(["المباراة", "الشوط الأول"]);
+    expect(d.statGroups[0].rows[0].homeValue).toBe("66%");
+    expect(d.statGroups[1].rows[0].homeValue).toBe("68%");
+    expect(calls.filter((c) => c.includes("filterId=")).length).toBe(1); // only the extra period
+  });
+});
+
+describe("toFacts", () => {
+  it("maps the ball-in-play block the stats tab now shows", () => {
+    const facts = toFacts({
+      actualPlayTime: { title: "وقت اللعب الفعلي", actualTime: { name: "لُعِبَ بالفعل 48:55" }, totalTime: { name: "الوقت الاجمالي 86:05" } },
+      general: [{ name: "فحوصات VAR مهمة", value: "04:29" }],
+      addedTime: { title: "وقت إضافي", stats: [{ name: "مُعلَن", value: "02:00" }] },
+      // the source splits time wasted per team under the SAME name
+      wastedTime: { title: "وقت ضائع", stats: [
+        { name: "ركنيات", competitorId: 140, value: "03:40" },
+        { name: "ركنيات", competitorId: 174, value: "01:12" },
+      ] },
+    }, 140, 174);
+    expect(facts.map((f) => f.title)).toEqual(["وقت اللعب الفعلي", "وقت إضافي", "وقت ضائع", "تفاصيل"]);
+    // a per-team figure becomes one row with both sides, not two rows
+    expect(facts[2].rows).toEqual([{ name: "ركنيات", value: "03:40", away: "01:12" }]);
+    // the figure lives at the tail of the label, not in a value field
+    expect(facts[0].rows).toEqual([
+      { name: "لُعِبَ بالفعل", value: "48:55" },
+      { name: "الوقت الاجمالي", value: "86:05" },
+    ]);
+    expect(facts[1].rows).toEqual([{ name: "مُعلَن", value: "02:00" }]);
+  });
+
+  it("is empty when the source publishes none (a finished Botola game)", () => {
+    expect(toFacts(undefined, 140, 174)).toEqual([]);
   });
 });

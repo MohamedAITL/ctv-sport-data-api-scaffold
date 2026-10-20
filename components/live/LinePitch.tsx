@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import PlayerCard from "./PlayerCard";
 import type { LineupPlayer, LiveDetail, TeamLineup } from "@/types/live";
 
 // `line` is depth from a team's own goal (0-100) and `side` is lateral (0-100).
@@ -25,6 +26,9 @@ const release = (e: React.PointerEvent) => {
   try { (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId); } catch { /* already released */ }
 };
 const clamp = (n: number) => Math.min(98, Math.max(2, n));
+// Below this the gesture was a tap, not a drag: a finger never lands perfectly
+// still, so zero movement is the wrong test on a touchscreen.
+const TAP_PX = 9;
 
 function loadMoved(gameId: number): Moved {
   try {
@@ -51,12 +55,13 @@ function PlayerFace({ p, size }: { p: LineupPlayer; size: number }) {
 }
 
 function Bench({
-  lineup, title, home, onBenchDown, placed, compact,
+  lineup, title, home, onBenchDown, placed, compact, onOpen,
 }: {
   lineup: TeamLineup; title: string; home: boolean;
   onBenchDown: (p: LineupPlayer, home: boolean) => (e: React.PointerEvent) => void;
   placed: (p: LineupPlayer, home: boolean) => boolean;
   compact?: boolean;
+  onOpen: (p: LineupPlayer, home: boolean) => void;
 }) {
   return (
     <div className="kp-bench">
@@ -80,7 +85,9 @@ function Bench({
         <>
           <h5>غيابات</h5>
           <ul className="kp-out">
-            {lineup.missing.map((p) => <li key={p.id}><span>{p.shortName || p.name}</span></li>)}
+            {lineup.missing.map((p) => (
+            <li key={p.id} onClick={() => onOpen(p, home)}><span>{p.shortName || p.name}</span></li>
+          ))}
           </ul>
         </>
       )}
@@ -104,6 +111,10 @@ export default function LinePitch({ d }: { d: LiveDetail }) {
   // Lit while a player is being dragged off the pitch, so "drop here to send
   // them back" is visible instead of something you have to guess.
   const [returning, setReturning] = useState(false);
+  // Tapping a player opens their card; the same pointer path also drags, so a
+  // gesture only counts as a tap if it barely moved.
+  const [open, setOpen] = useState<{ p: LineupPlayer; home: boolean } | null>(null);
+  const tap = useRef<{ x: number; y: number } | null>(null);
   const ghostRef = useRef<{ p: LineupPlayer; home: boolean } | null>(null);
 
   // Arrangements are per match and must survive the 15s auto-refresh.
@@ -144,6 +155,7 @@ export default function LinePitch({ d }: { d: LiveDetail }) {
       dy: ((e.clientY - box.top) / box.height) * 100 - cur.y,
     };
     setReturning(true);
+    tap.current = { x: e.clientX, y: e.clientY };
     capture(e);
   };
 
@@ -156,12 +168,18 @@ export default function LinePitch({ d }: { d: LiveDetail }) {
     setMoved((m) => ({ ...m, [drag.id]: { x, y } }));
   };
 
-  const onUp = (e: React.PointerEvent) => {
+  const onUp = (p: LineupPlayer, home: boolean) => (e: React.PointerEvent) => {
     const drag = dragging.current;
     dragging.current = null;
     setReturning(false);
     if (!drag) return;
     release(e);
+    const from = tap.current;
+    tap.current = null;
+    if (from && Math.abs(e.clientX - from.x) < TAP_PX && Math.abs(e.clientY - from.y) < TAP_PX) {
+      setOpen({ p, home });
+      return;
+    }
     const box = pitchRef.current?.getBoundingClientRect();
     // Released off the pitch: a substitute goes back to the bench and a starter
     // back to their formation spot — both are simply "forget this position".
@@ -182,6 +200,7 @@ export default function LinePitch({ d }: { d: LiveDetail }) {
   const onBenchDown = (p: LineupPlayer, home: boolean) => (e: React.PointerEvent) => {
     ghostRef.current = { p, home };
     setGhost({ p, home, x: e.clientX, y: e.clientY });
+    tap.current = { x: e.clientX, y: e.clientY };
     capture(e);
   };
 
@@ -196,6 +215,12 @@ export default function LinePitch({ d }: { d: LiveDetail }) {
     setGhost(null);
     if (!carried) return;
     release(e);
+    const from = tap.current;
+    tap.current = null;
+    if (from && Math.abs(e.clientX - from.x) < TAP_PX && Math.abs(e.clientY - from.y) < TAP_PX) {
+      setOpen({ p: carried.p, home: carried.home });
+      return;
+    }
     const box = pitchRef.current?.getBoundingClientRect();
     if (!box) return;
     const inside =
@@ -240,10 +265,11 @@ export default function LinePitch({ d }: { d: LiveDetail }) {
         style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
         onPointerDown={onDown(id, home, p)}
         onPointerMove={onMove}
-        onPointerUp={onUp}
-        onPointerCancel={onUp}
+        onPointerUp={onUp(p, home)}
+        onPointerCancel={onUp(p, home)}
       >
         <PlayerFace p={p} size={big ? 72 : 54} />
+        {p.rating !== null && <b className={`kp-rate${p.rating >= 7.5 ? " good" : p.rating < 6 ? " poor" : ""}`}>{p.rating.toFixed(1)}</b>}
         <span className="kp-name">{p.shortName || p.name}</span>
       </div>
     );
@@ -258,7 +284,7 @@ export default function LinePitch({ d }: { d: LiveDetail }) {
         {Object.keys(moved).length > 0 && (
           <button type="button" className="kp-tool" onClick={reset}>إعادة الترتيب</button>
         )}
-        <span className="kp-hint">اسحب اللاعبين لتغيير أماكنهم — واسحبهم خارج الملعب لإرجاعهم</span>
+        <span className="kp-hint">اضغط على لاعب لعرض إحصائياته — اسحبه لتغيير مكانه، أو خارج الملعب لإرجاعه</span>
       </div>
 
       {positioned ? (
@@ -278,9 +304,10 @@ export default function LinePitch({ d }: { d: LiveDetail }) {
                 <h4>{i === 0 ? d.match.home.name : d.match.away.name}{lu.formation ? ` · ${lu.formation}` : ""}</h4>
                 <ul>
                   {lu.starting.map((p) => (
-                    <li key={p.id}>
+                    <li key={p.id} className="kp-tapable" onClick={() => setOpen({ p, home: i === 0 })}>
                       <PlayerFace p={p} size={34} />
                       <span>{p.name}</span>
+                      {p.rating !== null && <b className="kp-rate">{p.rating.toFixed(1)}</b>}
                       <em>{p.position}</em>
                     </li>
                   ))}
@@ -297,9 +324,17 @@ export default function LinePitch({ d }: { d: LiveDetail }) {
         onPointerUp={onBenchUp}
         onPointerCancel={onBenchUp}
       >
-        {h && <Bench lineup={h} title={d.match.home.name} home onBenchDown={onBenchDown} placed={isPlaced} compact={big} />}
-        {a && <Bench lineup={a} title={d.match.away.name} home={false} onBenchDown={onBenchDown} placed={isPlaced} compact={big} />}
+        {h && <Bench lineup={h} title={d.match.home.name} home onBenchDown={onBenchDown} placed={isPlaced} compact={big} onOpen={(p, side) => setOpen({ p, home: side })} />}
+        {a && <Bench lineup={a} title={d.match.away.name} home={false} onBenchDown={onBenchDown} placed={isPlaced} compact={big} onOpen={(p, side) => setOpen({ p, home: side })} />}
       </div>
+
+      {open && (
+        <PlayerCard
+          player={open.p}
+          team={open.home ? d.match.home.name : d.match.away.name}
+          onClose={() => setOpen(null)}
+        />
+      )}
 
       {ghost && (
         <div className={`kp-ghost ${ghost.home ? "home" : "away"}`} style={{ left: ghost.x, top: ghost.y }}>

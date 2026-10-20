@@ -3,7 +3,7 @@ import LiveHeader from "@/components/live/LiveHeader";
 import type { LiveDetail, LiveMatch } from "@/types/live";
 
 const match = (over: Partial<LiveMatch> = {}): LiveMatch => ({
-  id: 1, matchupId: "1-2-11", competitionId: 11, competition: "الدوري الإسباني",
+  id: 1, matchupId: "1-2-11", competitionId: 11, competition: "الدوري الإسباني", competitionLogo: null,
   startTime: "2026-10-21T19:30:00+00:00", statusText: "لم تبدأ", clock: "",
   isLive: false, isFinished: false,
   home: { id: 1, name: "خيتافي", score: null, logo: null },
@@ -12,8 +12,8 @@ const match = (over: Partial<LiveMatch> = {}): LiveMatch => ({
 });
 
 const detail = (m: LiveMatch): LiveDetail => ({
-  match: m, homeLineup: null, awayLineup: null, events: [], stats: [],
-  statFilters: [], topPerformers: [], venue: null, referee: null, tv: [],
+  match: m, homeLineup: null, awayLineup: null, events: [],
+  statGroups: [], facts: [], topPerformers: [], venue: null, referee: null, tv: [],
 });
 
 describe("LiveHeader", () => {

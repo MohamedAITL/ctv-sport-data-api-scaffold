@@ -669,3 +669,95 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
     transition-duration: 0.001ms !important;
   }
 }
+
+/* ---- live: competition groups, every stat period, player card ---- */
+
+/* The rail carries 200+ matches across 60 competitions; without a header per
+   competition it is unreadable from across a room. */
+.kl-group { margin-bottom: 14px; }
+.kl-grouphead {
+  position: sticky; top: 0; z-index: 2;
+  display: flex; align-items: center; gap: 9px; margin: 0 0 8px;
+  padding: 9px 12px; background: var(--bg-2);
+  border: 1px solid var(--border); border-radius: 8px;
+  font-size: 14px; font-weight: 800; color: var(--text);
+}
+.kl-grouphead img { width: 22px; height: 22px; object-fit: contain; flex: none; }
+.kl-grouphead span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kl-grouphead em {
+  flex: none; font-style: normal; font-size: 12px; font-weight: 800; color: var(--muted);
+  background: var(--panel); border-radius: 999px; padding: 2px 9px;
+}
+.kl-row-top { min-height: 22px; }
+
+/* Whole match / first half / second half. */
+.ks-periods { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+.ks-period {
+  min-height: 64px; padding: 0 20px; border-radius: 10px; cursor: pointer;
+  border: 1.5px solid var(--border-2); background: var(--panel); color: var(--muted);
+  font-family: inherit; font-size: 16px; font-weight: 800;
+  transition: background-color var(--fast) var(--ease), color var(--fast) var(--ease), border-color var(--fast) var(--ease);
+}
+.ks-period.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.ks-period:active { transform: scale(0.98); }
+
+/* Ball in play, added time, time wasted. */
+.kf { margin-top: 26px; border-top: 1px solid var(--border); padding-top: 18px; }
+.kf h3 { margin: 0 0 12px; font-size: 20px; }
+.kf-block { margin-bottom: 14px; }
+.kf-block h4 { margin: 0 0 6px; font-size: 15px; color: var(--muted); font-weight: 800; }
+.kf-block ul { list-style: none; margin: 0; padding: 0; }
+.kf-block li { display: flex; justify-content: space-between; gap: 14px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 16px; }
+.kf-block li.paired span { flex: 1; text-align: center; color: var(--muted); }
+.kf-block li.paired b { min-width: 72px; text-align: center; }
+.kf-block li b { font-variant-numeric: tabular-nums; }
+
+/* The source's own match rating, on the shirt and in the card. */
+.kp-rate, .kpc-rate {
+  font-size: 13px; font-weight: 900; color: var(--accent-ink);
+  background: var(--warn); border-radius: 6px; padding: 1px 6px;
+  font-variant-numeric: tabular-nums;
+}
+.kp-rate.good, .kpc-rate.good { background: var(--ok); color: #06240f; }
+.kp-rate.poor, .kpc-rate.poor { background: var(--live); color: #fff; }
+.kp-man .kp-rate { position: absolute; top: -6px; inset-inline-start: -6px; }
+.kp-tapable { cursor: pointer; }
+.kp-xi li .kp-rate { margin-inline-start: auto; }
+
+/* Player card: a tap on a shirt, not a page change. */
+.kpc-back {
+  position: fixed; inset: 0; z-index: 10001; display: flex; align-items: center; justify-content: center;
+  background: rgba(8, 5, 12, 0.72); padding: 24px;
+}
+.kpc {
+  width: min(560px, 100%); max-height: 86vh; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  background: var(--panel); border: 1px solid var(--border-2); border-radius: 14px;
+  padding: 20px 22px 24px; position: relative;
+}
+.kpc-x {
+  position: absolute; inset-inline-end: 10px; top: 10px;
+  width: 64px; height: 64px; border-radius: 10px; cursor: pointer;
+  background: var(--panel-2); border: 1px solid var(--border-2); color: var(--text);
+  font-size: 30px; line-height: 1; font-family: inherit;
+}
+.kpc-head { display: flex; align-items: center; gap: 16px; padding-inline-end: 70px; margin-bottom: 18px; }
+.kpc-head img { width: 84px; height: 84px; border-radius: 50%; object-fit: cover; background: var(--panel-3); border: 3px solid var(--border-2); flex: none; }
+.kpc-num {
+  width: 84px; height: 84px; border-radius: 50%; flex: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--panel-2); font-size: 28px; font-weight: 900;
+}
+.kpc-head h3 { margin: 0 0 4px; font-size: 24px; }
+.kpc-head p { margin: 0; display: flex; flex-wrap: wrap; gap: 10px; color: var(--muted); font-size: 14px; }
+.kpc-shirt { color: var(--accent); font-weight: 900; }
+.kpc-bio { margin-top: 4px !important; }
+.kpc-rate { font-size: 20px; padding: 6px 12px; border-radius: 10px; }
+.kpc-top { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+.kpc-tile { background: var(--panel-2); border-radius: 10px; padding: 12px 10px; text-align: center; }
+.kpc-tile b { display: block; font-size: 24px; font-weight: 900; font-variant-numeric: tabular-nums; }
+.kpc-tile span { font-size: 12px; color: var(--muted); }
+.kpc-list { list-style: none; margin: 0; padding: 0; }
+.kpc-list li { display: flex; justify-content: space-between; gap: 14px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 15px; }
+.kpc-list li span { color: var(--muted); }
+.kpc-list li b { font-variant-numeric: tabular-nums; }
+.kpc-none { color: var(--muted); font-size: 16px; margin: 0; }
