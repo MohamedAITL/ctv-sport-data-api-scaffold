@@ -24,15 +24,15 @@ export async function fetchNews(page = 1, refresh = false): Promise<NewsFeed> {
   const hit = cache.get(key);
   if (!refresh && hit && Date.now() - hit.at < TTL_MS) return { items: hit.items, failed: [] };
 
-  // One dead publisher must not blank the page. The RSS feeds and 365scores
-  // only publish a first page, so deeper pages come from the paginated sources.
+  // One dead publisher must not blank the page. The two RSS feeds only publish
+  // a first page, so deeper pages come from the paginated sources.
   const [he, hp, eb, ko, bn, s3] = await Promise.allSettled([
     page === 1 ? fetchHesport() : Promise.resolve([]),
     page === 1 ? fetchHespress() : Promise.resolve([]),
     fetchElbotola(page),
     fetchKooora(page),
     fetchBein(page),
-    page === 1 ? fetchScores365News() : Promise.resolve([]),
+    fetchScores365News(page),
   ]);
 
   const failed: NewsSourceKey[] = [];

@@ -1,4 +1,4 @@
-import { toMatch, pairStats, fetchLiveMatches, fetchLiveDetail, toApiDate, toTopPerformers, toFacts } from "@/lib/live365";
+import { toMatch, pairStats, fetchLiveMatches, fetchLiveDetail, toApiDate, toTopPerformers, toFacts, toShots } from "@/lib/live365";
 
 const game = (over: Record<string, unknown> = {}) => ({
   id: 100, sportId: 1, competitionId: 11, competitionDisplayName: "الدوري الإسباني",
@@ -325,5 +325,34 @@ describe("toFacts", () => {
 
   it("is empty when the source publishes none (a finished Botola game)", () => {
     expect(toFacts(undefined, 140, 174)).toEqual([]);
+  });
+});
+
+describe("toShots", () => {
+  // Verified against Spurs 3-1 Coventry: `status` is the period (6 = first
+  // half), and the goal marker is outcome.id 0 — reading `status` as the
+  // result flagged all 29 shots as goals.
+  const members = [{ id: 11, name: "جيمس ماديسون" }, { id: 12, name: "تايوو أونيي" }];
+  const chart = {
+    events: [
+      { competitorNum: 1, time: "14'", playerId: 11, status: 6, xg: "0.05", xgot: "0.64",
+        bodyPart: "القدم اليمنى", goalDescription: "أعلى الجهة اليسرى", outcome: { id: 0, name: "هدف" } },
+      { competitorNum: 2, time: "85'", playerId: 12, status: 8, xg: "0.04", xgot: "0.00",
+        outcome: { id: 1, name: "خارج المرمى" } },
+    ],
+  };
+
+  it("marks only the goal, and resolves the shooter", () => {
+    const shots = toShots(chart, members);
+    expect(shots.map((s) => s.isGoal)).toEqual([true, false]);
+    expect(shots[0].player).toBe("جيمس ماديسون");
+    expect(shots[0].home).toBe(true);
+    expect(shots[0].xg).toBe("0.05");
+    expect(shots[1].home).toBe(false);
+    expect(shots[1].outcome).toBe("خارج المرمى");
+  });
+
+  it("is empty when the source charts no shots", () => {
+    expect(toShots(undefined, members)).toEqual([]);
   });
 });

@@ -87,6 +87,29 @@ export default function LiveStats({ d }: { d: LiveDetail }) {
         </div>
       ))}
 
+      {d.shots.length > 0 && (() => {
+        const sum = (home: boolean) =>
+          d.shots.filter((x) => x.home === home).reduce((t, x) => t + Number(x.xg || 0), 0).toFixed(2);
+        return (
+          <div className="kx">
+            <h3>التسديدات والأهداف المتوقعة</h3>
+            <div className="ks-row">
+              <div className="ks-head"><b>{sum(true)}</b><span>مجموع الأهداف المتوقعة (xG)</span><b>{sum(false)}</b></div>
+            </div>
+            <ul className="kx-list">
+              {d.shots.map((x, i) => (
+                <li key={`${x.minute}-${i}`} className={`${x.home ? "home" : "away"}${x.isGoal ? " goal" : ""}`}>
+                  <b className="kx-min">{x.minute}</b>
+                  <span className="kx-who">{x.player ?? "—"}</span>
+                  <span className="kx-out">{x.isGoal ? "⚽ هدف" : x.outcome ?? ""}{x.bodyPart ? ` · ${x.bodyPart}` : ""}</span>
+                  <b className="kx-xg">{x.xg ?? "-"}</b>
+                </li>
+              ))}
+            </ul>
+          </div>
+        );
+      })()}
+
       {d.facts.length > 0 && (
         <div className="kf">
           <h3>كيف مرّت المباراة</h3>

@@ -1,36 +1,61 @@
-// 365scores' own news feed. It returns only 3 items and ignores limit/page, so
-// it is a garnish next to the other two sources. It carries no article text, so
-// the detail page falls back to the JSON-LD description.
+// 365scores' Arabic magazine — the football category the site links as
+// /ar/news/magazine/category/كرة-قدم/.
+//
+// It replaces the old /web/news/ endpoint, which answered with three headlines,
+// ignored paging and carried no article text. The magazine runs on WordPress:
+// its feeds are disabled but the REST API is open, and it returns the full
+// article body, the hero image and real paging.
 import type { NewsItem } from "@/types/news";
 import { encodeNewsId } from "./id";
+import { decodeEntities } from "./rss";
 
-const API = "https://webws.365scores.com/web/news/";
-const Q = "appTypeId=5&langId=27&timezoneName=Africa%2FCasablanca&userCountryId=127";
+const API = "https://www.365scores.com/ar/news/magazine/wp-json/wp/v2/posts";
+const FOOTBALL_CATEGORY = 13; // "كرة قدم", the category in that URL
 
-interface S365News {
-  id?: number;
-  publishDate?: string;
-  title?: string;
-  image?: string | null;
-  url?: string;
+interface WpPost {
+  link?: string;
+  date_gmt?: string;
+  title?: { rendered?: string };
+  excerpt?: { rendered?: string };
+  content?: { rendered?: string };
+  _embedded?: { "wp:featuredmedia"?: Array<{ source_url?: string }> };
 }
 
-export async function fetchScores365News(competitionId?: number): Promise<NewsItem[]> {
-  const url = `${API}?${Q}${competitionId ? `&competitions=${competitionId}` : ""}`;
-  const r = await fetch(url, { headers: { Accept: "application/json" } });
-  if (!r.ok) throw new Error(`365scores news ${r.status}`);
-  const d = (await r.json()) as { news?: S365News[] };
-  return (d.news ?? []).flatMap((n) => {
-    if (!n.url || !n.title) return [];
-    // Their links carry a tracking query; keep the canonical article only.
-    const clean = n.url.split("?")[0];
+const text = (html: string | undefined): string =>
+  decodeEntities((html ?? "").replace(/<[^>]+>/g, " ")).replace(/\s+/g, " ").trim();
+
+export async function fetchScores365News(page = 1, pageSize = 12): Promise<NewsItem[]> {
+  const qs = new URLSearchParams({
+    categories: String(FOOTBALL_CATEGORY),
+    per_page: String(pageSize),
+    page: String(page),
+    _embed: "1",
+  });
+  const r = await fetch(`${API}?${qs}`, {
+    headers: {
+      Accept: "application/json",
+      "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36",
+    },
+  });
+  // Paging past the end answers 400 rather than an empty list.
+  if (r.status === 400) return [];
+  if (!r.ok) throw new Error(`365scores magazine ${r.status}`);
+  const posts = (await r.json()) as WpPost[];
+  return posts.flatMap((p) => {
+    const url = p.link;
+    const title = text(p.title?.rendered);
+    if (!url || !title) return [];
+    const body = p.content?.rendered ?? null;
     return [{
-      id: encodeNewsId(clean),
+      id: encodeNewsId(url),
       source: "scores365" as const,
-      title: n.title,
-      url: clean,
-      image: n.image ?? null,
-      publishedAt: n.publishDate ? new Date(n.publishDate).toISOString() : new Date().toISOString(),
+      title,
+      url,
+      image: p._embedded?.["wp:featuredmedia"]?.[0]?.source_url ?? null,
+      publishedAt: p.date_gmt ? new Date(`${p.date_gmt}Z`).toISOString() : new Date().toISOString(),
+      summary: text(p.excerpt?.rendered) || null,
+      body,
+      bodyIsHtml: Boolean(body),
     }];
   });
 }

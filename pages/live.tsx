@@ -6,10 +6,11 @@ import LiveHeader from "@/components/live/LiveHeader";
 import LinePitch from "@/components/live/LinePitch";
 import LiveStats from "@/components/live/LiveStats";
 import LiveEvents from "@/components/live/LiveEvents";
+import LivePrevious from "@/components/live/LivePrevious";
 import type { LiveDetail, LiveMatch } from "@/types/live";
 
 const POLL_MS = 15_000; // the source itself caches for 5s
-type Tab = "lineup" | "stats" | "events";
+type Tab = "lineup" | "stats" | "events" | "previous";
 type Filter = "live" | "done" | "all";
 
 const isoToday = () => new Date().toISOString().slice(0, 10);
@@ -161,11 +162,13 @@ export default function LivePage() {
                 <button type="button" className={tab === "lineup" ? "on" : ""} onClick={() => setTab("lineup")}>التشكيلة</button>
                 <button type="button" className={tab === "stats" ? "on" : ""} onClick={() => setTab("stats")}>الإحصائيات</button>
                 <button type="button" className={tab === "events" ? "on" : ""} onClick={() => setTab("events")}>الأحداث</button>
+                <button type="button" className={tab === "previous" ? "on" : ""} onClick={() => setTab("previous")}>مواجهات سابقة</button>
               </nav>
               <section className="kiosk-pane">
                 {tab === "lineup" && <LinePitch d={detail} />}
                 {tab === "stats" && <LiveStats d={detail} />}
                 {tab === "events" && <LiveEvents d={detail} />}
+                {tab === "previous" && <LivePrevious d={detail} />}
               </section>
             </>
           ) : (

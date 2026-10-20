@@ -342,7 +342,7 @@ html, body {
 .kh-status { margin-top: 10px; display: flex; justify-content: center; align-items: center; gap: 8px; color: var(--muted); font-size: 18px; font-weight: 700; }
 .kh-status.live { color: var(--live-text); }
 
-.kiosk-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 12px 28px; }
+.kiosk-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 12px 28px; }
 .kiosk-tabs button { min-height: 64px; border: 1.5px solid var(--border-2); border-radius: 12px; background: var(--panel); color: var(--muted); font-size: 19px; font-weight: 800; cursor: pointer; }
 .kiosk-tabs button.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .kiosk-tabs button:active { transform: scale(0.99); }
@@ -785,3 +785,40 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
 }
 .kl-group.closed .kl-chev { transform: rotate(135deg); }
 .kl-group.closed .kl-grouphead { background: var(--panel); border-style: dashed; }
+
+/* ---- live: shot chart and previous meetings ---- */
+.kx { margin-top: 26px; border-top: 1px solid var(--border); padding-top: 18px; }
+.kx h3 { margin: 0 0 12px; font-size: 20px; }
+.kx-list { list-style: none; margin: 10px 0 0; padding: 0; }
+.kx-list li {
+  display: flex; align-items: center; gap: 12px; padding: 9px 12px; font-size: 15px;
+  border-bottom: 1px solid var(--border); border-inline-start: 3px solid transparent;
+}
+.kx-list li.home { border-inline-start-color: var(--accent); }
+.kx-list li.away { border-inline-start-color: var(--brand-2); }
+.kx-list li.goal { background: var(--accent-soft); font-weight: 800; }
+.kx-min { min-width: 46px; font-variant-numeric: tabular-nums; color: var(--muted); }
+.kx-who { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kx-out { color: var(--muted); font-size: 13px; text-align: start; min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kx-xg { min-width: 54px; text-align: center; font-variant-numeric: tabular-nums; }
+
+.kpv section { margin-bottom: 22px; }
+.kpv h3 { margin: 0 0 10px; font-size: 19px; }
+.kpv ul { list-style: none; margin: 0; padding: 0; }
+.kpv-row {
+  display: flex; align-items: center; gap: 12px; padding: 11px 12px;
+  border-bottom: 1px solid var(--border); font-size: 16px;
+}
+.kpv-pill {
+  flex: none; width: 30px; height: 30px; border-radius: 8px; font-style: normal;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 900; background: var(--panel-2); color: var(--muted);
+}
+.kpv-pill.w { background: var(--ok); color: #06240f; }
+.kpv-pill.l { background: var(--live); color: #fff; }
+.kpv-pill.d { background: var(--warn); color: var(--accent-ink); }
+.kpv-date { flex: none; min-width: 112px; color: var(--muted); font-size: 14px; }
+.kpv-team { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kpv-team.away { text-align: start; }
+.kpv-score { flex: none; min-width: 74px; text-align: center; font-weight: 900; font-variant-numeric: tabular-nums; }
+.kpv-comp { flex: none; max-width: 190px; color: var(--muted); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

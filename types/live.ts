@@ -112,6 +112,34 @@ export interface AthleteSeason {
   stats: PerformerStat[]; // everything else it publishes
 }
 
+/** One shot from the source's shot chart: expected goals and where it went. */
+export interface Shot {
+  home: boolean;
+  minute: string;
+  player: string | null;
+  xg: string | null;
+  xgot: string | null;
+  bodyPart: string | null;
+  outcome: string | null; // Arabic, e.g. "خارج المرمى يسار"
+  isGoal: boolean;
+}
+
+/** A past match, as the previous-meetings and form lists show it. */
+export interface PastMatch {
+  id: number;
+  date: string; // ISO
+  competition: string;
+  home: { name: string; score: number | null; logo: string | null };
+  away: { name: string; score: number | null; logo: string | null };
+}
+
+/** What the مواجهات سابقة tab shows: the teams' meetings, and recent form. */
+export interface PreviousMatches {
+  h2h: PastMatch[];
+  home: PastMatch[];
+  away: PastMatch[];
+}
+
 /** The athlete endpoint's `fullDetails` view — none of this is in the match
  *  payload, and it is what the card shows beyond the 90 minutes on screen. */
 export interface AthleteBio {
@@ -158,6 +186,8 @@ export interface LiveDetail {
   statGroups: StatGroup[];
   /** Ball-in-play and time-wasted blocks, when the source publishes them. */
   facts: FactBlock[];
+  /** Every shot the source charts, with its expected-goals value. */
+  shots: Shot[];
   /** Season leaders per line — the only statistics a match has before kickoff. */
   topPerformers: TopPerformerRow[];
   venue: string | null;

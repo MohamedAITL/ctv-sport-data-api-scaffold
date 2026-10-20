@@ -13,7 +13,7 @@ const match = (over: Partial<LiveMatch> = {}): LiveMatch => ({
 
 const detail = (m: LiveMatch): LiveDetail => ({
   match: m, homeLineup: null, awayLineup: null, events: [],
-  statGroups: [], facts: [], topPerformers: [], venue: null, referee: null, tv: [],
+  statGroups: [], facts: [], shots: [], topPerformers: [], venue: null, referee: null, tv: [],
 });
 
 describe("LiveHeader", () => {

@@ -7,7 +7,7 @@
 //      Southern League and a Colombian second-division game). Every lineup field
 //      is therefore optional and the caller must cope with null.
 import type {
-  AthleteBio, AthleteSeason, FactBlock, FactRow, LineupPlayer, LineupRole, LiveDetail, LiveEvent,
+  AthleteBio, AthleteSeason, FactBlock, FactRow, LineupPlayer, PastMatch, PreviousMatches, Shot, LineupRole, LiveDetail, LiveEvent,
   LiveMatch, Performer, PerformerStat, StatGroup, StatRow, TeamLineup,
   TopPerformerRow,
 } from "@/types/live";
@@ -175,6 +175,16 @@ interface RawEvent {
   competitorId?: number; gameTimeDisplay?: string; playerId?: number;
   eventType?: { name?: string }; isMajor?: boolean; order?: number;
 }
+interface RawChartEvent {
+  competitorNum?: number; time?: string; playerId?: number;
+  xg?: string; xgot?: string; bodyPart?: string; goalDescription?: string;
+  outcome?: { id?: number; name?: string };
+}
+interface RawChart {
+  events?: RawChartEvent[];
+  statuses?: Array<{ id?: number; name?: string }> | Record<string, string>;
+}
+
 interface RawDetail {
   game?: RawGame & {
     members?: RawMember[];
@@ -182,6 +192,7 @@ interface RawDetail {
     officials?: Array<{ name?: string }>;
     tvNetworks?: Array<{ name?: string }>;
     venue?: { name?: string };
+    chartEvents?: RawChart;
     topPerformers?: RawTopPerformers;
     homeCompetitor?: RawDetailCompetitor;
     awayCompetitor?: RawDetailCompetitor;
@@ -380,6 +391,78 @@ export async function fetchAthlete(athleteId: number): Promise<AthleteBio | null
   };
 }
 
+// `status` on a chart event is the period (6 = first half, 8 = second), not the
+// result — the result is `outcome`, whose id 0 is a goal. Checked against
+// Spurs 3-1 Coventry: the five id-0 shots are exactly the four goals the event
+// list carries (one of them charted twice, as a rebound).
+const GOAL_OUTCOME = 0;
+
+export function toShots(chart: RawChart | undefined, members: RawMember[]): Shot[] {
+  const byId = new Map(members.filter((m) => m.id).map((m) => [m.id as number, m]));
+  return (chart?.events ?? []).map((e) => ({
+    home: e.competitorNum !== 2,
+    minute: e.time ?? "",
+    player: (e.playerId !== undefined ? byId.get(e.playerId)?.name : null) ?? null,
+    xg: e.xg ?? null,
+    xgot: e.xgot ?? null,
+    bodyPart: e.bodyPart ?? null,
+    outcome: e.outcome?.name ?? e.goalDescription ?? null,
+    isGoal: e.outcome?.id === GOAL_OUTCOME,
+  }));
+}
+
+const pastSide = (c?: RawCompetitor) => ({
+  name: c?.name ?? "",
+  score: score(c?.score),
+  logo: crest(c?.id, c?.imageVersion),
+});
+
+const toPast = (g: RawGame): PastMatch | null =>
+  g.id
+    ? {
+        id: g.id,
+        date: g.startTime ?? "",
+        competition: g.competitionDisplayName ?? "",
+        home: pastSide(g.homeCompetitor),
+        away: pastSide(g.awayCompetitor),
+      }
+    : null;
+
+/**
+ * The مواجهات سابقة tab. `recentMatches` on a competitor is only a list of game
+ * ids and there is no bulk game-by-id endpoint, but results filtered by
+ * competitor gives a team's recent games in one call — so two calls cover both
+ * teams, and their meetings are the games in which both sides appear.
+ */
+export async function fetchPreviousMatches(homeId: number, awayId: number, limit = 6): Promise<PreviousMatches> {
+  const [h, a] = await Promise.allSettled([
+    get<{ games?: RawGame[] }>(`/games/results/?${Q}&competitors=${homeId}`),
+    get<{ games?: RawGame[] }>(`/games/results/?${Q}&competitors=${awayId}`),
+  ]);
+  const games = (r: PromiseSettledResult<{ games?: RawGame[] }>) =>
+    r.status === "fulfilled" ? r.value.games ?? [] : [];
+
+  const involves = (g: RawGame, id: number) =>
+    g.homeCompetitor?.id === id || g.awayCompetitor?.id === id;
+  const byDate = (x: PastMatch, y: PastMatch) => y.date.localeCompare(x.date);
+  const clean = (list: RawGame[], keep: (g: RawGame) => boolean) =>
+    list.filter(keep).map(toPast).filter((m): m is PastMatch => m !== null).sort(byDate).slice(0, limit);
+
+  const all = [...games(h), ...games(a)];
+  const seen = new Set<number>();
+  const meetings = all.filter((g) => {
+    if (!g.id || seen.has(g.id)) return false;
+    seen.add(g.id);
+    return involves(g, homeId) && involves(g, awayId);
+  });
+
+  return {
+    h2h: clean(meetings, () => true),
+    home: clean(games(h), (g) => !(involves(g, homeId) && involves(g, awayId))),
+    away: clean(games(a), (g) => !(involves(g, homeId) && involves(g, awayId))),
+  };
+}
+
 export async function fetchLiveDetail(gameId: number, matchupId: string): Promise<LiveDetail | null> {
   // Stats failing must not cost us the lineup, so they are settled separately.
   const [detRes, statRes] = await Promise.allSettled([
@@ -433,6 +516,7 @@ export async function fetchLiveDetail(gameId: number, matchupId: string): Promis
     statGroups,
     facts,
     topPerformers: toTopPerformers(g.topPerformers),
+    shots: toShots(g.chartEvents, members),
     venue: g.venue?.name ?? null,
     referee: g.officials?.[0]?.name ?? null,
     tv: (g.tvNetworks ?? []).map((t) => t.name ?? "").filter(Boolean),
