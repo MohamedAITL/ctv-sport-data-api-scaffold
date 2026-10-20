@@ -65,6 +65,11 @@ shows the season's **top performers** per line instead of a dead end, and the
 scoreline carries the kickoff time and status in its centre until there is a
 score.
 
+Every page **shows what it already has before it asks the network**: the last
+payload is kept in IndexedDB, painted on mount, and only then refreshed behind
+what you are reading (the news feed merges — nothing loaded is ever dropped).
+The poster preview holds its place while its controls scroll.
+
 The interface is **Arabic and right-to-left throughout** — the poster pages read
 the same way as the live kiosk.
 

@@ -1,22 +1,47 @@
-// IndexedDB for LARGE assets only (uploaded logo overrides + uploaded templates)
-// — never in localStorage. Client-side, fail-soft (private mode, SSR, blocked).
+// IndexedDB for everything too big for localStorage: uploaded logo overrides,
+// uploaded templates, and the last payload each page received. Client-side,
+// fail-soft (private mode, SSR, blocked).
 import { openDB, type IDBPDatabase } from "idb";
 
 const DB_NAME = "botola-poster";
 const STORE = "assets";
+const CACHE = "cache";
 const LOGO_PREFIX = "logo:";
 
 async function db(): Promise<IDBPDatabase | null> {
   if (typeof indexedDB === "undefined") return null;
   try {
-    return await openDB(DB_NAME, 1, {
+    return await openDB(DB_NAME, 2, {
       upgrade(d) {
         if (!d.objectStoreNames.contains(STORE)) d.createObjectStore(STORE);
+        if (!d.objectStoreNames.contains(CACHE)) d.createObjectStore(CACHE);
       },
     });
   } catch {
     return null;
   }
+}
+
+/**
+ * The last answer a page got, kept across reloads so the screen is never empty
+ * while the network is consulted. Whole payloads (hundreds of news items, a
+ * table with inlined crests) go here rather than localStorage, which is small
+ * and synchronous.
+ */
+export interface Cached<T> { at: string; data: T }
+
+export async function readCache<T>(key: string): Promise<Cached<T> | null> {
+  try {
+    const d = await db();
+    const hit = (await d?.get(CACHE, key)) as Cached<T> | undefined;
+    return hit?.data === undefined ? null : hit;
+  } catch {
+    return null;
+  }
+}
+
+export async function writeCache<T>(key: string, data: T): Promise<void> {
+  try { await (await db())?.put(CACHE, { at: new Date().toISOString(), data }, key); } catch { /* quota, private mode */ }
 }
 
 export async function setLogoOverride(teamId: string, dataUrl: string): Promise<void> {

@@ -1,5 +1,5 @@
 import Head from "next/head";
-import { useLatestRequest } from "@/lib/useLatestRequest";
+import { useCachedData } from "@/lib/useCachedData";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Nav from "@/components/Nav";
 import MatchdayPoster from "@/components/MatchdayPoster";
@@ -24,8 +24,6 @@ const today = () => new Date().toISOString().slice(0, 10);
 
 interface FixturesState { date: string; matches: Match[]; fetchedAt?: string; stale: boolean; errors?: string[] }
 
-// Cached per date across navigation so switching pages / dates does not refetch.
-const fixturesCache: Record<string, FixturesState> = {};
 
 export default function Matchday() {
   const posterRef = useRef<HTMLDivElement>(null);
@@ -34,8 +32,6 @@ export default function Matchday() {
   const [nameOverrides, setNameOverrides] = useState<Record<string, string>>({});
   const [logoOverrides, setLogoOverrides] = useState<Record<string, string>>({});
   const [templateSrc, setTemplateSrc] = useState<string | null>(null);
-  const [data, setData] = useState<FixturesState | null>(null);
-  const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<Mode>("fixtures");
 
   useEffect(() => {
@@ -46,27 +42,15 @@ export default function Matchday() {
     getTemplate("matchday").then(setTemplateSrc);
   }, []);
 
-  const req = useLatestRequest<string>("");
-  const fetchFixtures = useCallback(async (d: string) => {
-    req.claim(d);
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/fixtures?date=${d}`);
-      const json = await res.json();
-      const s: FixturesState = { date: json.date ?? d, matches: json.matches ?? [], fetchedAt: json.fetchedAt, stale: Boolean(json.stale), errors: json.errors };
-      fixturesCache[d] = s;
-      if (req.isCurrent(d)) setData(s);
-    } catch (e) {
-      if (req.isCurrent(d)) setData({ date: d, matches: [], stale: true, errors: [String(e)] });
-    } finally {
-      if (req.isCurrent(d)) setLoading(false);
-    }
-  }, [req]);
+  // Last answer first, from IndexedDB, then the server behind it.
+  const readFixtures = useCallback(async (): Promise<FixturesState> => {
+    const res = await fetch(`/api/fixtures?date=${date}`);
+    const json = await res.json();
+    return { date: json.date ?? date, matches: json.matches ?? [], fetchedAt: json.fetchedAt, stale: Boolean(json.stale), errors: json.errors };
+  }, [date]);
 
-  useEffect(() => {
-    if (fixturesCache[date]) setData(fixturesCache[date]);
-    else fetchFixtures(date);
-  }, [date, fetchFixtures]);
+  const { data, loading, busy, refresh: fetchFixtures } =
+    useCachedData<FixturesState>(`matchday:${date}`, readFixtures);
 
   const pickMode = (m: Mode) => { setMode(m); try { localStorage.setItem(MODE_KEY, m); } catch { /* ignore */ } };
   const updateLayout = (n: MatchdayLayout) => { setLayout(n); saveLayout(n); };
@@ -126,7 +110,7 @@ export default function Matchday() {
               {dataForDate?.errors && dataForDate.errors.length > 0 && (
                 <ul className="warnlist">{dataForDate.errors.map((e, i) => <li key={i}>{e}</li>)}</ul>
               )}
-              <button className="btn" disabled={loadingDate} onClick={() => fetchFixtures(date)}>{loadingDate ? "جاري التحديث…" : "تحديث"}</button>
+              <button className="btn" disabled={loadingDate} onClick={() => fetchFixtures()}>{loadingDate ? "جاري التحديث…" : "تحديث"}</button>
             </div>
             <TemplateUploader isCustom={templateSrc !== null} onTemplate={onTemplate} defaultLabel="No template yet — using a plain background. Upload your matchday template." resetLabel="حذف القالب" />
             <ExportControls posterRef={posterRef} canExport={matches.length > 0} blocked={exportBlock} onResetDesign={() => updateLayout(DEFAULT_MATCHDAY_LAYOUT)} fileBase={results ? "choufsport-results" : "choufsport-matchday"} fileDate={date} />
@@ -137,7 +121,7 @@ export default function Matchday() {
           <section className="previewpane">
             <div className="previewsticky">
               <h3 className="muted">معاينة مباشرة</h3>
-              <div className="previewbox" style={{ width: PREVIEW_W, height: layout.height * scale }}>
+              <div className={busy ? "previewbox busy" : "previewbox"} style={{ width: PREVIEW_W, height: layout.height * scale }}>
                 <div style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}>
                   <MatchdayPoster ref={posterRef} mode={mode} matches={matches} layout={effLayout} templateSrc={templateSrc} nameOverrides={nameOverrides} logoOverrides={logoOverrides} />
                 </div>

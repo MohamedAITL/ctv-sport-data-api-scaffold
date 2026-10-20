@@ -875,13 +875,57 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
 /* Stat bars grow into place instead of snapping. */
 .ks-bar i { transition: width var(--med) var(--ease); }
 
-/* The refresh button turns while it works. */
 @keyframes spin { to { transform: rotate(360deg); } }
-.btn:disabled .spin, .kiosk-refresh:disabled { animation: none; }
-.newshead-actions .btn:disabled { position: relative; }
-.newshead-actions .btn:disabled::after {
-  content: ""; position: absolute; inset-inline-start: 10px; top: 50%;
-  width: 12px; height: 12px; margin-top: -6px; border-radius: 50%;
-  border: 2px solid var(--accent); border-top-color: transparent;
+
+/* ---- layout: the poster stays put while its controls scroll ----
+   The preview is the thing being worked on, so it holds its place on screen
+   instead of scrolling away under the design panel. */
+.app { max-width: 1320px; }
+.layout { grid-template-columns: minmax(0, 1fr) minmax(320px, 460px); gap: 26px; }
+@media (max-width: 1100px) { .layout { grid-template-columns: 1fr; } }
+.controls { gap: 16px; }
+/* `align-items: start` on the grid sizes each column to its content, which
+   leaves a sticky child nothing to stick inside — the pane has to span the row
+   for the poster to hold its place. */
+.previewpane { min-width: 0; align-self: stretch; }
+.previewsticky {
+  position: sticky; top: 86px;
+  display: flex; flex-direction: column; gap: 10px;
+  max-height: calc(100vh - 110px);
+}
+.previewsticky > h3 { margin: 0; font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.previewbox {
+  /* The poster is scaled from its top-left corner; in an RTL document that
+     corner is on the other side and the preview ended up clipped, so the box
+     itself stays LTR. The poster sets its own direction internally. */
+  direction: ltr;
+  position: relative; overflow: hidden;
+  border: 1px solid var(--border-2); border-radius: var(--radius-lg);
+  background: var(--panel); box-shadow: var(--shadow-2);
+}
+/* While a refresh is in flight the poster dims and a spinner sits over it,
+   instead of the page flickering between old and new. */
+.previewbox.busy::before {
+  content: ""; position: absolute; inset: 0; z-index: 2;
+  background: rgba(10, 6, 16, .45); backdrop-filter: blur(1px);
+  animation: fade-in 140ms var(--ease) both;
+}
+.previewbox.busy::after {
+  content: ""; position: absolute; z-index: 3; top: 50%; inset-inline-start: 50%;
+  width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%;
+  border: 3px solid var(--accent); border-top-color: transparent;
   animation: spin 700ms linear infinite;
+}
+
+/* ---- spinners ---- */
+.spinner {
+  display: inline-block; width: 14px; height: 14px; margin-inline-end: 8px;
+  vertical-align: -2px; border-radius: 50%;
+  border: 2px solid currentColor; border-top-color: transparent;
+  animation: spin 700ms linear infinite;
+}
+.spinner.lg { width: 30px; height: 30px; border-width: 3px; margin: 0; }
+.loadbox {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  padding: 40px 20px; color: var(--muted); font-size: 16px; font-weight: 700;
 }

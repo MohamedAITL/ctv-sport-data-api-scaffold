@@ -1,5 +1,5 @@
 import Head from "next/head";
-import { useLatestRequest } from "@/lib/useLatestRequest";
+import { useCachedData } from "@/lib/useCachedData";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Nav from "@/components/Nav";
 import StatsPoster from "@/components/StatsPoster";
@@ -22,7 +22,6 @@ const loadLayout = (): StatsLayout => {
 const saveLayout = (l: StatsLayout) => { try { localStorage.setItem(LKEY, JSON.stringify(l)); } catch { /* ignore */ } };
 
 interface StatsState { competition: number; categories: StatCategory[]; fetchedAt?: string; error?: string }
-const cache: Record<number, StatsState> = {};
 
 export default function StatsPage() {
   const posterRef = useRef<HTMLDivElement>(null);
@@ -30,8 +29,6 @@ export default function StatsPage() {
   const [catKey, setCatKey] = useState<string>("");
   const [layout, setLayout] = useState<StatsLayout>(DEFAULT_STATS_LAYOUT);
   const [templateSrc, setTemplateSrc] = useState<string | null>(null);
-  const [data, setData] = useState<StatsState | null>(null);
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     let lg = BOTOLA_LEAGUE;
@@ -44,27 +41,15 @@ export default function StatsPage() {
     getTemplate("stats").then(setTemplateSrc);
   }, []);
 
-  const req = useLatestRequest<number>(-1);
-  const fetchStats = useCallback(async (lg: number) => {
-    req.claim(lg);
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/stats?competition=${lg}`);
-      const json = await res.json();
-      const s: StatsState = { competition: lg, categories: json.categories ?? [], fetchedAt: json.fetchedAt, error: json.error };
-      cache[lg] = s;
-      if (req.isCurrent(lg)) setData(s);
-    } catch (e) {
-      if (req.isCurrent(lg)) setData({ competition: lg, categories: [], error: String(e) });
-    } finally {
-      if (req.isCurrent(lg)) setLoading(false);
-    }
-  }, [req]);
+  // Last answer first, from IndexedDB, then the server behind it.
+  const readStats = useCallback(async (): Promise<StatsState> => {
+    const res = await fetch(`/api/stats?competition=${league}`);
+    const json = await res.json();
+    return { competition: league, categories: json.categories ?? [], fetchedAt: json.fetchedAt, error: json.error };
+  }, [league]);
 
-  useEffect(() => {
-    if (cache[league]) setData(cache[league]);
-    else fetchStats(league);
-  }, [league, fetchStats]);
+  const { data, loading, busy, refresh: fetchStats } =
+    useCachedData<StatsState>(`stats:${league}`, readStats);
 
   const forLeague = data && data.competition === league ? data : null;
   const categories = useMemo(() => forLeague?.categories ?? [], [forLeague]);
@@ -79,8 +64,7 @@ export default function StatsPage() {
   const pickLeague = (id: number) => {
     if (id === league) return;
     try { localStorage.setItem(LEAGUE_KEY, String(id)); } catch { /* ignore */ }
-    setData(cache[id] ?? null);
-    setLeague(id);
+    setLeague(id); // the hook swaps in that league's cached payload, then refreshes
   };
   const pickCat = (k: string) => { setCatKey(k); try { localStorage.setItem(CAT_KEY, k); } catch { /* ignore */ } };
   const updateLayout = (n: StatsLayout) => { setLayout(n); saveLayout(n); };
@@ -151,7 +135,7 @@ export default function StatsPage() {
               <div className="kv"><span>الحالة</span><span className={loading ? "pill" : forLeague?.error ? "pill warn" : "pill ok"}>{loading ? "جاري التحميل…" : forLeague?.error ? "خطأ" : "متصل"}</span></div>
               {empty && <p className="err">365scores publishes no stat leaderboards for this competition.</p>}
               {forLeague?.error && <p className="err">{forLeague.error}</p>}
-              <button className="btn" disabled={loading} onClick={() => fetchStats(league)}>{loading ? "جاري التحديث…" : "تحديث"}</button>
+              <button className="btn" disabled={loading} onClick={() => fetchStats()}>{loading ? "جاري التحديث…" : "تحديث"}</button>
             </div>
 
             <TemplateUploader isCustom={templateSrc !== null} onTemplate={onTemplate} defaultLabel="No template yet — using a plain background. Upload your stats template." resetLabel="حذف القالب" />
@@ -175,7 +159,7 @@ export default function StatsPage() {
           <section className="previewpane">
             <div className="previewsticky">
               <h3 className="muted">معاينة مباشرة</h3>
-              <div className="previewbox" style={{ width: PREVIEW_W, height: layout.height * scale }}>
+              <div className={busy ? "previewbox busy" : "previewbox"} style={{ width: PREVIEW_W, height: layout.height * scale }}>
                 <div style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}>
                   <StatsPoster ref={posterRef} title={category?.name ?? ""} subtitle={subtitle} rows={rows} layout={layout} templateSrc={templateSrc} kind={category?.kind ?? "player"} />
                 </div>

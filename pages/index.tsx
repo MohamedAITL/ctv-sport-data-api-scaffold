@@ -1,5 +1,5 @@
 import Head from "next/head";
-import { useLatestRequest } from "@/lib/useLatestRequest";
+import { useCachedData } from "@/lib/useCachedData";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Poster from "@/components/Poster";
 import Nav from "@/components/Nav";
@@ -40,8 +40,6 @@ interface StandingsState {
   error?: string | null;
 }
 
-// Cached per league across navigation so switching pages / leagues does not refetch.
-const standingsCache: Record<number, StandingsState> = {};
 
 export default function Home() {
   const posterRef = useRef<HTMLDivElement>(null);
@@ -50,8 +48,7 @@ export default function Home() {
   const [nameOverrides, setNameOverrides] = useState<Record<string, string>>({});
   const [logoOverrides, setLogoOverrides] = useState<Record<string, string>>({});
   const [templateSrc, setTemplateSrc] = useState<string>(BOTOLA_TEMPLATE);
-  const [data, setData] = useState<StandingsState | null>(null);
-  const [loading, setLoading] = useState(false);
+
 
   // Load persisted state for the current league (client-only).
   useEffect(() => {
@@ -64,42 +61,28 @@ export default function Home() {
     getTemplate(templateKey(initial)).then((t) => setTemplateSrc(t || defaultTemplateFor(initial)));
   }, []);
 
-  const req = useLatestRequest<number>(-1);
-  const commit = useCallback((lg: number, s: StandingsState) => {
-    standingsCache[lg] = s;
-    if (req.isCurrent(lg)) setData(s);
-  }, [req]);
-
-  const fetchStandings = useCallback(async (lg: number) => {
-    req.claim(lg);
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/standings?competition=${lg}`);
-      const json = await res.json();
-      if (!res.ok && !json.rows) {
-        commit(lg, { rows: [], season: null, warnings: [], validation: { ok: false, errors: [json.error || "فشل الطلب"], warnings: [] }, stale: true, error: json.error });
-      } else {
-        commit(lg, json);
-      }
-    } catch (e) {
-      commit(lg, { rows: [], season: null, warnings: [], validation: { ok: false, errors: [String(e)], warnings: [] }, stale: true, error: String(e) });
-    } finally {
-      if (req.isCurrent(lg)) setLoading(false);
+  // Whatever this league last returned is shown at once from IndexedDB, then
+  // the server is asked behind it — so switching league or reloading the page
+  // never shows an empty poster.
+  const readStandings = useCallback(async (): Promise<StandingsState> => {
+    const res = await fetch(`/api/standings?competition=${league}`);
+    const json = await res.json();
+    if (!res.ok && !json.rows) {
+      return { rows: [], season: null, warnings: [], validation: { ok: false, errors: [json.error || "فشل الطلب"], warnings: [] }, stale: true, error: json.error } as StandingsState;
     }
-  }, [commit, req]);
+    return json as StandingsState;
+  }, [league]);
 
-  useEffect(() => {
-    if (standingsCache[league]) setData(standingsCache[league]);
-    else fetchStandings(league);
-  }, [league, fetchStandings]);
+  const { data, loading, busy, refresh: refreshStandings } =
+    useCachedData<StandingsState>(`standings:${league}`, readStandings);
+  const fetchStandings = refreshStandings;
 
   const onLeague = (id: number) => {
     if (id === league) return;
     try { localStorage.setItem(LEAGUE_KEY, String(id)); } catch { /* ignore */ }
     setLayout(loadLayout(defaultLayoutFor(id), String(id)));
     getTemplate(templateKey(id)).then((t) => setTemplateSrc(t || defaultTemplateFor(id)));
-    setData(standingsCache[id] ?? null);
-    setLeague(id);
+    setLeague(id); // the hook swaps in that league's cached table, then refreshes
   };
 
   const updateLayout = (next: LayoutConfig) => {
@@ -193,14 +176,14 @@ export default function Home() {
               fetchedAt={data?.fetchedAt}
               stale={Boolean(data?.stale)}
               error={data?.error}
-              loading={loading}
-              onRefresh={() => fetchStandings(league)}
+              loading={loading || busy}
+              onRefresh={fetchStandings}
             />
             {noTable && (
               <div className="card">
                 <h3>لا يوجد جدول</h3>
                 <p className="err" style={{ direction: "rtl" }}>لا يوجد جدول ترتيب لهذه المسابقة حاليا</p>
-                <p className="muted">365scores publishes a table only once a league or group stage is running. Pick another competition, or come back when it starts.</p>
+                <p className="muted">ينشر 365scores الجدول فقط بعد انطلاق الدوري أو دور المجموعات. اختر مسابقة أخرى أو عد عند انطلاقها.</p>
               </div>
             )}
             {data && data.validation.warnings.length > 0 && (
@@ -229,7 +212,7 @@ export default function Home() {
           <section className="previewpane">
             <div className="previewsticky">
               <h3 className="muted">معاينة مباشرة</h3>
-              <div className="previewbox" style={{ width: PREVIEW_W, height: layout.height * scale }}>
+              <div className={busy ? "previewbox busy" : "previewbox"} style={{ width: PREVIEW_W, height: layout.height * scale }}>
                 <div style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}>
                   <Poster ref={posterRef} rows={rows} layout={effLayout} templateSrc={templateSrc} logoOverrides={logoOverrides} />
                 </div>

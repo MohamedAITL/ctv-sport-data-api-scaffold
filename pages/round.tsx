@@ -2,7 +2,7 @@ import Head from "next/head";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Nav from "@/components/Nav";
 import MatchdayPoster from "@/components/MatchdayPoster";
-import { useLatestRequest } from "@/lib/useLatestRequest";
+import { useCachedData } from "@/lib/useCachedData";
 import MatchdayDesign from "@/components/MatchdayDesign";
 import MatchdayTeams from "@/components/MatchdayTeams";
 import TemplateUploader from "@/components/TemplateUploader";
@@ -26,8 +26,6 @@ const roundLabel = (r: number) => (r === UNSCHEDULED_ROUND ? "مباريات ق�
 
 interface RoundState { competition: number; matches: Match[]; rounds: number[]; fetchedAt?: string; error?: string }
 
-// Cached per league so switching league/round costs no extra API call.
-const cache: Record<number, RoundState> = {};
 
 export default function RoundPage() {
   const posterRef = useRef<HTMLDivElement>(null);
@@ -37,8 +35,6 @@ export default function RoundPage() {
   const [nameOverrides, setNameOverrides] = useState<Record<string, string>>({});
   const [logoOverrides, setLogoOverrides] = useState<Record<string, string>>({});
   const [templateSrc, setTemplateSrc] = useState<string | null>(null);
-  const [data, setData] = useState<RoundState | null>(null);
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     let initial = BOTOLA_LEAGUE;
@@ -50,27 +46,15 @@ export default function RoundPage() {
     getTemplate("round").then(setTemplateSrc);
   }, []);
 
-  const req = useLatestRequest<number>(BOTOLA_LEAGUE);
-  const fetchRound = useCallback(async (lg: number) => {
-    req.claim(lg);
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/round?competition=${lg}`);
-      const json = await res.json();
-      const s: RoundState = { competition: lg, matches: json.matches ?? [], rounds: json.rounds ?? [], fetchedAt: json.fetchedAt, error: json.error };
-      cache[lg] = s;
-      if (req.isCurrent(lg)) setData(s);
-    } catch (e) {
-      if (req.isCurrent(lg)) setData({ competition: lg, matches: [], rounds: [], error: String(e) });
-    } finally {
-      if (req.isCurrent(lg)) setLoading(false);
-    }
-  }, [req]);
+  // Last answer first, from IndexedDB, then the server behind it.
+  const readRound = useCallback(async (): Promise<RoundState> => {
+    const res = await fetch(`/api/round?competition=${league}`);
+    const json = await res.json();
+    return { competition: league, matches: json.matches ?? [], rounds: json.rounds ?? [], fetchedAt: json.fetchedAt, error: json.error };
+  }, [league]);
 
-  useEffect(() => {
-    if (cache[league]) setData(cache[league]);
-    else fetchRound(league);
-  }, [league, fetchRound]);
+  const { data, loading, busy, refresh: fetchRound } =
+    useCachedData<RoundState>(`round:${league}`, readRound);
 
   // Default to the newest round available for the league currently shown.
   const forLeague = data && data.competition === league ? data : null;
@@ -92,8 +76,7 @@ export default function RoundPage() {
     if (id === league) return;
     try { localStorage.setItem(LEAGUE_KEY, String(id)); } catch { /* ignore */ }
     setRound(null);
-    setData(cache[id] ?? null);
-    setLeague(id);
+    setLeague(id); // the hook swaps in that league's cached payload, then refreshes
   };
   const updateLayout = (n: MatchdayLayout) => { setLayout(n); saveLayout(n); };
   const onName = (id: string, v: string) => setNameOverrides((p) => { const next = { ...p, [id]: v }; saveNameOverrides(next); return next; });
@@ -175,7 +158,7 @@ export default function RoundPage() {
                 <p className="err">365scores has not published a schedule for this league yet. It will appear here once the next round is announced.</p>
               )}
               {forLeague?.error && <p className="err">{forLeague.error}</p>}
-              <button className="btn" disabled={loading} onClick={() => fetchRound(league)}>{loading ? "جاري التحديث…" : "تحديث"}</button>
+              <button className="btn" disabled={loading} onClick={() => fetchRound()}>{loading ? "جاري التحديث…" : "تحديث"}</button>
             </div>
             <TemplateUploader isCustom={templateSrc !== null} onTemplate={onTemplate} defaultLabel="No template yet — using a plain background. Upload your round template." resetLabel="حذف القالب" />
             <ExportControls posterRef={posterRef} canExport={matches.length > 0} blocked={exportBlock} onResetDesign={() => updateLayout(DEFAULT_MATCHDAY_LAYOUT)} fileBase={`choufsport-${leagueById(league)?.id === BOTOLA_LEAGUE ? "botola1" : "botola2"}-round${round ?? ""}`} fileDate={matches[0]?.date} />
@@ -186,7 +169,7 @@ export default function RoundPage() {
           <section className="previewpane">
             <div className="previewsticky">
               <h3 className="muted">معاينة مباشرة</h3>
-              <div className="previewbox" style={{ width: PREVIEW_W, height: layout.height * scale }}>
+              <div className={busy ? "previewbox busy" : "previewbox"} style={{ width: PREVIEW_W, height: layout.height * scale }}>
                 <div style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}>
                   <MatchdayPoster ref={posterRef} groupBy="date" mode={results ? "results" : "fixtures"} matches={matches} layout={effLayout} templateSrc={templateSrc} nameOverrides={nameOverrides} logoOverrides={logoOverrides} />
                 </div>

@@ -1,8 +1,9 @@
 import Head from "next/head";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Nav from "@/components/Nav";
 import { NEWS_SOURCES, sourceName, type NewsItem, type NewsSourceKey } from "@/types/news";
+import { useCachedData } from "@/lib/useCachedData";
 
 type Filter = NewsSourceKey | "all";
 
@@ -20,64 +21,61 @@ const timeAgo = (iso: string): string => {
 };
 
 export default function NewsPage() {
-  const [items, setItems] = useState<NewsItem[]>([]);
   const [failed, setFailed] = useState<NewsSourceKey[]>([]);
   const [filter, setFilter] = useState<Filter>("all");
   const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
+  const [more, setMore] = useState(false);
   const [fresh, setFresh] = useState<number | null>(null);
 
-  const load = useCallback(async (p: number, append: boolean, refresh = false) => {
-    if (refresh) setRefreshing(true); else setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/news?page=${p}${refresh ? "&refresh=1" : ""}`);
-      const json = await res.json();
-      if (json.error) setError(json.error);
-      setFailed(json.failed ?? []);
-      setItems((prev) => {
-        const incoming: NewsItem[] = json.items ?? [];
-        // A refresh keeps what is already loaded and puts anything newly
-        // published on top, so the list grows instead of resetting.
-        if (refresh) {
-          const known = new Set(prev.map((i) => i.id));
-          const added = incoming.filter((i) => !known.has(i.id));
-          setFresh(added.length);
-          return [...added, ...prev].sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
-        }
-        const next = append ? [...prev, ...incoming] : incoming;
-        // Appending a later page can repeat a story; keep the first occurrence.
-        const seen = new Set<string>();
-        return next.filter((i: NewsItem) => (seen.has(i.id) ? false : (seen.add(i.id), true)));
-      });
-    } catch (e) {
-      setError(String(e));
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
+  const read = useCallback(async (p: number, refresh: boolean): Promise<NewsItem[]> => {
+    const res = await fetch(`/api/news?page=${p}${refresh ? "&refresh=1" : ""}`);
+    const json = await res.json();
+    setFailed(json.failed ?? []);
+    if (json.error && !json.items?.length) throw new Error(json.error);
+    return (json.items ?? []) as NewsItem[];
   }, []);
 
-  useEffect(() => { load(1, false); }, [load]);
+  // Nothing that has been loaded is ever dropped: a refresh is a union, so the
+  // feed only ever grows, newest first.
+  const union = useCallback((previous: NewsItem[], incoming: NewsItem[]): NewsItem[] => {
+    const known = new Set(previous.map((i) => i.id));
+    const added = incoming.filter((i) => !known.has(i.id));
+    setFresh(added.length);
+    return [...previous, ...added].sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
+  }, []);
+
+  const firstPage = useCallback(() => read(1, true), [read]);
+  const { data, loading, busy, error, at, refresh, update } =
+    useCachedData<NewsItem[]>("news:feed", firstPage, union);
+  const items = useMemo(() => data ?? [], [data]);
+
+  // "المزيد" asks the paginated publishers for the next page and folds it in.
+  const loadMore = useCallback(async () => {
+    const next = page + 1;
+    setMore(true);
+    try {
+      const incoming = await read(next, false);
+      setPage(next);
+      update((prev) => union(prev ?? [], incoming));
+    } catch { /* the button can simply be pressed again */ }
+    finally { setMore(false); }
+  }, [page, read, update, union]);
 
   // Auto-refresh: re-read every publisher on a timer so a screen left open
-  // keeps filling itself. It only ever adds what is new (the merge above), so
-  // nothing the reader is looking at moves out from under them — and it pauses
-  // while the tab is hidden rather than polling a background tab all day.
+  // keeps filling itself. It only ever adds what is new, so nothing the reader
+  // is looking at moves — and it pauses while the tab is hidden.
   useEffect(() => {
     let timer: ReturnType<typeof setInterval> | null = null;
-    const tick = () => { if (!document.hidden) load(1, false, true); };
+    const tick = () => { if (!document.hidden) refresh(); };
     const start = () => { if (!timer) timer = setInterval(tick, AUTO_REFRESH_MS); };
     const stop = () => { if (timer) { clearInterval(timer); timer = null; } };
     const onVis = () => (document.hidden ? stop() : start());
     start();
     document.addEventListener("visibilitychange", onVis);
     return () => { stop(); document.removeEventListener("visibilitychange", onVis); };
-  }, [load]);
+  }, [refresh]);
 
-  const shown = filter === "all" ? items : items.filter((i) => i.source === filter);
+  const shown = filter === "all" ? items : items.filter((i: NewsItem) => i.source === filter);
 
   return (
     <>
@@ -101,8 +99,10 @@ export default function NewsPage() {
                 {fresh > 0 ? `${fresh} خبر جديد` : "لا جديد"}
               </span>
             )}
-            <button className="btn" disabled={refreshing} onClick={() => { setPage(1); load(1, false, true); }}>
-              {refreshing ? "جاري التحديث…" : "تحديث الأخبار"}
+            {at && <span className="muted">آخر تحديث: {new Date(at).toLocaleTimeString("ar-MA", { hour: "2-digit", minute: "2-digit" })}</span>}
+            <button className="btn" disabled={busy} onClick={refresh}>
+              {busy && <i className="spinner" aria-hidden="true" />}
+              {busy ? "جاري التحديث…" : "تحديث الأخبار"}
             </button>
           </div>
         </div>
@@ -112,7 +112,7 @@ export default function NewsPage() {
             الكل ({items.length})
           </button>
           {NEWS_SOURCES.map((s) => {
-            const n = items.filter((i) => i.source === s.key).length;
+            const n = items.filter((i: NewsItem) => i.source === s.key).length;
             return (
               <button key={s.key} role="tab" aria-selected={filter === s.key} className={filter === s.key ? "seg-btn on" : "seg-btn"} onClick={() => setFilter(s.key)}>
                 {s.name} ({n})
@@ -127,8 +127,9 @@ export default function NewsPage() {
         {error && <p className="err">{error}</p>}
 
         <div className="newsgrid">
-          {/* Four publishers are polled at once, so the first load is slow
-              enough that an empty grid reads as broken. */}
+          {/* Nine publishers are polled at once, so a first visit — with
+              nothing in the local cache — would otherwise stare at an empty
+              grid. Later visits paint from the cache and never see this. */}
           {loading && items.length === 0 && Array.from({ length: 8 }, (_, i) => (
             <div key={`skel-${i}`} className="newscard" aria-hidden="true">
               <div className="newsthumb skel thumb" />
@@ -138,7 +139,7 @@ export default function NewsPage() {
               </div>
             </div>
           ))}
-          {shown.map((n) => (
+          {shown.map((n: NewsItem) => (
             <Link key={n.id} href={`/news/${n.id}`} className="newscard">
               <div className="newsthumb">
                 {n.image ? (
@@ -163,8 +164,9 @@ export default function NewsPage() {
         {shown.length === 0 && !loading && <p className="muted">لا توجد أخبار حاليا.</p>}
 
         <div className="newsmore">
-          <button className="btn" disabled={loading} onClick={() => { const p = page + 1; setPage(p); load(p, true); }}>
-            {loading ? "جاري التحميل…" : "المزيد من الأخبار"}
+          <button className="btn" disabled={more} onClick={loadMore}>
+            {more && <i className="spinner" aria-hidden="true" />}
+            {more ? "جاري التحميل…" : "المزيد من الأخبار"}
           </button>
         </div>
       </main>
