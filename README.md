@@ -32,8 +32,10 @@ table until a group stage runs, and some competitions publish no stats — so ev
 page asks the API and says plainly when there is nothing to show, rather than
 rendering an empty poster.
 
-**News** is aggregated from **kooora.com** (30 items/page), **hesport.com**
-(RSS), **elbotola.com** (public JSON feed) and **365scores**. A refresh button
+**News** is aggregated from six publishers: **kooora.com** (30 items/page),
+**beIN SPORTS Arabic** (its own content API, which answers with the article
+body and image inline), **hespress.com/sport** and **hesport.com** (WordPress
+RSS), **elbotola.com** (public JSON feed) and **365scores**. A refresh button
 re-reads the publishers and reports how many stories are new, keeping what is
 already on screen; "المزيد" pages deeper into the paginated sources. Each article has its own page; the body is shown only
 where the publisher syndicates it (hesport's feed, kooora's and elbotola's own

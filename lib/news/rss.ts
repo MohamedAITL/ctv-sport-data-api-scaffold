@@ -1,0 +1,69 @@
+// Both Moroccan publishers we read run WordPress, which means one RSS shape:
+// <item> blocks carrying the full article in <content:encoded>. This is that
+// parser, extracted so a second WordPress feed costs a URL and a source key.
+import type { NewsItem, NewsSourceKey } from "@/types/news";
+import { encodeNewsId } from "./id";
+
+export const unwrap = (s: string): string =>
+  s.replace(/^\s*<!\[CDATA\[/, "").replace(/\]\]>\s*$/, "").trim();
+
+export const tag = (block: string, name: string): string | null => {
+  const m = block.match(new RegExp(`<${name}(?:\\s[^>]*)?>([\\s\\S]*?)</${name}>`));
+  return m ? unwrap(m[1]) : null;
+};
+
+export const decodeEntities = (s: string): string =>
+  s
+    .replace(/&quot;/g, '"').replace(/&#8217;/g, "’").replace(/&#8220;/g, "“")
+    .replace(/&#8221;/g, "”").replace(/&#038;/g, "&").replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&nbsp;/g, " ");
+
+// WordPress appends a syndication footer to the RSS body ("L'article X est
+// apparu en premier sur Y" / "The post X appeared first on Y"). It is feed
+// plumbing, not article text, so drop that trailing paragraph.
+export const stripFeedFooter = (html: string): string =>
+  html
+    .replace(/<p>(?:(?!<\/p>)[\s\S])*?(?:est apparu en premier sur|appeared first on)[\s\S]*?<\/p>\s*$/i, "")
+    .trim();
+
+const firstImage = (block: string): string | null => {
+  const m = block.match(/https?:\/\/[^"'\s<\]]+?\.(?:jpg|jpeg|png|webp)/i);
+  return m ? m[0] : null;
+};
+
+/** Read a WordPress feed into the app's own article shape. */
+export async function fetchWordpressFeed(feed: string, source: NewsSourceKey): Promise<NewsItem[]> {
+  const r = await fetch(feed, {
+    headers: {
+      Accept: "application/rss+xml,application/xml",
+      // Hespress answers a bare fetch with a challenge page; a normal browser
+      // agent gets the feed.
+      "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36",
+    },
+  });
+  if (!r.ok) throw new Error(`${source} feed ${r.status}`);
+  const xml = await r.text();
+
+  const items = xml.match(/<item>[\s\S]*?<\/item>/g) ?? [];
+  return items.flatMap((block) => {
+    const url = tag(block, "link");
+    const title = tag(block, "title");
+    if (!url || !title) return [];
+    const pub = tag(block, "pubDate");
+    const body = tag(block, "content:encoded");
+    const summary = tag(block, "description");
+    return [{
+      id: encodeNewsId(url),
+      source,
+      title: decodeEntities(title),
+      url,
+      image: firstImage(block),
+      publishedAt: pub ? new Date(pub).toISOString() : new Date().toISOString(),
+      author: tag(block, "dc:creator"),
+      section: tag(block, "category"),
+      summary: summary ? decodeEntities(summary).replace(/<[^>]+>/g, "").trim() : null,
+      body: body ? stripFeedFooter(body) : null,
+      bodyIsHtml: Boolean(body),
+    }];
+  });
+}

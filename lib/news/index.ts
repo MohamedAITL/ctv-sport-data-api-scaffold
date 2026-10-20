@@ -1,6 +1,8 @@
-// Aggregate the three publishers into one feed.
+// Aggregate the publishers into one feed.
 import type { NewsItem, NewsSourceKey } from "@/types/news";
 import { fetchHesport } from "./hesport";
+import { fetchHespress } from "./hespress";
+import { fetchBein, fetchBeinArticle } from "./bein";
 import { fetchElbotola, fetchElbotolaArticle } from "./elbotola";
 import { fetchScores365News } from "./scores365";
 import { fetchKooora, fetchKoooraArticle } from "./kooora";
@@ -22,12 +24,14 @@ export async function fetchNews(page = 1, refresh = false): Promise<NewsFeed> {
   const hit = cache.get(key);
   if (!refresh && hit && Date.now() - hit.at < TTL_MS) return { items: hit.items, failed: [] };
 
-  // One dead publisher must not blank the page. hesport and 365scores only
-  // publish a first page, so deeper pages come from the paginated sources.
-  const [he, eb, ko, s3] = await Promise.allSettled([
+  // One dead publisher must not blank the page. The RSS feeds and 365scores
+  // only publish a first page, so deeper pages come from the paginated sources.
+  const [he, hp, eb, ko, bn, s3] = await Promise.allSettled([
     page === 1 ? fetchHesport() : Promise.resolve([]),
+    page === 1 ? fetchHespress() : Promise.resolve([]),
     fetchElbotola(page),
     fetchKooora(page),
+    fetchBein(page),
     page === 1 ? fetchScores365News() : Promise.resolve([]),
   ]);
 
@@ -40,8 +44,10 @@ export async function fetchNews(page = 1, refresh = false): Promise<NewsFeed> {
 
   const all = [
     ...take(he, "hesport"),
+    ...take(hp, "hespress"),
     ...take(eb, "elbotola"),
     ...take(ko, "kooora"),
+    ...take(bn, "bein"),
     ...take(s3, "scores365"),
   ];
 
@@ -83,7 +89,9 @@ export async function fetchNewsItem(id: string): Promise<NewsItem | null> {
 
   try {
     const extra =
-      source === "kooora"
+      source === "bein"
+        ? (await fetchBeinArticle(url)) ?? {}
+        : source === "kooora"
         ? { ...(await articleFromJsonLd(url).catch(() => ({}))), ...(await fetchKoooraArticle(url)) }
         : source === "elbotola"
         ? await fetchElbotolaArticle(url)

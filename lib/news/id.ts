@@ -8,8 +8,10 @@ import type { NewsSourceKey } from "@/types/news";
 
 const ALLOWED_HOSTS = [
   "hesport.com",
+  "hespress.com",
   "elbotola.com",
   "kooora.com",
+  "beinsports.com",
   "365scores.com",
 ];
 
@@ -41,6 +43,8 @@ export function isAllowedArticleUrl(url: string): boolean {
 export function sourceOfUrl(url: string): NewsSourceKey | null {
   const h = (() => { try { return new URL(url).hostname.toLowerCase(); } catch { return ""; } })();
   if (h.endsWith("hesport.com")) return "hesport";
+  if (h.endsWith("hespress.com")) return "hespress";
+  if (h.endsWith("beinsports.com")) return "bein";
   if (h.endsWith("elbotola.com")) return "elbotola";
   if (h.endsWith("kooora.com")) return "kooora";
   if (h.endsWith("365scores.com")) return "scores365";
