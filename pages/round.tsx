@@ -2,6 +2,7 @@ import Head from "next/head";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Nav from "@/components/Nav";
 import MatchdayPoster from "@/components/MatchdayPoster";
+import { useLatestRequest } from "@/lib/useLatestRequest";
 import MatchdayDesign from "@/components/MatchdayDesign";
 import MatchdayTeams from "@/components/MatchdayTeams";
 import TemplateUploader from "@/components/TemplateUploader";
@@ -49,20 +50,22 @@ export default function RoundPage() {
     getTemplate("round").then(setTemplateSrc);
   }, []);
 
+  const req = useLatestRequest<number>(BOTOLA_LEAGUE);
   const fetchRound = useCallback(async (lg: number) => {
+    req.claim(lg);
     setLoading(true);
     try {
       const res = await fetch(`/api/round?competition=${lg}`);
       const json = await res.json();
       const s: RoundState = { competition: lg, matches: json.matches ?? [], rounds: json.rounds ?? [], fetchedAt: json.fetchedAt, error: json.error };
       cache[lg] = s;
-      setData(s);
+      if (req.isCurrent(lg)) setData(s);
     } catch (e) {
-      setData({ competition: lg, matches: [], rounds: [], error: String(e) });
+      if (req.isCurrent(lg)) setData({ competition: lg, matches: [], rounds: [], error: String(e) });
     } finally {
-      setLoading(false);
+      if (req.isCurrent(lg)) setLoading(false);
     }
-  }, []);
+  }, [req]);
 
   useEffect(() => {
     if (cache[league]) setData(cache[league]);
@@ -185,7 +188,7 @@ export default function RoundPage() {
               <h3 className="muted">Live preview</h3>
               <div className="previewbox" style={{ width: PREVIEW_W, height: layout.height * scale }}>
                 <div style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}>
-                  <MatchdayPoster ref={posterRef} mode={results ? "results" : "fixtures"} matches={matches} layout={effLayout} templateSrc={templateSrc} nameOverrides={nameOverrides} logoOverrides={logoOverrides} />
+                  <MatchdayPoster ref={posterRef} groupBy="date" mode={results ? "results" : "fixtures"} matches={matches} layout={effLayout} templateSrc={templateSrc} nameOverrides={nameOverrides} logoOverrides={logoOverrides} />
                 </div>
               </div>
             </div>

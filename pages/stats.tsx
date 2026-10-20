@@ -1,4 +1,5 @@
 import Head from "next/head";
+import { useLatestRequest } from "@/lib/useLatestRequest";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Nav from "@/components/Nav";
 import StatsPoster from "@/components/StatsPoster";
@@ -43,20 +44,22 @@ export default function StatsPage() {
     getTemplate("stats").then(setTemplateSrc);
   }, []);
 
+  const req = useLatestRequest<number>(-1);
   const fetchStats = useCallback(async (lg: number) => {
+    req.claim(lg);
     setLoading(true);
     try {
       const res = await fetch(`/api/stats?competition=${lg}`);
       const json = await res.json();
       const s: StatsState = { competition: lg, categories: json.categories ?? [], fetchedAt: json.fetchedAt, error: json.error };
       cache[lg] = s;
-      setData(s);
+      if (req.isCurrent(lg)) setData(s);
     } catch (e) {
-      setData({ competition: lg, categories: [], error: String(e) });
+      if (req.isCurrent(lg)) setData({ competition: lg, categories: [], error: String(e) });
     } finally {
-      setLoading(false);
+      if (req.isCurrent(lg)) setLoading(false);
     }
-  }, []);
+  }, [req]);
 
   useEffect(() => {
     if (cache[league]) setData(cache[league]);

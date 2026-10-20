@@ -1,4 +1,5 @@
 import Head from "next/head";
+import { useLatestRequest } from "@/lib/useLatestRequest";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Poster from "@/components/Poster";
 import Nav from "@/components/Nav";
@@ -63,9 +64,14 @@ export default function Home() {
     getTemplate(templateKey(initial)).then((t) => setTemplateSrc(t || defaultTemplateFor(initial)));
   }, []);
 
-  const commit = useCallback((lg: number, s: StandingsState) => { standingsCache[lg] = s; setData(s); }, []);
+  const req = useLatestRequest<number>(-1);
+  const commit = useCallback((lg: number, s: StandingsState) => {
+    standingsCache[lg] = s;
+    if (req.isCurrent(lg)) setData(s);
+  }, [req]);
 
   const fetchStandings = useCallback(async (lg: number) => {
+    req.claim(lg);
     setLoading(true);
     try {
       const res = await fetch(`/api/standings?competition=${lg}`);
@@ -78,9 +84,9 @@ export default function Home() {
     } catch (e) {
       commit(lg, { rows: [], season: null, warnings: [], validation: { ok: false, errors: [String(e)], warnings: [] }, stale: true, error: String(e) });
     } finally {
-      setLoading(false);
+      if (req.isCurrent(lg)) setLoading(false);
     }
-  }, [commit]);
+  }, [commit, req]);
 
   useEffect(() => {
     if (standingsCache[league]) setData(standingsCache[league]);

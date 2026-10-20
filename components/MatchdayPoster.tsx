@@ -10,6 +10,8 @@ interface Props {
   nameOverrides: Record<string, string>;
   logoOverrides: Record<string, string>;
   mode?: "fixtures" | "results";
+  /** A matchday spans leagues; a round spans days. */
+  groupBy?: "league" | "date";
 }
 
 const badgeStyle = (x: number, y: number, size: number): CSSProperties => ({
@@ -17,7 +19,34 @@ const badgeStyle = (x: number, y: number, size: number): CSSProperties => ({
   width: size, height: size, objectFit: "contain",
 });
 
-interface Group { leagueId: string; leagueName: string; leagueLogo: string | null; matches: Match[]; maxFame: number; popularity: number }
+interface Group { key: string; label: string; logo: string | null; matches: Match[]; maxFame: number; popularity: number }
+
+// "2026-10-17" -> "الجمعة 17 أكتوبر". Rendered in the browser only (the poster
+// has no data until the page has fetched), so no SSR locale mismatch.
+const arDate = (iso: string) => {
+  const d = new Date(`${iso}T12:00:00Z`);
+  return Number.isNaN(d.getTime())
+    ? iso
+    : d.toLocaleDateString("ar-MA", { weekday: "long", day: "numeric", month: "long" });
+};
+
+// A round is played over two or three days, so its matches are grouped by the
+// day they are played, in order.
+function groupByDate(matches: Match[]): Group[] {
+  const map = new Map<string, Group>();
+  for (const m of matches) {
+    const key = m.date || "—";
+    let g = map.get(key);
+    if (!g) {
+      g = { key, label: m.date ? arDate(m.date) : "", logo: null, matches: [], maxFame: 0, popularity: 0 };
+      map.set(key, g);
+    }
+    g.matches.push(m);
+  }
+  const groups = Array.from(map.values());
+  groups.forEach((g) => g.matches.sort((a, b) => a.kickoffUtc.localeCompare(b.kickoffUtc)));
+  return groups.sort((a, b) => a.key.localeCompare(b.key));
+}
 
 // Group selected matches by competition. Botola first, then by biggest match
 // (fame), then popularity. Matches inside a group are ordered by kickoff.
@@ -26,7 +55,7 @@ function groupByLeague(matches: Match[]): Group[] {
   for (const m of matches) {
     let g = map.get(m.leagueId);
     if (!g) {
-      g = { leagueId: m.leagueId, leagueName: m.leagueName, leagueLogo: m.leagueLogo, matches: [], maxFame: 0, popularity: m.leaguePopularity };
+      g = { key: m.leagueId, label: leagueArName(m.leagueId, m.leagueName), logo: m.leagueLogo, matches: [], maxFame: 0, popularity: m.leaguePopularity };
       map.set(m.leagueId, g);
     }
     g.matches.push(m);
@@ -35,14 +64,14 @@ function groupByLeague(matches: Match[]): Group[] {
   const groups = Array.from(map.values());
   groups.forEach((g) => g.matches.sort((a, b) => a.kickoffUtc.localeCompare(b.kickoffUtc)));
   return groups.sort((a, b) => {
-    if (a.leagueId === BOTOLA_LEAGUE_ID) return -1;
-    if (b.leagueId === BOTOLA_LEAGUE_ID) return 1;
+    if (a.key === BOTOLA_LEAGUE_ID) return -1;
+    if (b.key === BOTOLA_LEAGUE_ID) return 1;
     return b.maxFame - a.maxFame || b.popularity - a.popularity;
   });
 }
 
 const MatchdayPoster = forwardRef<HTMLDivElement, Props>(function MatchdayPoster(
-  { matches, layout, templateSrc, nameOverrides, logoOverrides, mode = "fixtures" },
+  { matches, layout, templateSrc, nameOverrides, logoOverrides, mode = "fixtures", groupBy = "league" },
   ref
 ) {
   const L = layout;
@@ -50,7 +79,7 @@ const MatchdayPoster = forwardRef<HTMLDivElement, Props>(function MatchdayPoster
   const titleCfg = results ? L.resultsTitle : L.title;
   const arName = (id: string, fallback: string) => nameOverrides[id] || fallback;
   const badgeOf = (id: string, fallback: string | null) => logoOverrides[id] || fallback;
-  const groups = groupByLeague(matches);
+  const groups = groupBy === "date" ? groupByDate(matches) : groupByLeague(matches);
 
   // Auto-fit: scale spacing so all groups + rows fit within the canvas height.
   const headerCount = L.groupHeader.show ? groups.length : 0;
@@ -97,12 +126,12 @@ const MatchdayPoster = forwardRef<HTMLDivElement, Props>(function MatchdayPoster
   for (const g of groups) {
     if (L.groupHeader.show) {
       headerNodes.push(
-        <div key={"h-" + g.leagueId} style={{ position: "absolute", left: L.rowBg.insetX, width: L.width - 2 * L.rowBg.insetX, top: y + L.groupHeader.dy, transform: "translateY(-50%)", display: "flex", alignItems: "center", justifyContent: "center", gap: 12, direction: "rtl" }}>
-          {g.leagueLogo && (
+        <div key={"h-" + g.key} style={{ position: "absolute", left: L.rowBg.insetX, width: L.width - 2 * L.rowBg.insetX, top: y + L.groupHeader.dy, transform: "translateY(-50%)", display: "flex", alignItems: "center", justifyContent: "center", gap: 12, direction: "rtl" }}>
+          {g.logo && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={g.leagueLogo} alt="" width={L.groupHeader.logoSize} height={L.groupHeader.logoSize} style={{ width: L.groupHeader.logoSize, height: L.groupHeader.logoSize, objectFit: "contain" }} />
+            <img src={g.logo} alt="" width={L.groupHeader.logoSize} height={L.groupHeader.logoSize} style={{ width: L.groupHeader.logoSize, height: L.groupHeader.logoSize, objectFit: "contain" }} />
           )}
-          <span style={{ color: L.groupHeader.color, fontSize: L.groupHeader.fontSize, fontWeight: 800 }}>{leagueArName(g.leagueId, g.leagueName)}</span>
+          <span style={{ color: L.groupHeader.color, fontSize: L.groupHeader.fontSize, fontWeight: 800 }}>{g.label}</span>
         </div>
       );
       y += headH;

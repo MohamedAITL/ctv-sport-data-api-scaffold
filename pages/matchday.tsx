@@ -1,4 +1,5 @@
 import Head from "next/head";
+import { useLatestRequest } from "@/lib/useLatestRequest";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Nav from "@/components/Nav";
 import MatchdayPoster from "@/components/MatchdayPoster";
@@ -45,20 +46,22 @@ export default function Matchday() {
     getTemplate("matchday").then(setTemplateSrc);
   }, []);
 
+  const req = useLatestRequest<string>("");
   const fetchFixtures = useCallback(async (d: string) => {
+    req.claim(d);
     setLoading(true);
     try {
       const res = await fetch(`/api/fixtures?date=${d}`);
       const json = await res.json();
       const s: FixturesState = { date: json.date ?? d, matches: json.matches ?? [], fetchedAt: json.fetchedAt, stale: Boolean(json.stale), errors: json.errors };
       fixturesCache[d] = s;
-      setData(s);
+      if (req.isCurrent(d)) setData(s);
     } catch (e) {
-      setData({ date: d, matches: [], stale: true, errors: [String(e)] });
+      if (req.isCurrent(d)) setData({ date: d, matches: [], stale: true, errors: [String(e)] });
     } finally {
-      setLoading(false);
+      if (req.isCurrent(d)) setLoading(false);
     }
-  }, []);
+  }, [req]);
 
   useEffect(() => {
     if (fixturesCache[date]) setData(fixturesCache[date]);

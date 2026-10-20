@@ -50,3 +50,35 @@ describe("MatchdayPoster modes", () => {
     expect(container.textContent).toContain("نتائج مباريات اليوم");
   });
 });
+
+describe("MatchdayPoster grouping", () => {
+  // A round is played over two or three days, so the round poster groups by
+  // day instead of by competition.
+  const day = (id: string, date: string) => mk({ id, date, kickoffUtc: `${date}T20:00:00Z`, isFinished: false, status: "SCHEDULED" });
+
+  it("groupBy=date puts one header per day, in date order", () => {
+    const { container } = render(
+      <MatchdayPoster
+        matches={[day("c", "2026-11-08"), day("a", "2026-11-06"), day("b", "2026-11-07")]}
+        layout={DEFAULT_MATCHDAY_LAYOUT} templateSrc={null} nameOverrides={{}} logoOverrides={{}}
+        mode="fixtures" groupBy="date"
+      />
+    );
+    const headers = Array.from(container.querySelectorAll("span"))
+      .map((s) => s.textContent ?? "")
+      .filter((t) => /نونبر|November/.test(t));
+    expect(headers).toHaveLength(3);
+    expect(headers[0]).toContain("6");
+    expect(headers[2]).toContain("8");
+  });
+
+  it("defaults to grouping by competition", () => {
+    const { container } = render(
+      <MatchdayPoster
+        matches={[mk()]} layout={DEFAULT_MATCHDAY_LAYOUT} templateSrc={null}
+        nameOverrides={{}} logoOverrides={{}} mode="fixtures"
+      />
+    );
+    expect(container.textContent).toContain("La Liga");
+  });
+});

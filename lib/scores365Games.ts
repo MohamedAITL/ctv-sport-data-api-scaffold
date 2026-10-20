@@ -2,10 +2,11 @@
 // so the matchday poster renders them unchanged.
 //
 // 365scores exposes no round filter: `roundNum` as a query param is ignored, so
-// games are fetched from the three game feeds and grouped by their own roundNum.
-// Coverage is a moving window (recent results + whatever is scheduled), not a
-// season archive, and a league with no published schedule simply returns fewer
-// games — that is a normal state, not an error.
+// games are fetched from the game feeds and grouped by their own roundNum.
+// The three feeds alone are a moving window — for Botola they held rounds 3-6
+// of a 30-round season — so the `paging` links in the response are followed
+// outwards until the season runs out. A league with no published schedule still
+// returns fewer games, which is a normal state, not an error.
 import type { Match, MatchSide } from "@/types/fixtures";
 
 const API = "https://webws.365scores.com/web/games";
@@ -37,7 +38,13 @@ interface S365Game {
 interface S365GamesResp {
   games?: S365Game[];
   competitions?: Array<{ id?: number; name?: string; imageVersion?: number }>;
+  paging?: { previousPage?: string; nextPage?: string };
 }
+
+// Older/newer pages are anchored on a game id. The links the API returns carry
+// `timezoneId=1`, which would shift every kickoff, so the URL is rebuilt with
+// our own query instead of being followed verbatim.
+const PAGE_MAX = 12;
 
 // -1 is 365scores' "no score yet" sentinel.
 const score = (v: number | undefined): number | null =>
@@ -62,6 +69,14 @@ async function feed(path: string, competitionId: number): Promise<S365GamesResp>
   });
   if (!r.ok) throw new Error(`365scores games/${path} ${r.status}`);
   return (await r.json()) as S365GamesResp;
+}
+
+async function page(competitionId: number, afterGame: number, direction: -1 | 1): Promise<S365Game[]> {
+  const r = await fetch(`${API}/?${Q}&competitions=${competitionId}&games=1&aftergame=${afterGame}&direction=${direction}`, {
+    headers: { Accept: "application/json" },
+  });
+  if (!r.ok) return []; // a missing page just ends the walk
+  return ((await r.json()) as S365GamesResp).games ?? [];
 }
 
 function toMatch(g: S365Game, leagueLogo: string | null): Match {
@@ -109,18 +124,47 @@ export async function fetch365Games(competitionId: number): Promise<GamesResult>
     ? `${IMG}/v${meta.imageVersion ?? 1}/Competitions/light/${meta.id}`
     : null;
 
-  // The three feeds overlap (current repeats recent results), so dedupe by id.
-  const byId = new Map<string, Match>();
-  for (const r of ok) {
-    for (const g of r.games ?? []) {
-      const m = toMatch(g, leagueLogo);
-      if (m.id) byId.set(m.id, m);
+  // The feeds overlap (current repeats recent results), so dedupe by id.
+  const games = new Map<number, S365Game>();
+  for (const r of ok) for (const g of r.games ?? []) if (g.id) games.set(g.id, g);
+
+  // The season the league is actually in — walking backwards eventually crosses
+  // into last season, and those rounds must not be mixed into this one.
+  const season = ok.find((r) => r.games?.length)?.games?.[0]?.seasonNum ?? null;
+  const inSeason = (g: S365Game) => season === null || g.seasonNum === season;
+
+  // Walk out in both directions until a page adds nothing, leaves the season,
+  // or the cap is hit.
+  for (const direction of [-1, 1] as const) {
+    for (let i = 0; i < PAGE_MAX; i++) {
+      // Anchor on the game at the edge of what we hold, by kickoff — ids are
+      // only roughly chronological.
+      const edge = Array.from(games.values()).reduce((best, g) =>
+        (g.startTime ?? "") === "" ? best
+        : direction === -1
+          ? (g.startTime as string) < (best.startTime ?? "~") ? g : best
+          : (g.startTime as string) > (best.startTime ?? "") ? g : best
+      );
+      const anchor = edge.id;
+      if (!anchor) break;
+      const batch = await page(competitionId, anchor, direction);
+      if (batch.length === 0) break;
+      let added = 0;
+      let leftSeason = false;
+      for (const g of batch) {
+        if (!g.id) continue;
+        if (!inSeason(g)) { leftSeason = true; continue; }
+        if (!games.has(g.id)) { games.set(g.id, g); added++; }
+      }
+      if (added === 0 || leftSeason) break;
     }
   }
-  const matches = Array.from(byId.values()).sort((a, b) =>
-    a.kickoffUtc.localeCompare(b.kickoffUtc)
-  );
-  const season = ok.find((r) => r.games?.length)?.games?.[0]?.seasonNum;
+
+  const matches = Array.from(games.values())
+    .filter(inSeason)
+    .map((g) => toMatch(g, leagueLogo))
+    .filter((m) => m.id)
+    .sort((a, b) => a.kickoffUtc.localeCompare(b.kickoffUtc));
   return { matches, season: season != null ? String(season) : null };
 }
 

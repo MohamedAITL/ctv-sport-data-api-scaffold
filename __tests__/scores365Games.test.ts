@@ -91,3 +91,53 @@ describe("round grouping", () => {
     expect(roundsOf([])).toEqual([]);
   });
 });
+
+describe("fetch365Games paging", () => {
+  const realFetch = global.fetch;
+  afterEach(() => { global.fetch = realFetch; });
+
+  // Verified live: the three feeds held only rounds 3-6 of Botola's 30-round
+  // season. The rest is reachable only by following the `paging` anchors.
+  const dated = (id: number, round: number, day: string, season = 84) => ({
+    ...game(id, round, 4, 1, 0), seasonNum: season, startTime: `${day}T20:00:00+00:00`,
+  });
+
+  it("walks back and forward until the pages run out, and stops at the season line", async () => {
+    const back1 = [dated(10, 1, "2026-09-24"), dated(11, 2, "2026-09-30")];
+    const lastSeason = [dated(1, 29, "2026-05-20", 83), dated(2, 30, "2026-05-27", 83)];
+    const forward = [dated(40, 7, "2026-11-06")];
+    const seen: string[] = [];
+    global.fetch = jest.fn(async (url: string) => {
+      seen.push(url);
+      let games: unknown[] = [];
+      if (url.includes("aftergame=")) {
+        const back = url.includes("direction=-1");
+        if (back) games = url.includes("aftergame=20") ? back1 : lastSeason;
+        else games = url.includes("aftergame=21") ? forward : [];
+      } else if (url.includes("/results/")) {
+        games = [dated(20, 4, "2026-10-16")];
+      } else if (url.includes("/fixtures/")) {
+        games = [dated(21, 5, "2026-10-23")];
+      }
+      return { ok: true, json: async () => resp(games) };
+    }) as unknown as typeof fetch;
+
+    const { matches } = await fetch365Games(557);
+    // rounds 1,2 (paged back), 4 and 5 (feeds), 7 (paged forward) — never 29/30
+    expect(roundsOf(matches)).toEqual([1, 2, 4, 5, 7]);
+    expect(matches.some((m) => m.round === "29" || m.round === "30")).toBe(false);
+    // anchored on the edge game by kickoff, not on an arbitrary id
+    expect(seen.some((u) => u.includes("aftergame=20") && u.includes("direction=-1"))).toBe(true);
+    expect(seen.some((u) => u.includes("aftergame=21") && u.includes("direction=1"))).toBe(true);
+  });
+
+  it("stops walking when a page repeats what we already hold", async () => {
+    let pages = 0;
+    global.fetch = jest.fn(async (url: string) => {
+      if (url.includes("aftergame=")) pages++;
+      return { ok: true, json: async () => resp([dated(20, 4, "2026-10-16")]) };
+    }) as unknown as typeof fetch;
+    await fetch365Games(557);
+    expect(pages).toBe(2); // one probe each way, both of which add nothing
+  });
+});

@@ -19,7 +19,10 @@ layout, 20-team leagues use the full canvas at full row size, and the 36-team
 Champions League league phase is split into **two readable columns** instead of
 being shrunk to fit. Each league keeps its own template and layout.
 
-A round with no published schedule is reported as such — 365scores publishes
+The round list covers the **whole season**, not just the current window: the
+three game feeds only ever return a few rounds, so the `paging` anchors in the
+response are followed outwards until the season ends. A round's matches are
+grouped by the day they are played. A round with no published schedule is reported as such — 365scores publishes
 fixtures only once a round is announced, and games scheduled before a round is
 assigned appear under **مباريات قادمة**. The poster is never exported empty.
 

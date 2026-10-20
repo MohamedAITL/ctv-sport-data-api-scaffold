@@ -35,7 +35,10 @@ async function get<T>(path: string): Promise<T> {
 const crest = (id?: number, v?: number) =>
   id ? `${CREST_IMG}/v${v ?? 1}/Competitors/${id}` : null;
 
-const COMP_IMG = `${IMG},d_Competitions:default1.png`;
+// There is no Competitions default asset — verified 404 on competitions 5677
+// and 5509 with every casing — but the Competitors one renders, so it stands in
+// for a missing competition badge instead of a 404 on the wall display.
+const COMP_IMG = `${IMG},d_Competitors:default1.png`;
 export const competitionLogo = (id: number) => `${COMP_IMG}/v1/Competitions/${id}`;
 
 // -1 is 365scores' "no score yet" sentinel.
