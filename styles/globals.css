@@ -453,3 +453,31 @@ html, body {
 .kp:fullscreen .kp-pitch, .kp.cssfull .kp-pitch { height: calc(100vh - 110px); aspect-ratio: auto; }
 .kp:fullscreen .kp-man, .kp.cssfull .kp-man { width: 120px; }
 .kp:fullscreen .kp-name, .kp.cssfull .kp-name { font-size: 17px; max-width: 120px; }
+
+/* ---- live: return link, bench drag, fullscreen fit ---- */
+.kiosk-brand { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.kiosk-back {
+  text-decoration: none; color: var(--text); background: var(--panel);
+  border: 1.5px solid var(--border-2); border-radius: 10px;
+  padding: 10px 14px; font-size: 14px; font-weight: 800;
+  min-height: 44px; display: inline-flex; align-items: center; touch-action: manipulation;
+}
+.kiosk-back:active { transform: scale(0.98); border-color: var(--accent); }
+
+/* A substitute is dragged with the same gesture as a starter. */
+.kp-draggable { touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; }
+.kp-draggable:active { cursor: grabbing; background: var(--panel-2); border-radius: 8px; }
+.kp-draggable.on-pitch { opacity: .55; }
+.kp-onpitch { margin-inline-start: auto; font-size: 12px; font-style: normal; color: var(--accent-2); }
+/* Follows the finger between bench and pitch so the drag is visible. */
+.kp-ghost {
+  position: fixed; z-index: 10000; transform: translate(-50%, -50%);
+  pointer-events: none; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  filter: drop-shadow(0 6px 14px rgba(0,0,0,.55));
+}
+
+/* Fullscreen must override the normal height cap, or the pitch would stay
+   small on a screen that just got much bigger. */
+.kp:fullscreen .kp-pitch, .kp.cssfull .kp-pitch {
+  max-height: none; height: calc(100vh - 150px); aspect-ratio: auto;
+}

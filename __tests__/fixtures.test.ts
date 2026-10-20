@@ -62,3 +62,31 @@ describe("selectMatchday", () => {
     expect(sel.every((m) => m.leagueId === BOTOLA_LEAGUE_ID)).toBe(true);
   });
 });
+
+describe("live vs finished", () => {
+  // `&&` binds tighter than `||`: without parentheses a finished match still
+  // carrying matchLive="1" was flagged live, and the results poster then drew
+  // the live-minute line — which for a finished match is the score, reversed.
+  it("never marks a finished match as live", () => {
+    const [m] = normalizeFixtures(
+      { data: [{
+        id: "1", matchStatus: "FINISHED", matchPeriod: "FINISHED", matchLive: "1",
+        homeTeamName: "Parma", awayTeamName: "Torino",
+        homeTeamScore: "0", awayTeamScore: "3",
+      }] },
+      0,
+    );
+    expect(m.isFinished).toBe(true);
+    expect(m.isLive).toBe(false);
+  });
+
+  it("still marks an in-progress match as live", () => {
+    const [m] = normalizeFixtures(
+      { data: [{ id: "2", matchStatus: "LIVE", matchPeriod: "2ND", matchLive: "1",
+                 homeTeamName: "a", awayTeamName: "b" }] },
+      0,
+    );
+    expect(m.isLive).toBe(true);
+    expect(m.isFinished).toBe(false);
+  });
+});

@@ -15,6 +15,15 @@ type Pos = { x: number; y: number };
 type Moved = Record<string, Pos>;
 
 const key = (gameId: number) => `live.pitch.${gameId}`;
+
+// Capture keeps a fast drag tracking, but it throws if the pointer has already
+// gone. Losing capture must never lose the drop, so both calls are guarded.
+const capture = (e: React.PointerEvent) => {
+  try { (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); } catch { /* no active pointer */ }
+};
+const release = (e: React.PointerEvent) => {
+  try { (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId); } catch { /* already released */ }
+};
 const clamp = (n: number) => Math.min(98, Math.max(2, n));
 
 function loadMoved(gameId: number): Moved {
@@ -41,16 +50,27 @@ function PlayerFace({ p, size }: { p: LineupPlayer; size: number }) {
   );
 }
 
-function Bench({ lineup, title }: { lineup: TeamLineup; title: string }) {
+function Bench({
+  lineup, title, home, onBenchDown, placed,
+}: {
+  lineup: TeamLineup; title: string; home: boolean;
+  onBenchDown: (p: LineupPlayer, home: boolean) => (e: React.PointerEvent) => void;
+  placed: (p: LineupPlayer, home: boolean) => boolean;
+}) {
   return (
     <div className="kp-bench">
       <h4>{title}{lineup.formation ? ` · ${lineup.formation}` : ""}</h4>
       {lineup.bench.length > 0 && (
         <ul>
           {lineup.bench.map((p) => (
-            <li key={p.id}>
+            <li
+              key={p.id}
+              className={`kp-draggable${placed(p, home) ? " on-pitch" : ""}`}
+              onPointerDown={onBenchDown(p, home)}
+            >
               <PlayerFace p={p} size={34} />
               <span>{p.shortName || p.name}</span>
+              {placed(p, home) && <em className="kp-onpitch">في الملعب</em>}
             </li>
           ))}
         </ul>
@@ -77,6 +97,10 @@ export default function LinePitch({ d }: { d: LiveDetail }) {
   const [full, setFull] = useState(false);
   const [cssFull, setCssFull] = useState(false); // used when the API is blocked
   const dragging = useRef<{ id: string; dx: number; dy: number } | null>(null);
+  // A bench player being carried toward the pitch; rendered as a ghost that
+  // follows the finger so the gesture is visible before it lands.
+  const [ghost, setGhost] = useState<{ p: LineupPlayer; home: boolean; x: number; y: number } | null>(null);
+  const ghostRef = useRef<{ p: LineupPlayer; home: boolean } | null>(null);
 
   // Arrangements are per match and must survive the 15s auto-refresh.
   useEffect(() => { setMoved(loadMoved(gameId)); }, [gameId]);
@@ -115,7 +139,7 @@ export default function LinePitch({ d }: { d: LiveDetail }) {
       dx: ((e.clientX - box.left) / box.width) * 100 - cur.x,
       dy: ((e.clientY - box.top) / box.height) * 100 - cur.y,
     };
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    capture(e);
   };
 
   const onMove = (e: React.PointerEvent) => {
@@ -131,9 +155,46 @@ export default function LinePitch({ d }: { d: LiveDetail }) {
     const drag = dragging.current;
     dragging.current = null;
     if (!drag) return;
-    (e.currentTarget as HTMLElement).releasePointerCapture?.(e.pointerId);
+    release(e);
     setMoved((m) => { persist(m); return m; });
   };
+
+  // Dragging a substitute onto the pitch places them there; it is the same
+  // pointer-event path as moving a starter, just starting outside the pitch.
+  const onBenchDown = (p: LineupPlayer, home: boolean) => (e: React.PointerEvent) => {
+    ghostRef.current = { p, home };
+    setGhost({ p, home, x: e.clientX, y: e.clientY });
+    capture(e);
+  };
+
+  const onBenchMove = (e: React.PointerEvent) => {
+    if (!ghostRef.current) return;
+    setGhost((g) => (g ? { ...g, x: e.clientX, y: e.clientY } : g));
+  };
+
+  const onBenchUp = (e: React.PointerEvent) => {
+    const carried = ghostRef.current;
+    ghostRef.current = null;
+    setGhost(null);
+    if (!carried) return;
+    release(e);
+    const box = pitchRef.current?.getBoundingClientRect();
+    if (!box) return;
+    const inside =
+      e.clientX >= box.left && e.clientX <= box.right &&
+      e.clientY >= box.top && e.clientY <= box.bottom;
+    if (!inside) return; // dropped outside — leave them on the bench
+    const id = `${carried.home ? "h" : "a"}${carried.p.id}`;
+    persist({
+      ...moved,
+      [id]: {
+        x: clamp(((e.clientX - box.left) / box.width) * 100),
+        y: clamp(((e.clientY - box.top) / box.height) * 100),
+      },
+    });
+  };
+
+  const isPlaced = (p: LineupPlayer, home: boolean) => Boolean(moved[`${home ? "h" : "a"}${p.id}`]);
 
   const reset = () => {
     try { localStorage.removeItem(key(gameId)); } catch { /* ignore */ }
@@ -187,6 +248,8 @@ export default function LinePitch({ d }: { d: LiveDetail }) {
           <div className="kp-circle" />
           {h?.starting.map((p) => shirt(p, true))}
           {a?.starting.map((p) => shirt(p, false))}
+          {h?.bench.filter((p) => isPlaced(p, true)).map((p) => shirt(p, true))}
+          {a?.bench.filter((p) => isPlaced(p, false)).map((p) => shirt(p, false))}
         </div>
       ) : (
         <div className="kp-xi">
@@ -210,9 +273,16 @@ export default function LinePitch({ d }: { d: LiveDetail }) {
       )}
 
       {!(full || cssFull) && (
-        <div className="kp-benches">
-          {h && <Bench lineup={h} title={d.match.home.name} />}
-          {a && <Bench lineup={a} title={d.match.away.name} />}
+        <div className="kp-benches" onPointerMove={onBenchMove} onPointerUp={onBenchUp} onPointerCancel={onBenchUp}>
+          {h && <Bench lineup={h} title={d.match.home.name} home onBenchDown={onBenchDown} placed={isPlaced} />}
+          {a && <Bench lineup={a} title={d.match.away.name} home={false} onBenchDown={onBenchDown} placed={isPlaced} />}
+        </div>
+      )}
+
+      {ghost && (
+        <div className={`kp-ghost ${ghost.home ? "home" : "away"}`} style={{ left: ghost.x, top: ghost.y }}>
+          <PlayerFace p={ghost.p} size={54} />
+          <span className="kp-name">{ghost.p.shortName || ghost.p.name}</span>
         </div>
       )}
     </div>

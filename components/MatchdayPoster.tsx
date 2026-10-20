@@ -82,7 +82,9 @@ const MatchdayPoster = forwardRef<HTMLDivElement, Props>(function MatchdayPoster
           <span>{m.home.score}</span>
         </div>
         {pens && <div style={{ fontSize: L.centerFontSize * 0.4, fontWeight: 700, opacity: 0.8 }}>({m.away.pen} - {m.home.pen})</div>}
-        {m.isLive && <div style={{ fontSize: L.centerFontSize * 0.4, fontWeight: 700, color: "#58d08b" }}>{m.statusLabel}</div>}
+        {m.isLive && !m.isFinished && (
+          <div style={{ fontSize: L.centerFontSize * 0.4, fontWeight: 700, color: "#58d08b" }}>{m.statusLabel}</div>
+        )}
       </div>
     );
   };

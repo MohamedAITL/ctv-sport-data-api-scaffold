@@ -1,4 +1,5 @@
 import Head from "next/head";
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import LiveList from "@/components/live/LiveList";
 import LiveHeader from "@/components/live/LiveHeader";
@@ -105,7 +106,8 @@ export default function LivePage() {
     dateRef.current = iso;
     setSelected(null); selectedRef.current = null;
     setDetail(null); setMatches([]);
-    setFilter(iso === isoToday() ? "live" : "done");
+    // Past days are results; future days are fixtures; today leads with live.
+    setFilter(iso === isoToday() ? "live" : iso < isoToday() ? "done" : "all");
     toTop();
     refreshAll(true);
   };
@@ -129,11 +131,14 @@ export default function LivePage() {
       <div className="kiosk" dir="rtl">
         <aside className="kiosk-rail">
           <div className="kiosk-railhead">
-            <div className="kiosk-brand"><span className="brandmark">شوف<b>TV</b></span></div>
+            <div className="kiosk-brand">
+              <span className="brandmark">شوف<b>TV</b></span>
+              <Link href="/" className="kiosk-back">رجوع للتطبيق</Link>
+            </div>
             <div className="kiosk-day">
               <button type="button" aria-label="اليوم السابق" onClick={() => goDay(shiftDay(date, -1))}>‹</button>
               <button type="button" className="kiosk-daylabel" onClick={() => goDay(isoToday())}>{arDay(date)}</button>
-              <button type="button" aria-label="اليوم التالي" disabled={date >= isoToday()} onClick={() => goDay(shiftDay(date, 1))}>›</button>
+              <button type="button" aria-label="اليوم التالي" onClick={() => goDay(shiftDay(date, 1))}>›</button>
             </div>
             <div className="kiosk-seg three">
               <button type="button" className={filter === "live" ? "on" : ""} onClick={() => pickFilter("live")}>مباشر ({liveCount})</button>
