@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { LiveDetail, PastMatch, PreviousMatches } from "@/types/live";
+import type { TeamRow } from "@/types/standings";
 
 const day = (iso: string) => {
   const d = new Date(iso);
@@ -30,6 +31,7 @@ function Row({ m, team }: { m: PastMatch; team?: string }) {
 
 export default function LivePrevious({ d }: { d: LiveDetail }) {
   const [data, setData] = useState<PreviousMatches | null>(null);
+  const [table, setTable] = useState<TeamRow[]>([]);
   const [error, setError] = useState(false);
   const { home, away } = d.match;
 
@@ -37,17 +39,21 @@ export default function LivePrevious({ d }: { d: LiveDetail }) {
     let live = true;
     setData(null);
     setError(false);
-    fetch(`/api/live/previous?home=${home.id}&away=${away.id}`)
+    fetch(`/api/live/previous?home=${home.id}&away=${away.id}&competition=${d.match.competitionId}`)
       .then((r) => r.json())
-      .then((j) => { if (live) { if (j.previous) setData(j.previous); else setError(true); } })
+      .then((j) => {
+        if (!live) return;
+        if (j.previous) { setData(j.previous); setTable(j.table ?? []); } else setError(true);
+      })
       .catch(() => { if (live) setError(true); });
     return () => { live = false; };
-  }, [home.id, away.id]);
+  }, [home.id, away.id, d.match.competitionId]);
 
   if (error) return <div className="kp-none" dir="rtl"><p>تعذر تحميل المواجهات السابقة</p></div>;
   if (!data) return <div className="kp-none" dir="rtl"><p>جاري التحميل…</p></div>;
 
-  const empty = data.h2h.length === 0 && data.home.length === 0 && data.away.length === 0;
+  const here = (name: string) => name === home.name || name === away.name;
+  const empty = data.h2h.length === 0 && data.home.length === 0 && data.away.length === 0 && table.length === 0;
   if (empty) {
     return (
       <div className="kp-none" dir="rtl">
@@ -75,6 +81,29 @@ export default function LivePrevious({ d }: { d: LiveDetail }) {
         <section>
           <h3>آخر مباريات {away.name}</h3>
           <ul>{data.away.map((m) => <Row key={m.id} m={m} team={away.name} />)}</ul>
+        </section>
+      )}
+      {table.length > 0 && (
+        <section>
+          <h3>{d.match.competition} — الترتيب</h3>
+          <table className="kpt">
+            <thead>
+              <tr><th>#</th><th>الفريق</th><th>لعب</th><th>فاز</th><th>تعادل</th><th>خسر</th><th>نقاط</th></tr>
+            </thead>
+            <tbody>
+              {table.map((r) => (
+                <tr key={r.teamId} className={here(r.nameAr) || here(r.nameOriginal) ? "on" : undefined}>
+                  <td>{r.rank}</td>
+                  <td className="kpt-team">{r.nameAr || r.nameOriginal}</td>
+                  <td>{r.played}</td>
+                  <td>{r.wins}</td>
+                  <td>{r.draws ?? "-"}</td>
+                  <td>{r.losses ?? "-"}</td>
+                  <td><b>{r.points}</b></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </section>
       )}
     </div>

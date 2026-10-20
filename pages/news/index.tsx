@@ -6,6 +6,10 @@ import { NEWS_SOURCES, sourceName, type NewsItem, type NewsSourceKey } from "@/t
 
 type Filter = NewsSourceKey | "all";
 
+// The server caches each publisher for five minutes, so asking more often than
+// that would mostly re-read its own cache.
+const AUTO_REFRESH_MS = 5 * 60 * 1000;
+
 const timeAgo = (iso: string): string => {
   const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
   if (!Number.isFinite(mins) || mins < 0) return "";
@@ -57,6 +61,21 @@ export default function NewsPage() {
   }, []);
 
   useEffect(() => { load(1, false); }, [load]);
+
+  // Auto-refresh: re-read every publisher on a timer so a screen left open
+  // keeps filling itself. It only ever adds what is new (the merge above), so
+  // nothing the reader is looking at moves out from under them — and it pauses
+  // while the tab is hidden rather than polling a background tab all day.
+  useEffect(() => {
+    let timer: ReturnType<typeof setInterval> | null = null;
+    const tick = () => { if (!document.hidden) load(1, false, true); };
+    const start = () => { if (!timer) timer = setInterval(tick, AUTO_REFRESH_MS); };
+    const stop = () => { if (timer) { clearInterval(timer); timer = null; } };
+    const onVis = () => (document.hidden ? stop() : start());
+    start();
+    document.addEventListener("visibilitychange", onVis);
+    return () => { stop(); document.removeEventListener("visibilitychange", onVis); };
+  }, [load]);
 
   const shown = filter === "all" ? items : items.filter((i) => i.source === filter);
 

@@ -13,6 +13,9 @@ const ALLOWED_HOSTS = [
   "kooora.com",
   "beinsports.com",
   "365scores.com",
+  "skynewsarabia.com",
+  "goal.com",
+  "elsport.com",
 ];
 
 export function encodeNewsId(url: string): string {
@@ -45,6 +48,9 @@ export function sourceOfUrl(url: string): NewsSourceKey | null {
   if (h.endsWith("hesport.com")) return "hesport";
   if (h.endsWith("hespress.com")) return "hespress";
   if (h.endsWith("beinsports.com")) return "bein";
+  if (h.endsWith("skynewsarabia.com")) return "skynews";
+  if (h.endsWith("goal.com")) return "goal";
+  if (h.endsWith("elsport.com")) return "elsport";
   if (h.endsWith("elbotola.com")) return "elbotola";
   if (h.endsWith("kooora.com")) return "kooora";
   if (h.endsWith("365scores.com")) return "scores365";

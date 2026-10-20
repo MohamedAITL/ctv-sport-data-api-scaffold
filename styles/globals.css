@@ -822,3 +822,18 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
 .kpv-team.away { text-align: start; }
 .kpv-score { flex: none; min-width: 74px; text-align: center; font-weight: 900; font-variant-numeric: tabular-nums; }
 .kpv-comp { flex: none; max-width: 190px; color: var(--muted); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Nine publishers put ~280 cards on the page. `content-visibility` lets the
+   browser skip layout and paint for the ones off screen, which is what keeps
+   scrolling smooth at that length; the size hint stops the scrollbar jumping
+   as they come into view. */
+.newscard { content-visibility: auto; contain-intrinsic-size: auto 320px; }
+
+/* The competition table, under the meetings — the last block 365scores shows
+   for a match that we did not. */
+.kpt { width: 100%; border-collapse: collapse; font-size: 15px; font-variant-numeric: tabular-nums; }
+.kpt th { text-align: center; font-size: 13px; color: var(--muted); font-weight: 800; padding: 8px 4px; border-bottom: 1px solid var(--border-2); }
+.kpt td { text-align: center; padding: 9px 4px; border-bottom: 1px solid var(--border); }
+.kpt .kpt-team { text-align: start; }
+.kpt tr.on { background: var(--accent-soft); }
+.kpt tr.on .kpt-team { font-weight: 900; color: var(--accent); }

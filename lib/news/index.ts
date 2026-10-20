@@ -6,33 +6,72 @@ import { fetchBein, fetchBeinArticle } from "./bein";
 import { fetchElbotola, fetchElbotolaArticle } from "./elbotola";
 import { fetchScores365News } from "./scores365";
 import { fetchKooora, fetchKoooraArticle } from "./kooora";
+import { fetchSkyNews } from "./skynews";
+import { fetchGoal } from "./goal";
+import { fetchElsport } from "./elsport";
 import { articleFromJsonLd } from "./jsonld";
 import { decodeNewsId, sourceOfUrl } from "./id";
 
 const TTL_MS = 5 * 60 * 1000;
+// What the paginated sources are asked for per page. The first page already
+// carries ~280 stories from nine publishers, so this only affects "المزيد".
+const PAGE_SIZE = 20;
+// Nine publishers are read in parallel, so the slowest sets the wait. Every
+// one of them answers in under two seconds when healthy; past this they are
+// treated as down for the round rather than holding up the other eight. The
+// underlying request is not aborted — it just stops being waited on.
+const SOURCE_TIMEOUT_MS = 8000;
 const cache = new Map<string, { at: number; items: NewsItem[] }>();
 
 export interface NewsFeed {
   items: NewsItem[];
   failed: NewsSourceKey[]; // sources that did not answer, surfaced in the UI
+  /** Served from an expired cache while a refresh runs behind it. */
+  stale?: boolean;
 }
+
+const withTimeout = <T,>(p: Promise<T>, label: string): Promise<T> =>
+  new Promise<T>((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error(`${label} timed out`)), SOURCE_TIMEOUT_MS);
+    p.then((v) => { clearTimeout(t); resolve(v); }, (e) => { clearTimeout(t); reject(e); });
+  });
+
+// One background refresh per page at a time, so a burst of visitors on an
+// expired cache does not multiply into a burst of publisher requests.
+const refreshing = new Set<string>();
 
 // `refresh` skips the TTL so the button really re-reads the publishers; the
 // cache still serves ordinary browsing and the "load more" paging.
 export async function fetchNews(page = 1, refresh = false): Promise<NewsFeed> {
   const key = `page:${page}`;
   const hit = cache.get(key);
-  if (!refresh && hit && Date.now() - hit.at < TTL_MS) return { items: hit.items, failed: [] };
+  if (!refresh && hit) {
+    if (Date.now() - hit.at < TTL_MS) return { items: hit.items, failed: [] };
+    // Expired: answer instantly with what we have and renew it behind the
+    // request, so nobody ever waits on nine publishers twice.
+    if (!refreshing.has(key)) {
+      refreshing.add(key);
+      void fetchNews(page, true).catch(() => undefined).finally(() => refreshing.delete(key));
+    }
+    return { items: hit.items, failed: [], stale: true };
+  }
 
-  // One dead publisher must not blank the page. The two RSS feeds only publish
-  // a first page, so deeper pages come from the paginated sources.
-  const [he, hp, eb, ko, bn, s3] = await Promise.allSettled([
-    page === 1 ? fetchHesport() : Promise.resolve([]),
-    page === 1 ? fetchHespress() : Promise.resolve([]),
-    fetchElbotola(page),
-    fetchKooora(page),
-    fetchBein(page),
-    fetchScores365News(page),
+  // One dead publisher must not blank the page, and every source is asked at
+  // once so the slowest one — not their sum — sets the wait. A feed or a
+  // homepage has a single page, so those answer only on the first; the sources
+  // that paginate keep going for "المزيد".
+  const first = page === 1;
+  const run = (label: string, p: Promise<NewsItem[]>) => withTimeout(p, label);
+  const [he, hp, eb, ko, bn, s3, sky, go, els] = await Promise.allSettled([
+    first ? run("hesport", fetchHesport()) : Promise.resolve([]),
+    first ? run("hespress", fetchHespress()) : Promise.resolve([]),
+    run("elbotola", fetchElbotola(page)),
+    run("kooora", fetchKooora(page)),
+    run("bein", fetchBein(page, PAGE_SIZE)),
+    run("365scores", fetchScores365News(page, PAGE_SIZE)),
+    first ? run("skynews", fetchSkyNews()) : Promise.resolve([]),
+    first ? run("goal", fetchGoal()) : Promise.resolve([]),
+    first ? run("elsport", fetchElsport()) : Promise.resolve([]),
   ]);
 
   const failed: NewsSourceKey[] = [];
@@ -49,6 +88,9 @@ export async function fetchNews(page = 1, refresh = false): Promise<NewsFeed> {
     ...take(ko, "kooora"),
     ...take(bn, "bein"),
     ...take(s3, "scores365"),
+    ...take(sky, "skynews"),
+    ...take(go, "goal"),
+    ...take(els, "elsport"),
   ];
 
   // Same story can appear twice (e.g. a republished wire piece); key on URL.
