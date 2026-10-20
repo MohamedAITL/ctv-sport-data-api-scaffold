@@ -51,11 +51,12 @@ function PlayerFace({ p, size }: { p: LineupPlayer; size: number }) {
 }
 
 function Bench({
-  lineup, title, home, onBenchDown, placed,
+  lineup, title, home, onBenchDown, placed, compact,
 }: {
   lineup: TeamLineup; title: string; home: boolean;
   onBenchDown: (p: LineupPlayer, home: boolean) => (e: React.PointerEvent) => void;
   placed: (p: LineupPlayer, home: boolean) => boolean;
+  compact?: boolean;
 }) {
   return (
     <div className="kp-bench">
@@ -75,7 +76,7 @@ function Bench({
           ))}
         </ul>
       )}
-      {lineup.missing.length > 0 && (
+      {!compact && lineup.missing.length > 0 && (
         <>
           <h5>غيابات</h5>
           <ul className="kp-out">
@@ -83,7 +84,7 @@ function Bench({
           </ul>
         </>
       )}
-      {lineup.coach && <p className="kp-coach">المدرب: {lineup.coach.name}</p>}
+      {!compact && lineup.coach && <p className="kp-coach">المدرب: {lineup.coach.name}</p>}
     </div>
   );
 }
@@ -100,15 +101,18 @@ export default function LinePitch({ d }: { d: LiveDetail }) {
   // A bench player being carried toward the pitch; rendered as a ghost that
   // follows the finger so the gesture is visible before it lands.
   const [ghost, setGhost] = useState<{ p: LineupPlayer; home: boolean; x: number; y: number } | null>(null);
+  // Lit while a player is being dragged off the pitch, so "drop here to send
+  // them back" is visible instead of something you have to guess.
+  const [returning, setReturning] = useState(false);
   const ghostRef = useRef<{ p: LineupPlayer; home: boolean } | null>(null);
 
   // Arrangements are per match and must survive the 15s auto-refresh.
   useEffect(() => { setMoved(loadMoved(gameId)); }, [gameId]);
 
-  const persist = useCallback((next: Moved) => {
-    setMoved(next);
+  const store = useCallback((next: Moved) => {
     try { localStorage.setItem(key(gameId), JSON.stringify(next)); } catch { /* private mode */ }
   }, [gameId]);
+  const persist = useCallback((next: Moved) => { setMoved(next); store(next); }, [store]);
 
   useEffect(() => {
     const onFs = () => setFull(Boolean(document.fullscreenElement));
@@ -139,6 +143,7 @@ export default function LinePitch({ d }: { d: LiveDetail }) {
       dx: ((e.clientX - box.left) / box.width) * 100 - cur.x,
       dy: ((e.clientY - box.top) / box.height) * 100 - cur.y,
     };
+    setReturning(true);
     capture(e);
   };
 
@@ -154,9 +159,22 @@ export default function LinePitch({ d }: { d: LiveDetail }) {
   const onUp = (e: React.PointerEvent) => {
     const drag = dragging.current;
     dragging.current = null;
+    setReturning(false);
     if (!drag) return;
     release(e);
-    setMoved((m) => { persist(m); return m; });
+    const box = pitchRef.current?.getBoundingClientRect();
+    // Released off the pitch: a substitute goes back to the bench and a starter
+    // back to their formation spot — both are simply "forget this position".
+    const outside = box
+      ? e.clientX < box.left || e.clientX > box.right ||
+        e.clientY < box.top || e.clientY > box.bottom
+      : false;
+    setMoved((m) => {
+      const next = { ...m };
+      if (outside) delete next[drag.id];
+      store(next);
+      return next;
+    });
   };
 
   // Dragging a substitute onto the pitch places them there; it is the same
@@ -210,6 +228,7 @@ export default function LinePitch({ d }: { d: LiveDetail }) {
     );
   }
   const positioned = Boolean(h?.hasFieldPositions && a?.hasFieldPositions);
+  const big = full || cssFull;
 
   const shirt = (p: LineupPlayer, home: boolean) => {
     const id = `${home ? "h" : "a"}${p.id}`;
@@ -224,7 +243,7 @@ export default function LinePitch({ d }: { d: LiveDetail }) {
         onPointerUp={onUp}
         onPointerCancel={onUp}
       >
-        <PlayerFace p={p} size={full || cssFull ? 72 : 54} />
+        <PlayerFace p={p} size={big ? 72 : 54} />
         <span className="kp-name">{p.shortName || p.name}</span>
       </div>
     );
@@ -234,12 +253,12 @@ export default function LinePitch({ d }: { d: LiveDetail }) {
     <div className={`kp${cssFull ? " cssfull" : ""}`} dir="rtl" ref={wrapRef}>
       <div className="kp-tools">
         <button type="button" className="kp-tool" onClick={toggleFull}>
-          {full || cssFull ? "خروج من ملء الشاشة" : "ملء الشاشة"}
+          {big ? "خروج من ملء الشاشة" : "ملء الشاشة"}
         </button>
         {Object.keys(moved).length > 0 && (
           <button type="button" className="kp-tool" onClick={reset}>إعادة الترتيب</button>
         )}
-        <span className="kp-hint">اسحب اللاعبين لتغيير أماكنهم</span>
+        <span className="kp-hint">اسحب اللاعبين لتغيير أماكنهم — واسحبهم خارج الملعب لإرجاعهم</span>
       </div>
 
       {positioned ? (
@@ -272,12 +291,15 @@ export default function LinePitch({ d }: { d: LiveDetail }) {
         </div>
       )}
 
-      {!(full || cssFull) && (
-        <div className="kp-benches" onPointerMove={onBenchMove} onPointerUp={onBenchUp} onPointerCancel={onBenchUp}>
-          {h && <Bench lineup={h} title={d.match.home.name} home onBenchDown={onBenchDown} placed={isPlaced} />}
-          {a && <Bench lineup={a} title={d.match.away.name} home={false} onBenchDown={onBenchDown} placed={isPlaced} />}
-        </div>
-      )}
+      <div
+        className={`kp-benches${big ? " strip" : ""}${returning ? " dropzone" : ""}`}
+        onPointerMove={onBenchMove}
+        onPointerUp={onBenchUp}
+        onPointerCancel={onBenchUp}
+      >
+        {h && <Bench lineup={h} title={d.match.home.name} home onBenchDown={onBenchDown} placed={isPlaced} compact={big} />}
+        {a && <Bench lineup={a} title={d.match.away.name} home={false} onBenchDown={onBenchDown} placed={isPlaced} compact={big} />}
+      </div>
 
       {ghost && (
         <div className={`kp-ghost ${ghost.home ? "home" : "away"}`} style={{ left: ghost.x, top: ghost.y }}>

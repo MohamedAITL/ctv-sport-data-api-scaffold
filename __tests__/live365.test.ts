@@ -1,4 +1,4 @@
-import { toMatch, pairStats, fetchLiveMatches, fetchLiveDetail, toApiDate } from "@/lib/live365";
+import { toMatch, pairStats, fetchLiveMatches, fetchLiveDetail, toApiDate, toTopPerformers } from "@/lib/live365";
 
 const game = (over: Record<string, unknown> = {}) => ({
   id: 100, sportId: 1, competitionId: 11, competitionDisplayName: "الدوري الإسباني",
@@ -174,5 +174,42 @@ describe("fetchLiveDetail", () => {
     const d = (await fetchLiveDetail(100, "140-174-11"))!;
     expect(d.stats).toEqual([]);
     expect(d.homeLineup?.starting).toHaveLength(1);
+  });
+});
+
+describe("toTopPerformers", () => {
+  // Verified on a real "لم تبدأ" game (Guadalajara–Necaxa): /game/stats/ has no
+  // `statistics` key at all before kickoff, but /game/ already carries this.
+  const raw = {
+    categories: [
+      {
+        name: "الهجوم",
+        homePlayer: {
+          id: 499173, athleteId: 9098, name: "أنجيل سيبولفيدا", imageVersion: 29,
+          positionName: "المهاجم الصريح",
+          stats: [{ type: 1, name: "اهداف", value: "1" }, { type: 5, name: "المشاركات", value: "11" }],
+        },
+        awayPlayer: { id: 5486695, athleteId: 53046, name: "جوليان كارانزا", imageVersion: 37, stats: [] },
+      },
+      { name: "الوسط" },
+    ],
+  };
+
+  it("pairs each category and builds photo URLs with the 404 guard", () => {
+    const rows = toTopPerformers(raw);
+    expect(rows).toHaveLength(1); // the category with no players is dropped
+    expect(rows[0].name).toBe("الهجوم");
+    expect(rows[0].home!.photo).toContain("/v29/Athletes/9098");
+    expect(rows[0].home!.photo).toContain("d_Athletes:default.png");
+    expect(rows[0].home!.stats).toEqual([
+      { name: "اهداف", value: "1" },
+      { name: "المشاركات", value: "11" },
+    ]);
+    expect(rows[0].away!.position).toBeNull();
+  });
+
+  it("is empty when the source publishes none", () => {
+    expect(toTopPerformers(undefined)).toEqual([]);
+    expect(toTopPerformers({})).toEqual([]);
   });
 });

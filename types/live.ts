@@ -73,6 +73,28 @@ export interface StatFilter {
   name: string;
 }
 
+/** One of a player's headline season figures, e.g. "اهداف" → "7". */
+export interface PerformerStat {
+  name: string; // Arabic
+  value: string;
+}
+
+export interface Performer {
+  id: number;
+  name: string;
+  photo: string | null;
+  position: string | null; // Arabic
+  stats: PerformerStat[];
+}
+
+/** A pre-match comparison the source publishes before kickoff, one per line
+ *  of the field ("الهجوم" / "الوسط" / "الدفاع"). */
+export interface TopPerformerRow {
+  name: string; // Arabic category
+  home: Performer | null;
+  away: Performer | null;
+}
+
 export interface LiveDetail {
   match: LiveMatch;
   homeLineup: TeamLineup | null;
@@ -80,6 +102,8 @@ export interface LiveDetail {
   events: LiveEvent[];
   stats: StatRow[];
   statFilters: StatFilter[];
+  /** Season leaders per line — the only statistics a match has before kickoff. */
+  topPerformers: TopPerformerRow[];
   venue: string | null;
   referee: string | null;
   tv: string[];

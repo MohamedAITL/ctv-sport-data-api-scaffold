@@ -318,7 +318,7 @@ html, body {
 /* rtl so the home score stays on the home side, as in the header and list */
 .kh-nums { display: flex; align-items: center; gap: 16px; font-size: 76px; font-weight: 900; line-height: 1; direction: rtl; }
 .kh-dash { opacity: .4; }
-.kh-status { margin-top: 10px; display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 18px; font-weight: 700; }
+.kh-status { margin-top: 10px; display: flex; justify-content: center; align-items: center; gap: 8px; color: var(--muted); font-size: 18px; font-weight: 700; }
 .kh-status.live { color: var(--ok); }
 
 .kiosk-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 12px 28px; }
@@ -460,7 +460,7 @@ html, body {
   text-decoration: none; color: var(--text); background: var(--panel);
   border: 1.5px solid var(--border-2); border-radius: 10px;
   padding: 10px 14px; font-size: 14px; font-weight: 800;
-  min-height: 44px; display: inline-flex; align-items: center; touch-action: manipulation;
+  min-height: 64px; display: inline-flex; align-items: center; touch-action: manipulation;
 }
 .kiosk-back:active { transform: scale(0.98); border-color: var(--accent); }
 
@@ -479,5 +479,44 @@ html, body {
 /* Fullscreen must override the normal height cap, or the pitch would stay
    small on a screen that just got much bigger. */
 .kp:fullscreen .kp-pitch, .kp.cssfull .kp-pitch {
-  max-height: none; height: calc(100vh - 150px); aspect-ratio: auto;
+  max-height: none; height: calc(100vh - 240px); aspect-ratio: auto;
 }
+
+/* ---- live: pre-match performers, centred kickoff, bench as a drop target ---- */
+
+/* No score yet: the middle of the scoreline carries kickoff + status. */
+.kh-soon { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
+.kh-soon b { font-size: 52px; font-weight: 900; line-height: 1; letter-spacing: 1px; }
+.kh-soon span { font-size: 19px; font-weight: 800; color: var(--muted); }
+
+/* Season leaders — what the stats tab shows before kickoff. */
+.kt h3 { margin: 4px 0 14px; font-size: 20px; }
+.kt-row { margin-bottom: 18px; }
+.kt-row h4 { margin: 0 0 8px; font-size: 16px; color: var(--muted); font-weight: 800; }
+.kt-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.kt-p { display: flex; align-items: center; gap: 12px; background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; min-height: 92px; }
+.kt-p.empty { background: transparent; border-style: dashed; }
+.kt-p.away { flex-direction: row-reverse; text-align: left; }
+.kt-p img { width: 58px; height: 58px; border-radius: 50%; object-fit: cover; background: var(--panel-2); border: 2px solid var(--border-2); }
+.kt-p.home img { border-color: #4f7cff; }
+.kt-p.away img { border-color: #e0564f; }
+.kt-info { min-width: 0; }
+.kt-info b { display: block; font-size: 17px; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kt-info span { font-size: 13px; color: var(--muted); }
+.kt-info ul { list-style: none; margin: 6px 0 0; padding: 0; display: flex; gap: 12px; flex-wrap: wrap; }
+.kt-info li { font-size: 13px; color: var(--muted); }
+.kt-info li i { font-style: normal; font-weight: 900; color: var(--text); font-size: 15px; }
+.kt-note { margin: 6px 0 0; color: var(--muted); font-size: 15px; }
+
+/* Dragging a player off the pitch returns them, so the bench lights up. */
+.kp-benches.dropzone .kp-bench { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(255,255,255,.06) inset; }
+
+/* Fullscreen keeps the bench reachable as a compact, scrollable strip: a
+   lineup you cannot substitute into is half a lineup on a touchscreen. */
+.kp-benches.strip { grid-template-columns: 1fr 1fr; gap: 12px; }
+.kp-benches.strip .kp-bench { padding: 8px 10px; max-height: 118px; overflow: hidden; }
+.kp-benches.strip .kp-bench h4 { margin: 0 0 6px; font-size: 14px; }
+.kp-benches.strip .kp-bench ul { display: flex; gap: 10px; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+.kp-benches.strip .kp-bench li { flex: 0 0 auto; flex-direction: column; gap: 4px; border-bottom: 0; padding: 4px 6px; font-size: 13px; max-width: 86px; text-align: center; }
+.kp-benches.strip .kp-bench li span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80px; }
+.kp-benches.strip .kp-onpitch { margin: 0; font-size: 11px; }

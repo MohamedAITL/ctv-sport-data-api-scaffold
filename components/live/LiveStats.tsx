@@ -1,12 +1,57 @@
 import { useState } from "react";
-import type { LiveDetail } from "@/types/live";
+import type { LiveDetail, Performer } from "@/types/live";
+
+// Before kickoff the source publishes no match statistics at all, only season
+// leaders per line — so the tab shows those rather than dead-ending.
+function PerformerCard({ p, side }: { p: Performer | null; side: "home" | "away" }) {
+  if (!p) return <div className={`kt-p ${side} empty`} />;
+  return (
+    <div className={`kt-p ${side}`}>
+      {p.photo ? (
+        /* eslint-disable-next-line @next/next/no-img-element */
+        <img src={p.photo} alt="" />
+      ) : null}
+      <div className="kt-info">
+        <b>{p.name}</b>
+        {p.position && <span>{p.position}</span>}
+        <ul>
+          {p.stats.map((s) => (
+            <li key={s.name}><i>{s.value}</i> {s.name}</li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+}
 
 // Paired comparison bars. `valuePercentage` already encodes each side's share,
 // so the bars are drawn straight from it.
 export default function LiveStats({ d }: { d: LiveDetail }) {
   const [majorOnly, setMajorOnly] = useState(false);
   if (d.stats.length === 0) {
-    return <div className="kp-none" dir="rtl"><p>الإحصائيات غير متوفرة بعد</p></div>;
+    if (d.topPerformers.length === 0) {
+      return (
+        <div className="kp-none" dir="rtl">
+          <p>الإحصائيات غير متوفرة</p>
+          <span>{d.match.isLive || d.match.isFinished ? "لا ينشر المصدر إحصائيات هذه المباراة" : "تظهر الإحصائيات عند انطلاق المباراة"}</span>
+        </div>
+      );
+    }
+    return (
+      <div className="kt" dir="rtl">
+        <h3>أفضل اللاعبين هذا الموسم</h3>
+        {d.topPerformers.map((r) => (
+          <div key={r.name} className="kt-row">
+            <h4>{r.name}</h4>
+            <div className="kt-pair">
+              <PerformerCard p={r.home} side="home" />
+              <PerformerCard p={r.away} side="away" />
+            </div>
+          </div>
+        ))}
+        <p className="kt-note">لم تبدأ المباراة بعد — إحصائيات اللقاء تظهر عند انطلاقه.</p>
+      </div>
+    );
   }
   const rows = majorOnly ? d.stats.filter((s) => s.isMajor) : d.stats;
   return (

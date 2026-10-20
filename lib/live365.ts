@@ -7,8 +7,8 @@
 //      Southern League and a Colombian second-division game). Every lineup field
 //      is therefore optional and the caller must cope with null.
 import type {
-  LineupPlayer, LineupRole, LiveDetail, LiveEvent, LiveMatch,
-  StatFilter, StatRow, TeamLineup,
+  LineupPlayer, LineupRole, LiveDetail, LiveEvent, LiveMatch, Performer,
+  StatFilter, StatRow, TeamLineup, TopPerformerRow,
 } from "@/types/live";
 import { STANDINGS_LEAGUES } from "@/config/standingsLeagues";
 
@@ -127,6 +127,7 @@ interface RawDetail {
     officials?: Array<{ name?: string }>;
     tvNetworks?: Array<{ name?: string }>;
     venue?: { name?: string };
+    topPerformers?: RawTopPerformers;
     homeCompetitor?: RawDetailCompetitor;
     awayCompetitor?: RawDetailCompetitor;
   };
@@ -186,6 +187,39 @@ export function pairStats(rows: RawStat[], homeId: number, awayId: number): Stat
   return Array.from(byId.values()).filter((r) => r.homeValue !== "" || r.awayValue !== "");
 }
 
+interface RawPerformer {
+  id?: number; athleteId?: number; name?: string; imageVersion?: number;
+  positionName?: string; stats?: Array<{ name?: string; value?: string }>;
+}
+interface RawTopPerformers {
+  categories?: Array<{ name?: string; homePlayer?: RawPerformer; awayPlayer?: RawPerformer }>;
+}
+
+const performer = (p?: RawPerformer): Performer | null =>
+  p && p.id
+    ? {
+        id: p.id,
+        name: p.name ?? "",
+        photo: p.athleteId ? `${FACE_IMG}/v${p.imageVersion ?? 1}/Athletes/${p.athleteId}` : null,
+        position: p.positionName ?? null,
+        stats: (p.stats ?? [])
+          .filter((s) => s.name && s.value)
+          .map((s) => ({ name: s.name as string, value: s.value as string })),
+      }
+    : null;
+
+/**
+ * Season leaders per line of the field. This is the only statistical content a
+ * match has before kickoff — `/game/stats/` returns no `statistics` key at all
+ * until the first whistle — and it rides along on the detail call we already
+ * make, so it costs no extra request.
+ */
+export function toTopPerformers(tp?: RawTopPerformers): TopPerformerRow[] {
+  return (tp?.categories ?? [])
+    .map((c) => ({ name: c.name ?? "", home: performer(c.homePlayer), away: performer(c.awayPlayer) }))
+    .filter((r) => r.home || r.away);
+}
+
 export async function fetchLiveDetail(gameId: number, matchupId: string): Promise<LiveDetail | null> {
   // Stats failing must not cost us the lineup, so they are settled separately.
   const [detRes, statRes] = await Promise.allSettled([
@@ -223,6 +257,7 @@ export async function fetchLiveDetail(gameId: number, matchupId: string): Promis
     events: events.sort((a, b) => a.order - b.order),
     stats,
     statFilters,
+    topPerformers: toTopPerformers(g.topPerformers),
     venue: g.venue?.name ?? null,
     referee: g.officials?.[0]?.name ?? null,
     tv: (g.tvNetworks ?? []).map((t) => t.name ?? "").filter(Boolean),

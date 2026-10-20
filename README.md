@@ -47,9 +47,16 @@ refreshes itself every 15s without disturbing the selection, tab or scroll
 position, and pauses while the tab is hidden. Players appear with their photos
 and shirt numbers and can be **dragged around the pitch by finger** — the
 arrangement is kept per match and survives the auto-refresh, with a reset
-button — and a fullscreen button hands the pitch the whole display. Day arrows
+button — and dropping a player **outside the pitch** returns them (a
+substitute to the bench, a starter to their formation spot). A fullscreen button
+hands the pitch the whole display, with the benches kept as a scrollable strip so
+substitutes can still be dragged on. Day arrows
 browse **previous match days**, and a النتائج filter shows the day's results. Not every competition publishes a
 lineup, so the pitch degrades to a plain XI list and then to a clear message.
+Before kickoff a match publishes no statistics at all, so the الإحصائيات tab
+shows the season's **top performers** per line instead of a dead end, and the
+scoreline carries the kickoff time and status in its centre until there is a
+score.
 
 Stack: **Next.js 14 + TypeScript + Tailwind**. 365scores needs no key; the GOAL
 API key (Botola standings fallback + the matchday page) stays server-side in a
