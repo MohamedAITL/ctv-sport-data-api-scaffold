@@ -1,4 +1,6 @@
 import { render, waitFor, act } from "@testing-library/react";
+// The card renders through a portal (into the fullscreen element when there is
+// one, otherwise <body>), so assertions read `baseElement`, not `container`.
 import PlayerCard from "@/components/live/PlayerCard";
 import type { LineupPlayer } from "@/types/live";
 
@@ -39,45 +41,45 @@ describe("PlayerCard", () => {
 
   it("opens on this match's stat line, with the headline figures as tiles", async () => {
     mockBio({ bio });
-    const { container, getByText } = render(<PlayerCard player={player()} team="كورينثيانز" onClose={() => {}} />);
+    const { baseElement, getByText } = render(<PlayerCard player={player()} team="كورينثيانز" onClose={() => {}} />);
     expect(getByText("6.9")).toBeInTheDocument();
-    expect(container.querySelector(".kpc-tile")?.textContent).toContain("90'");
+    expect(baseElement.querySelector(".kpc-tile")?.textContent).toContain("90'");
     // the remaining match stats are listed, never repeated as a tile
-    expect(container.querySelectorAll(".kpc-list li")).toHaveLength(2);
-    expect(container.textContent).toContain("64/66 (97%)");
-    await waitFor(() => expect(container.textContent).toContain("البرازيل"));
-    expect(container.textContent).toContain("القدم المفضلة: اليسار");
+    expect(baseElement.querySelectorAll(".kpc-list li")).toHaveLength(2);
+    expect(baseElement.textContent).toContain("64/66 (97%)");
+    await waitFor(() => expect(baseElement.textContent).toContain("البرازيل"));
+    expect(baseElement.textContent).toContain("القدم المفضلة: اليسار");
     // the birth row is titled with the date and valued with the age, which the
     // header already shows — it must not print "35 سنة" twice
-    expect(container.textContent).toContain("مواليد 31/01/99");
-    expect(container.textContent?.match(/35 سنة/g)).toHaveLength(1);
+    expect(baseElement.textContent).toContain("مواليد 31/01/99");
+    expect(baseElement.textContent?.match(/35 سنة/g)).toHaveLength(1);
   });
 
   it("switches to the season, per competition", async () => {
     mockBio({ bio });
-    const { container, getByText } = render(<PlayerCard player={player()} team="كورينثيانز" onClose={() => {}} />);
-    await waitFor(() => expect(container.querySelector(".kpc-tabs")).not.toBeNull());
+    const { baseElement, getByText } = render(<PlayerCard player={player()} team="كورينثيانز" onClose={() => {}} />);
+    await waitFor(() => expect(baseElement.querySelector(".kpc-tabs")).not.toBeNull());
     act(() => { getByText("إحصائيات الموسم").click(); });
-    expect(container.querySelector(".kpc-season h4")?.textContent).toBe("الدوري البرازيلي الدرجة الأولى");
-    expect(container.textContent).toContain("23/31");
-    expect(container.textContent).toContain("1463");
+    expect(baseElement.querySelector(".kpc-season h4")?.textContent).toBe("الدوري البرازيلي الدرجة الأولى");
+    expect(baseElement.textContent).toContain("23/31");
+    expect(baseElement.textContent).toContain("1463");
   });
 
   it("falls straight to the season when the match publishes no player stats", async () => {
     mockBio({ bio });
-    const { container } = render(
+    const { baseElement } = render(
       <PlayerCard player={player({ rating: null, stats: [], topStats: [] })} team="فريق" onClose={() => {}} />
     );
-    expect(container.querySelector(".kpc-rate")).toBeNull();
-    expect(container.querySelector(".kpc-tabs")).toBeNull(); // nothing to switch between
-    await waitFor(() => expect(container.textContent).toContain("23/31"));
+    expect(baseElement.querySelector(".kpc-rate")).toBeNull();
+    expect(baseElement.querySelector(".kpc-tabs")).toBeNull(); // nothing to switch between
+    await waitFor(() => expect(baseElement.textContent).toContain("23/31"));
   });
 
   it("says so when neither the match nor the season has anything", async () => {
     mockBio({});
-    const { container } = render(
+    const { baseElement } = render(
       <PlayerCard player={player({ athleteId: null, rating: null, stats: [], topStats: [] })} team="فريق" onClose={() => {}} />
     );
-    await waitFor(() => expect(container.querySelector(".kpc-none")).not.toBeNull());
+    await waitFor(() => expect(baseElement.querySelector(".kpc-none")).not.toBeNull());
   });
 });

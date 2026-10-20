@@ -23,6 +23,7 @@
   --accent-2: #ffc94d;
   --brand-2: #645ba4;
   --live: #db3131;           /* fills and dots */
+  --line: rgba(255, 255, 255, 0.28); /* pitch markings */
   --live-text: #ff6b6b;      /* 6.2:1 on --panel, which #db3131 is not */
   --ok: #3ad07f;
   --warn: #ffc94d;
@@ -358,14 +359,57 @@ html, body {
   /* Cap the height to what is left under the header, tabs, tools and footer —
      at 1080p a plain 16/9 box pushed the back line below the fold, and a wall
      display is not something you scroll. Players are positioned in percentages,
-     so a slightly wider-than-16/9 pitch still places them correctly. */
+     so a slightly wider-than-16/9 pitch still places them correctly.
+     `overflow: visible` so a shirt on the touchline keeps its name and card;
+     the grass itself is a child that does the clipping. */
   position: relative; width: 100%; aspect-ratio: 16 / 9;
-  max-height: calc(100vh - 450px); min-height: 320px; border-radius: 16px;
-  background: #19573a;
-  border: 1px solid #27754c; box-shadow: none; overflow: hidden; margin-bottom: 16px;
+  max-height: calc(100vh - 450px); min-height: 320px;
+  overflow: visible; margin-bottom: 16px;
 }
-.kp-mid { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; background: rgba(255,255,255,.25); }
-.kp-circle { position: absolute; left: 50%; top: 50%; width: 15%; aspect-ratio: 1; transform: translate(-50%,-50%); border: 2px solid rgba(255,255,255,.25); border-radius: 50%; }
+.kp-turf {
+  position: absolute; inset: 0; z-index: 0; border-radius: 16px; overflow: hidden;
+  background: #19573a;
+  border: 1px solid #27754c;
+}
+/* Mown stripes, so the surface reads as a pitch rather than a green box. */
+.kp-turf::after {
+  content: ""; position: absolute; inset: 0;
+  background: repeating-linear-gradient(90deg, rgba(255,255,255,.035) 0 8%, transparent 8% 16%);
+}
+.kp-mid { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; background: var(--line); z-index: 1; }
+.kp-circle { position: absolute; left: 50%; top: 50%; width: 15%; aspect-ratio: 1; transform: translate(-50%,-50%); border: 2px solid var(--line); border-radius: 50%; z-index: 1; }
+
+/* ---- the goals ---- */
+.kp-goal { position: absolute; top: 0; bottom: 0; width: 17%; z-index: 1; }
+.kp-goal.home { right: 0; }
+.kp-goal.away { left: 0; }
+.kp-goal i { position: absolute; display: block; border: 2px solid var(--line); }
+/* penalty area */
+.kp-box { top: 14%; bottom: 14%; inset-inline-start: 0; width: 100%; }
+/* six-yard box */
+.kp-sixyard { top: 33%; bottom: 33%; inset-inline-start: 0; width: 41%; }
+.kp-goal.home .kp-box, .kp-goal.home .kp-sixyard { border-right: 0; }
+.kp-goal.away .kp-box, .kp-goal.away .kp-sixyard { border-left: 0; }
+/* penalty spot */
+.kp-spot { top: 50%; width: 5px; height: 5px; border-radius: 50%; background: var(--line); border: 0; }
+.kp-goal.home .kp-spot { right: 73%; transform: translateY(-50%); }
+.kp-goal.away .kp-spot { left: 73%; transform: translateY(-50%); }
+/* the D outside the box */
+.kp-arc { top: 50%; width: 36%; aspect-ratio: 1; border-radius: 50%; }
+.kp-goal.home .kp-arc { right: 88%; transform: translateY(-50%); clip-path: inset(0 50% 0 0); }
+.kp-goal.away .kp-arc { left: 88%; transform: translateY(-50%); clip-path: inset(0 0 0 50%); }
+/* the net itself, hanging off the goal line */
+.kp-net {
+  top: 41%; bottom: 41%; width: 9%;
+  background: repeating-linear-gradient(90deg, rgba(255,255,255,.22) 0 2px, transparent 2px 6px),
+              repeating-linear-gradient(0deg, rgba(255,255,255,.22) 0 2px, transparent 2px 6px);
+  background-color: rgba(255,255,255,.05);
+}
+.kp-goal.home .kp-net { right: -6%; border-right: 2px solid var(--line); }
+.kp-goal.away .kp-net { left: -6%; border-left: 2px solid var(--line); }
+
+/* Shirts sit above the markings, and are never clipped by the turf. */
+.kp-man { z-index: 2; }
 .kp-man { position: absolute; transform: translate(-50%,-50%); display: flex; flex-direction: column; align-items: center; gap: 3px; width: 92px; }
 .kp-num { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 19px; font-weight: 900; color: #fff; }
 .kp-man.home .kp-num { background: var(--accent); color: var(--accent-ink); }
@@ -848,21 +892,25 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes pop-in { from { opacity: 0; transform: scale(.96) translateY(6px); } to { opacity: 1; transform: none; } }
 
-/* Panels and cards arrive rather than appear. */
+/* Panels and cards arrive rather than appear.
+   `backwards`, never `both`: a finished animation with `both` keeps an identity
+   transform applied, and an element with a transform becomes the containing
+   block for `position: fixed` children — which put the player card inside the
+   pitch pane instead of over the screen. */
 .card, .newscard, .kpv section, .kx, .kf, .kt-row {
-  animation: rise-in var(--med) var(--ease) both;
+  animation: rise-in var(--med) var(--ease) backwards;
 }
 /* A photo that pops in mid-scroll is the one thing that reads as a glitch. */
-.newsthumb img, .kt-p img, .kpc-head img { animation: fade-in 260ms var(--ease) both; }
+.newsthumb img, .kt-p img, .kpc-head img { animation: fade-in 260ms var(--ease) backwards; }
 
 /* The kiosk's panes and the rail's rows. */
-.kiosk-pane > * { animation: rise-in 180ms var(--ease) both; }
-.kl-group:not(.closed) .kl-row { animation: rise-in 160ms var(--ease) both; }
-.ks-row, .kpv-row, .kpt tbody tr { animation: fade-in 200ms var(--ease) both; }
+.kiosk-pane > * { animation: rise-in 180ms var(--ease) backwards; }
+.kl-group:not(.closed) .kl-row { animation: rise-in 160ms var(--ease) backwards; }
+.ks-row, .kpv-row, .kpt tbody tr { animation: fade-in 200ms var(--ease) backwards; }
 
 /* The player card drops in over its backdrop. */
-.kpc-back { animation: fade-in 140ms var(--ease) both; }
-.kpc { animation: pop-in 220ms var(--ease) both; }
+.kpc-back { animation: fade-in 140ms var(--ease) backwards; }
+.kpc { animation: pop-in 220ms var(--ease) backwards; }
 
 /* Hover/press: a card lifts, a row slides a hair toward the finger. */
 .card { transition: transform var(--fast) var(--ease), border-color var(--fast) var(--ease), box-shadow var(--fast) var(--ease); }

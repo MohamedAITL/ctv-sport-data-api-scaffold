@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import type { AthleteBio, LineupPlayer, PerformerStat } from "@/types/live";
 
 function Tiles({ rows }: { rows: PerformerStat[] }) {
@@ -34,6 +35,16 @@ export default function PlayerCard({
   player: LineupPlayer; team: string; onClose: () => void;
 }) {
   const [bio, setBio] = useState<AthleteBio | null>(null);
+  // In native fullscreen the browser paints only the fullscreen element's own
+  // subtree, so a card portaled to <body> would exist and measure but never be
+  // seen. The host is therefore the fullscreen element when there is one.
+  const [host, setHost] = useState<Element | null>(null);
+  useEffect(() => {
+    const pick = () => setHost(document.fullscreenElement ?? document.body);
+    pick();
+    document.addEventListener("fullscreenchange", pick);
+    return () => document.removeEventListener("fullscreenchange", pick);
+  }, []);
   const [tab, setTab] = useState<"season" | "match">(player.stats.length > 0 ? "match" : "season");
 
   useEffect(() => {
@@ -50,7 +61,12 @@ export default function PlayerCard({
   const matchRest = player.stats.filter((s) => !matchTop.some((t) => t.name === s.name));
   const seasons = bio?.seasons ?? [];
 
-  return (
+  if (!host) return null; // first client paint; the effect runs immediately after
+
+  // Rendered outside the pitch: the card is an overlay on the whole screen, and
+  // inside the pitch it would be at the mercy of any ancestor that creates a
+  // containing block (a transform left by an animation did exactly that).
+  return createPortal(
     <div className="kpc-back" role="dialog" aria-modal="true" onClick={onClose}>
       <div className="kpc" dir="rtl" onClick={(e) => e.stopPropagation()}>
         <button type="button" className="kpc-x" onClick={onClose} aria-label="إغلاق">×</button>
@@ -118,6 +134,7 @@ export default function PlayerCard({
           )
         )}
       </div>
-    </div>
+    </div>,
+    host
   );
 }

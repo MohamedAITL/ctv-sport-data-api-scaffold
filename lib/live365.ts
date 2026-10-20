@@ -429,37 +429,77 @@ const toPast = (g: RawGame): PastMatch | null =>
     : null;
 
 /**
- * The مواجهات سابقة tab. `recentMatches` on a competitor is only a list of game
- * ids and there is no bulk game-by-id endpoint, but results filtered by
- * competitor gives a team's recent games in one call — so two calls cover both
- * teams, and their meetings are the games in which both sides appear.
+ * The مواجهات سابقة tab.
+ *
+ * `recentMatches` on a competitor is only a list of game ids and there is no
+ * bulk game-by-id endpoint, but results filtered by competitor give a team's
+ * games in one call — and the `paging` anchors on that response walk further
+ * back. One page holds a couple of months, which for two Botola sides found a
+ * single meeting; walking back a few pages finds the real head-to-head (five
+ * for Berkane v FAR, league and CAF).
  */
+const H2H_PAGES = 6;
+
+async function teamResults(competitorId: number, pages: number): Promise<RawGame[]> {
+  const first = await get<{ games?: RawGame[]; paging?: { previousPage?: string } }>(
+    `/games/results/?${Q}&competitors=${competitorId}`
+  );
+  const byId = new Map<number, RawGame>();
+  for (const g of first.games ?? []) if (g.id) byId.set(g.id, g);
+
+  // The links the API returns carry `timezoneId=1`, which would shift every
+  // kickoff, so the anchor is rebuilt with our own query.
+  let anchor = oldestId(byId);
+  for (let i = 0; i < pages && anchor; i++) {
+    const page = await get<{ games?: RawGame[] }>(
+      `/games/?${Q}&competitors=${competitorId}&games=1&aftergame=${anchor}&direction=-1`
+    ).catch(() => ({ games: [] as RawGame[] }));
+    let added = 0;
+    for (const g of page.games ?? []) if (g.id && !byId.has(g.id)) { byId.set(g.id, g); added++; }
+    if (added === 0) break;
+    anchor = oldestId(byId);
+  }
+  return Array.from(byId.values());
+}
+
+const oldestId = (games: Map<number, RawGame>): number | null => {
+  let best: RawGame | null = null;
+  for (const g of Array.from(games.values())) {
+    if (!g.startTime) continue;
+    if (!best || g.startTime < (best.startTime ?? "~")) best = g;
+  }
+  return best?.id ?? null;
+};
+
 export async function fetchPreviousMatches(homeId: number, awayId: number, limit = 6): Promise<PreviousMatches> {
   const [h, a] = await Promise.allSettled([
-    get<{ games?: RawGame[] }>(`/games/results/?${Q}&competitors=${homeId}`),
-    get<{ games?: RawGame[] }>(`/games/results/?${Q}&competitors=${awayId}`),
+    teamResults(homeId, H2H_PAGES),   // deep: this list also yields the meetings
+    teamResults(awayId, 0),           // shallow: the away side only needs its form
   ]);
-  const games = (r: PromiseSettledResult<{ games?: RawGame[] }>) =>
-    r.status === "fulfilled" ? r.value.games ?? [] : [];
+  const games = (r: PromiseSettledResult<RawGame[]>) => (r.status === "fulfilled" ? r.value : []);
 
   const involves = (g: RawGame, id: number) =>
     g.homeCompetitor?.id === id || g.awayCompetitor?.id === id;
+  const isMeeting = (g: RawGame) => involves(g, homeId) && involves(g, awayId);
   const byDate = (x: PastMatch, y: PastMatch) => y.date.localeCompare(x.date);
-  const clean = (list: RawGame[], keep: (g: RawGame) => boolean) =>
-    list.filter(keep).map(toPast).filter((m): m is PastMatch => m !== null).sort(byDate).slice(0, limit);
+  // A results feed occasionally carries a fixture with no score (postponed or
+  // abandoned); a past match without a result is noise in both lists.
+  const played = (m: PastMatch) => m.home.score !== null && m.away.score !== null;
+  const clean = (list: RawGame[], keep: (g: RawGame) => boolean, take: number) =>
+    list.filter(keep).map(toPast).filter((m): m is PastMatch => m !== null && played(m)).sort(byDate).slice(0, take);
 
   const all = [...games(h), ...games(a)];
   const seen = new Set<number>();
   const meetings = all.filter((g) => {
-    if (!g.id || seen.has(g.id)) return false;
+    if (!g.id || seen.has(g.id) || !isMeeting(g)) return false;
     seen.add(g.id);
-    return involves(g, homeId) && involves(g, awayId);
+    return true;
   });
 
   return {
-    h2h: clean(meetings, () => true),
-    home: clean(games(h), (g) => !(involves(g, homeId) && involves(g, awayId))),
-    away: clean(games(a), (g) => !(involves(g, homeId) && involves(g, awayId))),
+    h2h: clean(meetings, () => true, 8),
+    home: clean(games(h), (g) => !isMeeting(g), limit),
+    away: clean(games(a), (g) => !isMeeting(g), limit),
   };
 }
 

@@ -289,8 +289,19 @@ export default function LinePitch({ d }: { d: LiveDetail }) {
 
       {positioned ? (
         <div className="kp-pitch" ref={pitchRef}>
+          <div className="kp-turf" />
           <div className="kp-mid" />
           <div className="kp-circle" />
+          {/* Both goals: penalty area, six-yard box, spot, D and the net. */}
+          {["home", "away"].map((side) => (
+            <div key={side} className={`kp-goal ${side}`}>
+              <i className="kp-box" />
+              <i className="kp-sixyard" />
+              <i className="kp-spot" />
+              <i className="kp-arc" />
+              <i className="kp-net" />
+            </div>
+          ))}
           {h?.starting.map((p) => shirt(p, true))}
           {a?.starting.map((p) => shirt(p, false))}
           {h?.bench.filter((p) => isPlaced(p, true)).map((p) => shirt(p, true))}
