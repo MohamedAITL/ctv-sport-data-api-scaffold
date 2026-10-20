@@ -132,7 +132,8 @@ export default function LivePage() {
         <aside className="kiosk-rail">
           <div className="kiosk-railhead">
             <div className="kiosk-brand">
-              <span className="brandmark">شوف<b>TV</b></span>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img className="brandlogo kiosk-logo" src="/chouftv-logo.png" alt="Chouf TV" />
               <Link href="/" className="kiosk-back">رجوع للتطبيق</Link>
             </div>
             <div className="kiosk-day">

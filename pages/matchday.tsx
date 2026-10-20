@@ -94,7 +94,10 @@ export default function Matchday() {
       <Head><title>Matchday Poster — Chouf TV</title></Head>
       <main className="app">
         <header className="topbar">
-          <div className="brand"><span className="brandmark">شوف<b>TV</b></span> Poster Studio</div>
+          <div className="brand">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="brandlogo" src="/chouftv-logo.png" alt="Chouf TV" />
+          </div>
           <Nav />
         </header>
         <div className="pagehead">

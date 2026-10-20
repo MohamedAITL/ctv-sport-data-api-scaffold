@@ -65,7 +65,10 @@ export default function NewsPage() {
       <Head><title>أخبار الرياضة — Chouf TV</title></Head>
       <main className="app">
         <header className="topbar">
-          <div className="brand"><span className="brandmark">شوف<b>TV</b></span> Poster Studio</div>
+          <div className="brand">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="brandlogo" src="/chouftv-logo.png" alt="Chouf TV" />
+          </div>
           <Nav />
         </header>
         <div className="pagehead newshead">
@@ -105,6 +108,17 @@ export default function NewsPage() {
         {error && <p className="err">{error}</p>}
 
         <div className="newsgrid">
+          {/* Four publishers are polled at once, so the first load is slow
+              enough that an empty grid reads as broken. */}
+          {loading && items.length === 0 && Array.from({ length: 8 }, (_, i) => (
+            <div key={`skel-${i}`} className="newscard" aria-hidden="true">
+              <div className="newsthumb skel thumb" />
+              <div className="newsbody">
+                <span className="skel title" />
+                <span className="skel line" />
+              </div>
+            </div>
+          ))}
           {shown.map((n) => (
             <Link key={n.id} href={`/news/${n.id}`} className="newscard">
               <div className="newsthumb">
@@ -112,7 +126,10 @@ export default function NewsPage() {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={n.image} alt="" loading="lazy" />
                 ) : (
-                  <div className="newsthumb-empty">شوف<b>TV</b></div>
+                  <div className="newsthumb-empty">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/chouftv-logo.png" alt="" />
+                  </div>
                 )}
 
               </div>

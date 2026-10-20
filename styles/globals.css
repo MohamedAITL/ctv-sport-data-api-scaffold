@@ -3,31 +3,48 @@
 @tailwind utilities;
 
 :root {
-  --bg: #130e20;
-  --bg-2: #171026;
-  --panel: #1e1733;
-  --panel-2: #271d41;
-  --border: #322647;
-  --border-2: #3d2f57;
-  --text: #efeafc;
-  --muted: #a99fc7;
-  --accent: #8b6dff;
-  --accent-2: #f6c744;
-  --ok: #58d08b;
-  --warn: #f6c744;
-  --danger: #ff8a8a;
-  --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  /* Chouf TV's own colours: 3f254c purple, fe8c0c orange, db3131 red,
+     645ba4 violet. Surfaces are tints of the purple, the orange is the only
+     "do this" colour, and the red means live or lost. */
+  --bg: #13101a;
+  --bg-2: #181420;
+  --panel: #1d1826;
+  --panel-2: #272031;
+  --panel-3: #322a3d;
+  --border: #2c2536;
+  --border-2: #3b3348;
+  --text: #f2eff6;
+  --muted: #a79fb4;          /* 6.8:1 on --panel */
+  --brand: #3f254c;          /* the header band, and only the header band */
+  --accent: #fe8c0c;
+  /* White on the orange is 2.3:1 — anything sitting ON the accent uses this. */
+  --accent-ink: #1a1420;     /* 7.7:1 on --accent */
+  --accent-soft: rgba(254, 140, 12, 0.14);
+  --accent-2: #ffc94d;
+  --brand-2: #645ba4;
+  --live: #db3131;           /* fills and dots */
+  --live-text: #ff6b6b;      /* 6.2:1 on --panel, which #db3131 is not */
+  --ok: #3ad07f;
+  --warn: #ffc94d;
+  --danger: #ff6b6b;
+  --radius: 8px;
+  --radius-lg: 10px;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-2: 0 6px 18px rgba(0, 0, 0, 0.45);
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --fast: 140ms;
+  --med: 220ms;
 }
 
 * { box-sizing: border-box; }
 html, body {
   margin: 0;
   padding: 0;
-  background:
-    radial-gradient(1200px 600px at 80% -10%, rgba(139, 109, 255, 0.12), transparent 60%),
-    var(--bg);
+  background: var(--bg);
   color: var(--text);
-  font-family: Cairo, system-ui, -apple-system, Arial, sans-serif;
+  /* Rubik for the app. The posters ask for Cairo by name, so they are unaffected. */
+  font-family: "Rubik Variable", Rubik, Cairo, system-ui, -apple-system, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* ---- shell ---- */
@@ -38,8 +55,8 @@ html, body {
   padding-bottom: 14px; margin-bottom: 18px; border-bottom: 1px solid var(--border);
 }
 .brand { font-size: 15px; font-weight: 800; letter-spacing: .01em; color: var(--text); display: inline-flex; align-items: center; gap: 10px; }
-.brandmark { display: inline-flex; align-items: center; gap: 3px; background: linear-gradient(135deg, var(--accent), #6f4bff); color: #fff; font-weight: 900; font-size: 13px; padding: 5px 10px; border-radius: 9px; box-shadow: var(--shadow); }
-.brandmark b { color: var(--accent-2); font-weight: 900; }
+.brandmark { display: inline-flex; align-items: center; gap: 3px; background: var(--accent); color: var(--accent-ink); font-weight: 900; font-size: 13px; padding: 5px 10px; border-radius: 6px; }
+.brandmark b { color: #fff; font-weight: 900; }
 
 .pagehead { margin-bottom: 20px; }
 .pagehead h1 { font-size: 26px; font-weight: 800; margin: 0 0 4px; }
@@ -49,7 +66,7 @@ html, body {
 .nav { display: inline-flex; gap: 4px; background: var(--panel); border: 1px solid var(--border); padding: 4px; border-radius: 12px; }
 .navlink { font-size: 13px; font-weight: 700; padding: 7px 16px; border-radius: 9px; color: var(--muted); text-decoration: none; transition: .15s; }
 .navlink:hover { color: var(--text); }
-.navlink.active { background: linear-gradient(135deg, var(--accent), #6f4bff); color: #fff; box-shadow: var(--shadow); }
+.navlink.active { color: #fff; }
 
 /* ---- layout ---- */
 .layout { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 22px; align-items: start; }
@@ -85,7 +102,7 @@ html, body {
 .btn:hover:not(:disabled) { border-color: var(--accent); transform: translateY(-1px); }
 .btn:active:not(:disabled) { transform: translateY(0); }
 .btn:disabled { opacity: .4; cursor: not-allowed; }
-.btn.primary { background: linear-gradient(135deg, var(--accent), #6f4bff); border-color: transparent; color: #fff; box-shadow: var(--shadow); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 800; }
 .btn.ghost { background: transparent; border-style: dashed; }
 .btn.tiny { padding: 4px 9px; font-size: 11px; border-radius: 8px; }
 .card > .btn:last-child, .collapsible .btn { margin-top: 2px; }
@@ -93,8 +110,8 @@ html, body {
 
 /* ---- status pills ---- */
 .pill { font-size: 12px; font-weight: 700; padding: 3px 11px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--border); }
-.pill.ok { background: rgba(88, 208, 139, .12); border-color: rgba(88, 208, 139, .4); color: var(--ok); }
-.pill.warn { background: rgba(246, 199, 68, .12); border-color: rgba(246, 199, 68, .4); color: var(--warn); }
+.pill.ok { background: rgba(47, 191, 113, .14); border-color: rgba(47, 191, 113, .45); color: var(--ok); }
+.pill.warn { background: rgba(255, 201, 77, .14); border-color: rgba(255, 201, 77, .45); color: var(--warn); }
 .err { color: var(--danger); font-size: 12px; margin: 8px 0 0; }
 .warnlist { margin: 8px 0 0; padding-inline-start: 18px; font-size: 12px; color: var(--warn); max-height: 140px; overflow: auto; }
 
@@ -104,7 +121,7 @@ html, body {
 .teamrow:last-child { border-bottom: none; }
 .teamrow .rank { width: 20px; text-align: center; color: var(--muted); font-size: 12px; }
 .teamrow .logo { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
-.teamrow .logo.fallback { display: inline-flex; align-items: center; justify-content: center; background: #4b3a6e; color: #fff; font-weight: 800; font-size: 12px; }
+.teamrow .logo.fallback { display: inline-flex; align-items: center; justify-content: center; background: var(--panel-3); color: #fff; font-weight: 800; font-size: 12px; }
 .teamrow .namein { flex: 1; min-width: 0; background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 6px 9px; font-family: inherit; font-size: 14px; }
 .teamrow .namein:focus { outline: none; border-color: var(--accent); }
 .teamrow .stats { font-size: 12px; color: var(--muted); direction: ltr; white-space: nowrap; }
@@ -128,12 +145,12 @@ html, body {
   -webkit-appearance: none;
   width: 100%;
   min-width: 170px;
-  background-color: #2d2250;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23efeafc' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-color: var(--panel-2);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f6f1fb' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
   background-repeat: no-repeat;
   background-position: right 13px center;
   background-size: 17px;
-  border: 1.5px solid #4a3a73;
+  border: 1.5px solid var(--border-2);
   border-radius: 11px;
   color: var(--text);
   padding: 13px 46px 13px 15px;
@@ -146,24 +163,24 @@ html, body {
   text-overflow: ellipsis;
   transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
 }
-.field select:hover:not(:disabled) { border-color: var(--accent); background-color: #352868; }
+.field select:hover:not(:disabled) { border-color: var(--accent); background-color: var(--panel-3); }
 .field select:focus-visible {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(139, 109, 255, 0.35);
+  box-shadow: 0 0 0 3px rgba(254, 140, 12, 0.38);
 }
 .field select:disabled { opacity: 0.5; cursor: not-allowed; }
 /* The open list is drawn by the OS; these are the parts it honours. */
 .field select option {
-  background: #241b40;
-  color: #f4f1ff;
+  background: #32203f;
+  color: #f6f1fb;
   font-size: 15px;
   font-weight: 600;
   padding: 10px 12px;
 }
 .field select optgroup {
-  background: #15102a;
-  color: var(--accent-2);
+  background: var(--bg);
+  color: var(--accent);
   font-weight: 800;
   font-size: 13px;
   letter-spacing: 0.06em;
@@ -175,7 +192,7 @@ html, body {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: #c5b9e8;
+  color: var(--muted);
 }
 
 /* ---- News ---- */
@@ -205,7 +222,7 @@ html, body {
 }
 .newsbadge {
   position: absolute; inset-inline-start: 10px; bottom: 10px;
-  background: rgba(19, 14, 32, 0.85); border: 1px solid var(--border-2);
+  background: rgba(27, 16, 38, 0.86); border: 1px solid var(--border-2);
   color: var(--text); font-size: 11px; font-weight: 700;
   padding: 4px 9px; border-radius: 999px; backdrop-filter: blur(4px);
 }
@@ -280,7 +297,7 @@ html, body {
 .kiosk-seg.three { grid-template-columns: repeat(3, 1fr); }
 .kiosk-seg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: var(--panel); border-radius: 12px; padding: 5px; }
 .kiosk-seg button { min-height: 64px; border: 0; border-radius: 9px; background: transparent; color: var(--muted); font-size: 15px; font-weight: 800; cursor: pointer; }
-.kiosk-seg button.on { background: var(--accent); color: #fff; }
+.kiosk-seg button.on { background: var(--accent); color: var(--accent-ink); }
 .kiosk-seg button:active { transform: scale(0.98); }
 
 .kl-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; min-height: 0; }
@@ -290,14 +307,18 @@ html, body {
   background: var(--panel); border: 1.5px solid transparent; border-radius: 14px;
   padding: 12px 14px; margin-bottom: 10px; color: inherit; cursor: pointer;
 }
-.kl-row.on { border-color: var(--accent); background: #2c2152; }
+.kl-row.on { border-color: var(--accent); background: var(--panel-2); }
 .kl-row:active { transform: scale(0.99); }
 .kl-row-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; }
 .kl-comp { font-size: 13px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.kl-live { display: inline-flex; align-items: center; gap: 6px; color: var(--ok); font-size: 14px; font-weight: 800; }
+.kl-live { display: inline-flex; align-items: center; gap: 6px; color: var(--live-text); font-size: 14px; font-weight: 800; }
 .kl-when { font-size: 14px; color: var(--muted); font-weight: 700; }
-.kl-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--ok); animation: kpulse 1.6s infinite; }
-@keyframes kpulse { 0%,100% { opacity: 1 } 50% { opacity: .25 } }
+.kl-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--live); box-shadow: 0 0 0 0 rgba(219, 49, 49, .55); animation: kpulse 1.6s infinite; }
+@keyframes kpulse {
+  0%   { opacity: 1; box-shadow: 0 0 0 0 rgba(219, 49, 49, .55); }
+  70%  { opacity: .55; box-shadow: 0 0 0 9px rgba(219, 49, 49, 0); }
+  100% { opacity: 1; box-shadow: 0 0 0 0 rgba(219, 49, 49, 0); }
+}
 .kl-team { display: flex; align-items: center; gap: 10px; padding: 3px 0; }
 .kl-team img { width: 28px; height: 28px; object-fit: contain; }
 .kl-name { flex: 1; font-size: 18px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -319,11 +340,11 @@ html, body {
 .kh-nums { display: flex; align-items: center; gap: 16px; font-size: 76px; font-weight: 900; line-height: 1; direction: rtl; }
 .kh-dash { opacity: .4; }
 .kh-status { margin-top: 10px; display: flex; justify-content: center; align-items: center; gap: 8px; color: var(--muted); font-size: 18px; font-weight: 700; }
-.kh-status.live { color: var(--ok); }
+.kh-status.live { color: var(--live-text); }
 
 .kiosk-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 12px 28px; }
 .kiosk-tabs button { min-height: 64px; border: 1.5px solid var(--border-2); border-radius: 12px; background: var(--panel); color: var(--muted); font-size: 19px; font-weight: 800; cursor: pointer; }
-.kiosk-tabs button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.kiosk-tabs button.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .kiosk-tabs button:active { transform: scale(0.99); }
 
 .kiosk-pane { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 8px 28px 20px; min-height: 0; }
@@ -340,15 +361,15 @@ html, body {
      so a slightly wider-than-16/9 pitch still places them correctly. */
   position: relative; width: 100%; aspect-ratio: 16 / 9;
   max-height: calc(100vh - 450px); min-height: 320px; border-radius: 16px;
-  background: linear-gradient(90deg, #1b4332 0%, #216a45 50%, #1b4332 100%);
-  border: 2px solid #2f7d55; overflow: hidden; margin-bottom: 16px;
+  background: #19573a;
+  border: 1px solid #27754c; box-shadow: none; overflow: hidden; margin-bottom: 16px;
 }
 .kp-mid { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; background: rgba(255,255,255,.25); }
 .kp-circle { position: absolute; left: 50%; top: 50%; width: 15%; aspect-ratio: 1; transform: translate(-50%,-50%); border: 2px solid rgba(255,255,255,.25); border-radius: 50%; }
 .kp-man { position: absolute; transform: translate(-50%,-50%); display: flex; flex-direction: column; align-items: center; gap: 3px; width: 92px; }
 .kp-num { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 19px; font-weight: 900; color: #fff; }
-.kp-man.home .kp-num { background: #4f7cff; }
-.kp-man.away .kp-num { background: #e0564f; }
+.kp-man.home .kp-num { background: var(--accent); color: var(--accent-ink); }
+.kp-man.away .kp-num { background: var(--brand-2); }
 .kp-name { font-size: 13px; font-weight: 700; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.8); text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 92px; }
 .kp-benches { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .kp-bench { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; }
@@ -372,7 +393,7 @@ html, body {
 /* stats */
 .ks-toggle { display: flex; gap: 8px; margin-bottom: 14px; }
 .ks-btn { min-height: 64px; padding: 0 22px; border-radius: 12px; border: 1.5px solid var(--border-2); background: var(--panel); color: var(--muted); font-size: 16px; font-weight: 800; cursor: pointer; }
-.ks-btn.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.ks-btn.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .ks-row { margin-bottom: 16px; }
 .ks-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 18px; margin-bottom: 7px; }
 .ks-head span { color: var(--muted); font-size: 16px; }
@@ -382,8 +403,8 @@ html, body {
 .ks-bar.home { justify-content: flex-start; }
 .ks-bar.away { justify-content: flex-end; }
 .ks-bar i { display: block; height: 100%; border-radius: 7px; }
-.ks-bar.home i { background: #4f7cff; }
-.ks-bar.away i { background: #e0564f; }
+.ks-bar.home i { background: var(--accent); }
+.ks-bar.away i { background: var(--brand-2); }
 
 /* events */
 .ke { position: relative; padding: 4px 0; }
@@ -422,18 +443,18 @@ html, body {
 .kp-face { position: relative; display: block; border-radius: 50%; overflow: visible; }
 .kp-face img {
   width: 100%; height: 100%; object-fit: cover; border-radius: 50%;
-  background: #4b3a6e; border: 3px solid #fff; display: block; pointer-events: none;
+  background: var(--panel-3); border: 3px solid #fff; display: block; pointer-events: none;
 }
-.kp-man.home .kp-face img { border-color: #4f7cff; }
-.kp-man.away .kp-face img { border-color: #e0564f; }
+.kp-man.home .kp-face img { border-color: var(--accent); }
+.kp-man.away .kp-face img { border-color: var(--brand-2); }
 .kp-face b {
   position: absolute; inset-inline-end: -4px; bottom: -4px;
   min-width: 26px; height: 26px; padding: 0 5px; border-radius: 13px;
   display: flex; align-items: center; justify-content: center;
   font-size: 14px; font-weight: 900; color: #fff; border: 2px solid rgba(0,0,0,.35);
 }
-.kp-man.home .kp-face b { background: #4f7cff; }
-.kp-man.away .kp-face b { background: #e0564f; }
+.kp-man.home .kp-face b { background: var(--accent); color: var(--accent-ink); }
+.kp-man.away .kp-face b { background: var(--brand-2); }
 .kp-bench .kp-face img, .kp-xi .kp-face img { border-width: 2px; }
 .kp-bench .kp-face b, .kp-xi .kp-face b { min-width: 20px; height: 20px; font-size: 11px; border-width: 1px; }
 
@@ -498,8 +519,8 @@ html, body {
 .kt-p.empty { background: transparent; border-style: dashed; }
 .kt-p.away { flex-direction: row-reverse; text-align: left; }
 .kt-p img { width: 58px; height: 58px; border-radius: 50%; object-fit: cover; background: var(--panel-2); border: 2px solid var(--border-2); }
-.kt-p.home img { border-color: #4f7cff; }
-.kt-p.away img { border-color: #e0564f; }
+.kt-p.home img { border-color: var(--accent); }
+.kt-p.away img { border-color: var(--brand-2); }
 .kt-info { min-width: 0; }
 .kt-info b { display: block; font-size: 17px; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .kt-info span { font-size: 13px; color: var(--muted); }
@@ -520,3 +541,131 @@ html, body {
 .kp-benches.strip .kp-bench li { flex: 0 0 auto; flex-direction: column; gap: 4px; border-bottom: 0; padding: 4px 6px; font-size: 13px; max-width: 86px; text-align: center; }
 .kp-benches.strip .kp-bench li span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80px; }
 .kp-benches.strip .kp-onpitch { margin: 0; font-size: 11px; }
+
+/* ======================= Redesign: chrome, type, motion =======================
+   Brand-coloured premium pass over the same markup. Everything here is colour,
+   type, radius, shadow and GPU-only motion — no layout rewrites, and nothing
+   that touches the poster components (they are 100% inline styles and keep
+   Cairo, so an exported PNG is byte-for-byte unaffected). */
+
+/* ---- type scale: one set of rules that also suits a wall display ---- */
+h1, h2, h3, h4 { letter-spacing: -0.01em; }
+.pagehead h1 { font-size: clamp(22px, 2.1vw, 30px); font-weight: 800; }
+.card h3 { font-size: clamp(14px, 1.1vw, 16px); }
+
+/* Digits must not jitter as they change — the single most "cheap-looking"
+   detail in a live sports UI. */
+.kh-nums, .kl-score, .kl-when, .ks-head b, .kh-soon b, .kiosk-foot, .ke-min,
+.teamrow .stats, .kv, .kt-info li i, .pill {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* ---- header: one solid brand band, full width, no markup change
+   (clip-path lets the band escape the centred container) ---- */
+.topbar {
+  position: sticky; top: 0; z-index: 40;
+  margin-bottom: 22px; padding: 10px 0; border-bottom: 0;
+  background: var(--brand);
+  box-shadow: 0 0 0 100vmax var(--brand), 0 1px 0 rgba(0, 0, 0, .35);
+  clip-path: inset(0 -100vmax);
+}
+
+/* ---- nav: a pill rail, not a row of links ---- */
+.nav { background: none; border: 0; border-radius: 0; padding: 0; gap: 2px; }
+.navlink {
+  position: relative; border-radius: 0; padding: 10px 14px 12px;
+  font-size: 13px; font-weight: 700; letter-spacing: 0.01em;
+  color: rgba(255, 255, 255, 0.72);
+  transition: color var(--fast) var(--ease);
+}
+.navlink::after {
+  content: ""; position: absolute; inset-inline: 10px; bottom: 2px; height: 3px;
+  background: var(--accent); border-radius: 2px;
+  transform: scaleX(0); transform-origin: center;
+  transition: transform var(--med) var(--ease);
+}
+.navlink:hover { color: #fff; }
+.navlink.active::after { transform: scaleX(1); }
+
+/* ---- the real Chouf TV mark replaces the text lockup ---- */
+.brandlogo { height: 42px; width: auto; display: block; }
+.brand { gap: 12px; color: #fff; font-size: 0; }
+.kiosk-logo { height: 66px; }
+.newsthumb-empty img { height: 58%; width: auto; opacity: .35; }
+@media (max-width: 720px) { .brandlogo { height: 38px; } }
+
+/* ---- segmented control (news sources): it had no styling at all ---- */
+.seg {
+  display: flex; flex-wrap: wrap; gap: 0; margin: 16px 0 2px;
+  border-bottom: 1px solid var(--border);
+}
+.seg-btn {
+  border: 0; border-bottom: 3px solid transparent; background: none; color: var(--muted);
+  padding: 10px 16px; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
+  transition: color var(--fast) var(--ease), border-color var(--fast) var(--ease);
+}
+.seg-btn:hover:not(.on) { color: var(--text); }
+.seg-btn.on { color: var(--text); border-bottom-color: var(--accent); }
+
+/* ---- cards: depth from layering, the way SofaScore does it ---- */
+.card, .newscard, .titlebox, .articlesource { border-radius: var(--radius-lg); }
+.card { padding: 14px 16px; box-shadow: none; }
+.card h3 { font-weight: 800; letter-spacing: -0.01em; }
+.newscard:hover { border-color: var(--border-2); box-shadow: var(--shadow-2); }
+.newscard:active { transform: translateY(0) scale(0.995); }
+.newsthumb img { transition: transform var(--med) var(--ease); }
+.newscard:hover .newsthumb img { transform: scale(1.03); }
+.newsbody h3 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.newsbadge { background: rgba(27, 16, 38, 0.86); border-color: var(--border-2); }
+
+/* ---- buttons: a visible focus ring, which dark purple used to swallow ---- */
+.btn { border-radius: var(--radius); transition: border-color var(--fast) var(--ease), transform var(--fast) var(--ease), box-shadow var(--fast) var(--ease); }
+.btn:hover:not(:disabled) { box-shadow: 0 6px 16px rgba(10, 4, 18, 0.4); }
+.btn.primary:hover:not(:disabled) { box-shadow: 0 10px 24px rgba(254, 140, 12, 0.34); }
+a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible, summary:focus-visible, [tabindex]:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+
+/* ---- tables and rows: hairlines, no boxes ---- */
+.teamrow { border-bottom-color: var(--border); }
+.teamrow:hover { background: var(--accent-soft); }
+.kv { border-bottom-color: var(--border); }
+
+/* ---- skeletons: perceived speed, and no layout shift ---- */
+.skel {
+  position: relative; overflow: hidden; border-radius: var(--radius);
+  background: var(--panel-2); color: transparent;
+}
+.skel::after {
+  content: ""; position: absolute; inset: 0; transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.07), transparent);
+  animation: shimmer 1.25s infinite;
+}
+.skel.line { height: 14px; margin: 8px 0; }
+.skel.title { height: 22px; width: 60%; }
+.skel.thumb { aspect-ratio: 16 / 9; }
+@keyframes shimmer { to { transform: translateX(100%); } }
+
+/* ---- motion: transform/opacity only, so nothing triggers layout ---- */
+.kl-row, .kiosk-seg button, .kiosk-tabs button, .kiosk-day button, .kp-tool, .ks-btn {
+  transition: transform var(--fast) var(--ease), background-color var(--fast) var(--ease), border-color var(--fast) var(--ease), color var(--fast) var(--ease);
+}
+.kl-row.on { box-shadow: inset 3px 0 0 var(--accent); }
+/* A score that changes pulses once: it is what makes a live board feel live. */
+.kh-nums b.flash { animation: kflash 900ms var(--ease) 1; }
+@keyframes kflash {
+  0%   { transform: scale(1); color: var(--text); }
+  22%  { transform: scale(1.22); color: var(--accent); }
+  100% { transform: scale(1); color: var(--text); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

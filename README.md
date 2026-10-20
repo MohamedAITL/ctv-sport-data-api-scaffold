@@ -58,6 +58,14 @@ shows the season's **top performers** per line instead of a dead end, and the
 scoreline carries the kickoff time and status in its centre until there is a
 score.
 
+**Look**: a flat, dense sports UI on Chouf TV's own colours — a solid #3f254c
+header band carrying the real logo, near-black surfaces, #fe8c0c for the one
+action that matters, #db3131 for live. Rubik Variable (Arabic + Latin) for the
+app, tabular numerals so scores do not jitter, and motion limited to press
+feedback, a live pulse and a one-shot flash when a score changes. **Cairo stays
+loaded because the posters hardcode it — an exported PNG is unaffected by any
+of this.**
+
 Stack: **Next.js 14 + TypeScript + Tailwind**. 365scores needs no key; the GOAL
 API key (Botola standings fallback + the matchday page) stays server-side in a
 Next API route, never shipped to the browser.
