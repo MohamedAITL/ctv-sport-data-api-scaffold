@@ -29,17 +29,17 @@ export default function ExportControls({ posterRef, canExport, blocked, onResetD
 
   return (
     <div className="card">
-      <h3>Export</h3>
-      {blocked && <p className="err">Cannot export: {blocked}</p>}
+      <h3>التصدير</h3>
+      {blocked && <p className="err">تعذر التصدير: {blocked}</p>}
       <div className="row">
         <button className="btn primary" disabled={!canExport || !!busy || !!blocked} onClick={() => run("png")}>
-          {busy === "png" ? "Rendering…" : "Download PNG (1080×1350)"}
+          {busy === "png" ? "جاري التجهيز…" : "تحميل PNG (1080×1350)"}
         </button>
         <button className="btn" disabled={!canExport || !!busy || !!blocked} onClick={() => run("jpeg")}>
-          {busy === "jpeg" ? "Rendering…" : "Download JPEG"}
+          {busy === "jpeg" ? "جاري التجهيز…" : "تحميل JPEG"}
         </button>
       </div>
-      <button className="btn ghost" onClick={onResetDesign}>Reset design (keeps names & logos)</button>
+      <button className="btn ghost" onClick={onResetDesign}>إعادة ضبط التصميم (مع الإبقاء على الأسماء والشعارات)</button>
     </div>
   );
 }

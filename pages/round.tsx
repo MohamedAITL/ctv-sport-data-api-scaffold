@@ -130,12 +130,12 @@ export default function RoundPage() {
   const exportBlock = empty
     ? "جدول هذه البطولة غير منشور بعد — no schedule published for this league yet"
     : matches.length === 0
-    ? "no matches in this round yet"
+    ? "لا توجد مباريات في هذه الجولة بعد"
     : null;
 
   return (
     <>
-      <Head><title>Round Poster — Chouf TV</title></Head>
+      <Head><title>ملصق الجولة — شوف تي في</title></Head>
       <main className="app">
         <header className="topbar">
           <div className="brand">
@@ -145,39 +145,39 @@ export default function RoundPage() {
           <Nav />
         </header>
         <div className="pagehead">
-          <h1>Round Poster</h1>
-          <span className="muted">{leagueById(league)?.name} · matches by round · live 365scores · exports 1080×1350 PNG</span>
+          <h1>ملصق الجولة</h1>
+          <span className="muted">{leagueById(league)?.ar} · مباريات حسب الجولة · مباشر من 365scores · تصدير 1080×1350 PNG</span>
         </div>
 
         <div className="layout">
           <section className="controls">
             <div className="card">
-              <h3>Round</h3>
+              <h3>الجولة</h3>
               <label className="field wide">
-                <span>League</span>
+                <span>البطولة</span>
                 <select value={league} onChange={(e) => pickLeague(Number(e.target.value))} disabled={loading}>
                   {ROUND_LEAGUES.map((id) => (
-                    <option key={id} value={id}>{leagueById(id)?.name} · {leagueById(id)?.ar}</option>
+                    <option key={id} value={id}>{leagueById(id)?.ar}</option>
                   ))}
                 </select>
               </label>
               <label className="field wide">
-                <span>Round</span>
+                <span>الجولة</span>
                 <select value={round ?? ""} onChange={(e) => setRound(Number(e.target.value))} disabled={loading || rounds.length === 0}>
                   {rounds.length === 0 && <option value="">—</option>}
                   {rounds.map((r) => <option key={r} value={r}>{roundLabel(r)}</option>)}
                 </select>
               </label>
-              <div className="kv"><span>Matches</span><b>{matches.length}{matches.length > 0 ? ` · ${finished} finished` : ""}</b></div>
-              <div className="kv"><span>Last refresh</span><b>{forLeague?.fetchedAt ? new Date(forLeague.fetchedAt).toLocaleString() : "—"}</b></div>
-              <div className="kv"><span>Status</span><span className={loading ? "pill" : forLeague?.error ? "pill warn" : "pill ok"}>{loading ? "Loading…" : forLeague?.error ? "Error" : "Connected"}</span></div>
+              <div className="kv"><span>المباريات</span><b>{matches.length}{matches.length > 0 ? ` · ${finished} انتهت` : ""}</b></div>
+              <div className="kv"><span>آخر تحديث</span><b>{forLeague?.fetchedAt ? new Date(forLeague.fetchedAt).toLocaleString() : "—"}</b></div>
+              <div className="kv"><span>الحالة</span><span className={loading ? "pill" : forLeague?.error ? "pill warn" : "pill ok"}>{loading ? "جاري التحميل…" : forLeague?.error ? "خطأ" : "متصل"}</span></div>
               {empty && (
                 <p className="err">365scores has not published a schedule for this league yet. It will appear here once the next round is announced.</p>
               )}
               {forLeague?.error && <p className="err">{forLeague.error}</p>}
-              <button className="btn" disabled={loading} onClick={() => fetchRound(league)}>{loading ? "Refreshing…" : "Refresh"}</button>
+              <button className="btn" disabled={loading} onClick={() => fetchRound(league)}>{loading ? "جاري التحديث…" : "تحديث"}</button>
             </div>
-            <TemplateUploader isCustom={templateSrc !== null} onTemplate={onTemplate} defaultLabel="No template yet — using a plain background. Upload your round template." resetLabel="Remove template" />
+            <TemplateUploader isCustom={templateSrc !== null} onTemplate={onTemplate} defaultLabel="No template yet — using a plain background. Upload your round template." resetLabel="حذف القالب" />
             <ExportControls posterRef={posterRef} canExport={matches.length > 0} blocked={exportBlock} onResetDesign={() => updateLayout(DEFAULT_MATCHDAY_LAYOUT)} fileBase={`choufsport-${leagueById(league)?.id === BOTOLA_LEAGUE ? "botola1" : "botola2"}-round${round ?? ""}`} fileDate={matches[0]?.date} />
             <MatchdayTeams matches={matches} nameOverrides={nameOverrides} logoOverrides={logoOverrides} onName={onName} onLogo={onLogo} onClearLogo={onClearLogo} />
             <MatchdayDesign layout={layout} onChange={updateLayout} />
@@ -185,7 +185,7 @@ export default function RoundPage() {
 
           <section className="previewpane">
             <div className="previewsticky">
-              <h3 className="muted">Live preview</h3>
+              <h3 className="muted">معاينة مباشرة</h3>
               <div className="previewbox" style={{ width: PREVIEW_W, height: layout.height * scale }}>
                 <div style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}>
                   <MatchdayPoster ref={posterRef} groupBy="date" mode={results ? "results" : "fixtures"} matches={matches} layout={effLayout} templateSrc={templateSrc} nameOverrides={nameOverrides} logoOverrides={logoOverrides} />

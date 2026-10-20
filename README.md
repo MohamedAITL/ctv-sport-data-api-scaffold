@@ -65,6 +65,9 @@ shows the season's **top performers** per line instead of a dead end, and the
 scoreline carries the kickoff time and status in its centre until there is a
 score.
 
+The interface is **Arabic and right-to-left throughout** — the poster pages read
+the same way as the live kiosk.
+
 **Look**: a flat, dense sports UI on Chouf TV's own colours — a solid #3f254c
 header band carrying the real logo, near-black surfaces, #fe8c0c for the one
 action that matters, #db3131 for live. Rubik Variable (Arabic + Latin) for the

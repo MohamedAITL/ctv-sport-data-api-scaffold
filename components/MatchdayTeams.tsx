@@ -27,8 +27,8 @@ export default function MatchdayTeams({ matches, nameOverrides, logoOverrides, o
 
   return (
     <details className="card collapsible" open>
-      <summary><h3>Teams — Arabic names & badges</h3><span className="chev" /></summary>
-      <p className="muted">Edits persist and are shared with the standings editor (same teamId).</p>
+      <summary><h3>الفرق — الأسماء والشعارات</h3><span className="chev" /></summary>
+      <p className="muted">تُحفظ التعديلات وتُستخدم أيضاً في محرر الترتيب (نفس الفريق).</p>
       <div className="teamlist">
         {teams.map((t) => {
           const badge = logoOverrides[t.id] || t.badge;
@@ -41,8 +41,8 @@ export default function MatchdayTeams({ matches, nameOverrides, logoOverrides, o
                 <span className="logo fallback">{(t.name || "?").charAt(0)}</span>
               )}
               <input className="namein" dir="rtl" value={nameOverrides[t.id] ?? t.nameAr} title={t.name} onChange={(e) => onName(t.id, e.target.value)} />
-              <button className="btn tiny" onClick={() => inputs.current[t.id]?.click()}>{logoOverrides[t.id] ? "Change" : "Upload"}</button>
-              {logoOverrides[t.id] && <button className="btn tiny ghost" onClick={() => onClearLogo(t.id)}>Revert</button>}
+              <button className="btn tiny" onClick={() => inputs.current[t.id]?.click()}>{logoOverrides[t.id] ? "تغيير" : "رفع"}</button>
+              {logoOverrides[t.id] && <button className="btn tiny ghost" onClick={() => onClearLogo(t.id)}>تراجع</button>}
               <input ref={(el) => { inputs.current[t.id] = el; }} type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" hidden onChange={(e) => pick(t.id, e)} />
             </div>
           );

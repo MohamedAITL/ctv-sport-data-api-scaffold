@@ -837,3 +837,51 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
 .kpt .kpt-team { text-align: start; }
 .kpt tr.on { background: var(--accent-soft); }
 .kpt tr.on .kpt-team { font-weight: 900; color: var(--accent); }
+
+/* ======================= Motion =======================
+   Transform and opacity only, 120–260ms, and every one of them is switched off
+   by the prefers-reduced-motion block above (it uses !important, so order does
+   not matter). Nothing here delays content: elements animate from their final
+   position, so a dropped frame costs nothing but the effect. */
+
+@keyframes rise-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pop-in { from { opacity: 0; transform: scale(.96) translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* Panels and cards arrive rather than appear. */
+.card, .newscard, .kpv section, .kx, .kf, .kt-row {
+  animation: rise-in var(--med) var(--ease) both;
+}
+/* A photo that pops in mid-scroll is the one thing that reads as a glitch. */
+.newsthumb img, .kt-p img, .kpc-head img { animation: fade-in 260ms var(--ease) both; }
+
+/* The kiosk's panes and the rail's rows. */
+.kiosk-pane > * { animation: rise-in 180ms var(--ease) both; }
+.kl-group:not(.closed) .kl-row { animation: rise-in 160ms var(--ease) both; }
+.ks-row, .kpv-row, .kpt tbody tr { animation: fade-in 200ms var(--ease) both; }
+
+/* The player card drops in over its backdrop. */
+.kpc-back { animation: fade-in 140ms var(--ease) both; }
+.kpc { animation: pop-in 220ms var(--ease) both; }
+
+/* Hover/press: a card lifts, a row slides a hair toward the finger. */
+.card { transition: transform var(--fast) var(--ease), border-color var(--fast) var(--ease), box-shadow var(--fast) var(--ease); }
+.card:hover { transform: translateY(-2px); border-color: var(--border-2); box-shadow: var(--shadow-2); }
+.kl-row:active { transform: scale(.985); }
+.kpv-row, .kpt tbody tr { transition: background-color var(--fast) var(--ease); }
+.kpv-row:hover, .kpt tbody tr:hover { background: var(--accent-soft); }
+.navlink, .seg-btn, .btn, .kiosk-tabs button, .ks-period { will-change: transform; }
+
+/* Stat bars grow into place instead of snapping. */
+.ks-bar i { transition: width var(--med) var(--ease); }
+
+/* The refresh button turns while it works. */
+@keyframes spin { to { transform: rotate(360deg); } }
+.btn:disabled .spin, .kiosk-refresh:disabled { animation: none; }
+.newshead-actions .btn:disabled { position: relative; }
+.newshead-actions .btn:disabled::after {
+  content: ""; position: absolute; inset-inline-start: 10px; top: 50%;
+  width: 12px; height: 12px; margin-top: -6px; border-radius: 50%;
+  border: 2px solid var(--accent); border-top-color: transparent;
+  animation: spin 700ms linear infinite;
+}

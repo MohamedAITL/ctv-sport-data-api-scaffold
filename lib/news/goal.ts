@@ -7,13 +7,18 @@ import { nextData, pageProps } from "./nextdata";
 const SITE = "https://www.goal.com";
 const NEWS = `${SITE}/ar/%D8%A3%D8%AE%D8%A8%D8%A7%D8%B1`; // /ar/أخبار
 
+// `image` is not a URL: it nests one ({ image: { src, width, height } }), and
+// assigning it straight through renders "[object Object]" as the src.
+interface GoalImage { src?: string; image?: { src?: string } }
 interface GoalCard {
   title?: string;
   teaser?: string;
   url?: string;
-  image?: string;
+  image?: GoalImage;
   publishTime?: string;
 }
+
+const imageOf = (i?: GoalImage): string | null => i?.image?.src ?? i?.src ?? null;
 
 const dig = (o: unknown, path: string[]): unknown =>
   path.reduce<unknown>((cur, k) => (cur && typeof cur === "object" ? (cur as Record<string, unknown>)[k] : undefined), o);
@@ -29,7 +34,7 @@ export async function fetchGoal(): Promise<NewsItem[]> {
       source: "goal" as const,
       title: c.title,
       url,
-      image: c.image ?? null,
+      image: imageOf(c.image),
       publishedAt: c.publishTime ? new Date(c.publishTime).toISOString() : new Date().toISOString(),
       summary: c.teaser ?? null,
     }];

@@ -51,67 +51,67 @@ export default function DesignSettings({ layout, onChange }: Props) {
 
   return (
     <details className="card collapsible">
-      <summary><h3>Design</h3><span className="chev" /></summary>
+      <summary><h3>التصميم</h3><span className="chev" /></summary>
 
-      <h4>Rows</h4>
+      <h4>الصفوف</h4>
       <div className="grid">
-        <Num label="First row Y" value={T.firstRowCenterY} onChange={(v) => up((n) => (n.table.firstRowCenterY = v))} />
-        <Num label="Row height" value={T.rowHeight} step={0.5} onChange={(v) => up((n) => (n.table.rowHeight = v))} />
-        <Num label="Name size" value={T.fontSizeName} onChange={(v) => up((n) => (n.table.fontSizeName = v))} />
-        <Num label="Stat size" value={T.fontSizeStat} onChange={(v) => up((n) => (n.table.fontSizeStat = v))} />
-        <Num label="Rank size" value={T.fontSizeRank} onChange={(v) => up((n) => (n.table.fontSizeRank = v))} />
-        <Num label="Logo size" value={T.logoSize} onChange={(v) => up((n) => (n.table.logoSize = v))} />
-        <Color label="Name color" value={T.nameColor} onChange={(v) => up((n) => (n.table.nameColor = v))} />
+        <Num label="موضع أول صف" value={T.firstRowCenterY} onChange={(v) => up((n) => (n.table.firstRowCenterY = v))} />
+        <Num label="ارتفاع الصف" value={T.rowHeight} step={0.5} onChange={(v) => up((n) => (n.table.rowHeight = v))} />
+        <Num label="حجم الاسم" value={T.fontSizeName} onChange={(v) => up((n) => (n.table.fontSizeName = v))} />
+        <Num label="حجم الأرقام" value={T.fontSizeStat} onChange={(v) => up((n) => (n.table.fontSizeStat = v))} />
+        <Num label="حجم الترتيب" value={T.fontSizeRank} onChange={(v) => up((n) => (n.table.fontSizeRank = v))} />
+        <Num label="حجم الشعار" value={T.logoSize} onChange={(v) => up((n) => (n.table.logoSize = v))} />
+        <Color label="لون الاسم" value={T.nameColor} onChange={(v) => up((n) => (n.table.nameColor = v))} />
       </div>
 
-      <h4>Columns (X)</h4>
+      <h4>مواضع الأعمدة</h4>
       <div className="grid">
-        <Num label="Points X" value={T.pointsX} onChange={(v) => up((n) => (n.table.pointsX = v))} />
-        <Num label="Wins X" value={T.winsX} onChange={(v) => up((n) => (n.table.winsX = v))} />
-        <Num label="Played X" value={T.playedX} onChange={(v) => up((n) => (n.table.playedX = v))} />
-        <Num label="Name right X" value={T.nameRightX} onChange={(v) => up((n) => (n.table.nameRightX = v))} />
-        <Num label="Logo X" value={T.logoCenterX} onChange={(v) => up((n) => (n.table.logoCenterX = v))} />
-        <Num label="Rank X" value={T.rankX} onChange={(v) => up((n) => (n.table.rankX = v))} />
+        <Num label="موضع النقاط" value={T.pointsX} onChange={(v) => up((n) => (n.table.pointsX = v))} />
+        <Num label="موضع «فاز»" value={T.winsX} onChange={(v) => up((n) => (n.table.winsX = v))} />
+        <Num label="موضع «لعب»" value={T.playedX} onChange={(v) => up((n) => (n.table.playedX = v))} />
+        <Num label="موضع الاسم" value={T.nameRightX} onChange={(v) => up((n) => (n.table.nameRightX = v))} />
+        <Num label="موضع الشعار" value={T.logoCenterX} onChange={(v) => up((n) => (n.table.logoCenterX = v))} />
+        <Num label="موضع الترتيب" value={T.rankX} onChange={(v) => up((n) => (n.table.rankX = v))} />
       </div>
 
-      <h4>Zone colors</h4>
+      <h4>ألوان المناطق</h4>
       <div className="grid">
-        <Num label="Top count" value={Z.topCount} onChange={(v) => up((n) => (n.zones.topCount = v))} />
-        <Num label="Bottom count" value={Z.bottomCount} onChange={(v) => up((n) => (n.zones.bottomCount = v))} />
-        <Color label="Top" value={Z.topColor} onChange={(v) => up((n) => (n.zones.topColor = v))} />
-        <Color label="Mid" value={Z.midColor} onChange={(v) => up((n) => (n.zones.midColor = v))} />
-        <Color label="Bottom" value={Z.bottomColor} onChange={(v) => up((n) => (n.zones.bottomColor = v))} />
+        <Num label="عدد الأعلى" value={Z.topCount} onChange={(v) => up((n) => (n.zones.topCount = v))} />
+        <Num label="عدد الأسفل" value={Z.bottomCount} onChange={(v) => up((n) => (n.zones.bottomCount = v))} />
+        <Color label="الأعلى" value={Z.topColor} onChange={(v) => up((n) => (n.zones.topColor = v))} />
+        <Color label="الوسط" value={Z.midColor} onChange={(v) => up((n) => (n.zones.midColor = v))} />
+        <Color label="الأسفل" value={Z.bottomColor} onChange={(v) => up((n) => (n.zones.bottomColor = v))} />
       </div>
 
-      <h4>Mask (covers old rows)</h4>
+      <h4>تغطية الصفوف القديمة</h4>
       <div className="grid">
         <Num label="X" value={M.x} onChange={(v) => up((n) => (n.mask.x = v))} />
         <Num label="Y" value={M.y} onChange={(v) => up((n) => (n.mask.y = v))} />
-        <Num label="Width" value={M.w} onChange={(v) => up((n) => (n.mask.w = v))} />
-        <Num label="Height" value={M.h} onChange={(v) => up((n) => (n.mask.h = v))} />
-        <Num label="Radius" value={M.radius} onChange={(v) => up((n) => (n.mask.radius = v))} />
-        <Num label="Opacity" value={M.opacity} step={0.02} onChange={(v) => up((n) => (n.mask.opacity = v))} />
-        <Color label="Color" value={M.color} onChange={(v) => up((n) => (n.mask.color = v))} />
+        <Num label="العرض" value={M.w} onChange={(v) => up((n) => (n.mask.w = v))} />
+        <Num label="الارتفاع" value={M.h} onChange={(v) => up((n) => (n.mask.h = v))} />
+        <Num label="الاستدارة" value={M.radius} onChange={(v) => up((n) => (n.mask.radius = v))} />
+        <Num label="الشفافية" value={M.opacity} step={0.02} onChange={(v) => up((n) => (n.mask.opacity = v))} />
+        <Color label="اللون" value={M.color} onChange={(v) => up((n) => (n.mask.color = v))} />
       </div>
 
-      <h4>Overlays (optional — off keeps the template text)</h4>
+      <h4>عناصر إضافية (أطفئها للإبقاء على نص القالب)</h4>
       <div className="grid">
-        <Toggle label="Heading" value={layout.heading.show} onChange={(v) => up((n) => (n.heading.show = v))} />
-        <Toggle label="Column headers" value={layout.columnHeaders.show} onChange={(v) => up((n) => (n.columnHeaders.show = v))} />
-        <Toggle label="Season label" value={layout.seasonLabel.show} onChange={(v) => up((n) => (n.seasonLabel.show = v))} />
-        <Toggle label="Updated label" value={layout.updatedLabel.show} onChange={(v) => up((n) => (n.updatedLabel.show = v))} /> <Toggle label="Row mask" value={layout.mask.show} onChange={(v) => up((n) => (n.mask.show = v))} />
+        <Toggle label="العنوان" value={layout.heading.show} onChange={(v) => up((n) => (n.heading.show = v))} />
+        <Toggle label="عناوين الأعمدة" value={layout.columnHeaders.show} onChange={(v) => up((n) => (n.columnHeaders.show = v))} />
+        <Toggle label="سطر الموسم" value={layout.seasonLabel.show} onChange={(v) => up((n) => (n.seasonLabel.show = v))} />
+        <Toggle label="سطر التحديث" value={layout.updatedLabel.show} onChange={(v) => up((n) => (n.updatedLabel.show = v))} /> <Toggle label="تغطية الصفوف" value={layout.mask.show} onChange={(v) => up((n) => (n.mask.show = v))} />
       </div>
       {layout.heading.show && (
         <div className="grid">
-          <Text label="Heading text" rtl value={layout.heading.text || ""} onChange={(v) => up((n) => (n.heading.text = v))} />
-          <Num label="Heading size" value={layout.heading.fontSize} onChange={(v) => up((n) => (n.heading.fontSize = v))} />
+          <Text label="نص العنوان" rtl value={layout.heading.text || ""} onChange={(v) => up((n) => (n.heading.text = v))} />
+          <Num label="حجم العنوان" value={layout.heading.fontSize} onChange={(v) => up((n) => (n.heading.fontSize = v))} />
         </div>
       )}
       {layout.seasonLabel.show && (
-        <Text label="Season text" rtl value={layout.seasonLabel.text || ""} onChange={(v) => up((n) => (n.seasonLabel.text = v))} />
+        <Text label="نص الموسم" rtl value={layout.seasonLabel.text || ""} onChange={(v) => up((n) => (n.seasonLabel.text = v))} />
       )}
       {layout.updatedLabel.show && (
-        <Text label="Updated text" rtl value={layout.updatedLabel.text || ""} onChange={(v) => up((n) => (n.updatedLabel.text = v))} />
+        <Text label="نص التحديث" rtl value={layout.updatedLabel.text || ""} onChange={(v) => up((n) => (n.updatedLabel.text = v))} />
       )}
     </details>
   );

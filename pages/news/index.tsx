@@ -92,8 +92,8 @@ export default function NewsPage() {
         </header>
         <div className="pagehead newshead">
           <div>
-            <h1>News</h1>
-            <span className="muted" dir="rtl">آخر الأخبار من هسبورت والبطولة وكووورة و365scores</span>
+            <h1>الأخبار</h1>
+            <span className="muted" dir="rtl">آخر الأخبار من هسبورت وهسبريس والبطولة وكووورة وبي إن سبورتس وسكاي نيوز وgoal والرياضة و365scores</span>
           </div>
           <div className="newshead-actions">
             {fresh !== null && (
@@ -107,7 +107,7 @@ export default function NewsPage() {
           </div>
         </div>
 
-        <div className="seg" role="tablist" aria-label="Source">
+        <div className="seg" role="tablist" aria-label="المصدر">
           <button role="tab" aria-selected={filter === "all"} className={filter === "all" ? "seg-btn on" : "seg-btn"} onClick={() => setFilter("all")}>
             الكل ({items.length})
           </button>

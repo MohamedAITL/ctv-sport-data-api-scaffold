@@ -8,12 +8,12 @@ export default function Nav() {
   );
   return (
     <nav className="nav">
-      {link("/", "Standings")}
-      {link("/round", "Round")}
-      {link("/matchday", "Matchday")}
-      {link("/stats", "Stats")}
-      {link("/news", "News")}
-      {link("/live", "Live")}
+      {link("/", "الترتيب")}
+      {link("/round", "الجولة")}
+      {link("/matchday", "مباريات اليوم")}
+      {link("/stats", "الإحصائيات")}
+      {link("/news", "الأخبار")}
+      {link("/live", "المباشر")}
     </nav>
   );
 }

@@ -3,6 +3,7 @@ import { fetchHesport } from "@/lib/news/hesport";
 import { fetchElbotola } from "@/lib/news/elbotola";
 import { fetchBein } from "@/lib/news/bein";
 import { fetchHespress } from "@/lib/news/hespress";
+import { fetchGoal } from "@/lib/news/goal";
 
 describe("news ids and the host allowlist", () => {
   const url = "https://www.hesport.com/some-article-123.html";
@@ -190,5 +191,46 @@ describe("hespress sport feed", () => {
     expect(a.image).toContain("rally.jpg");
     expect(a.body).toContain("الاتحاد السعودي");
     expect(sourceOfUrl(a.url)).toBe("hespress");
+  });
+});
+
+describe("goal.com Arabic", () => {
+  const realFetch = global.fetch;
+  afterEach(() => { global.fetch = realFetch; });
+
+  // The card's `image` is not a URL but a nested object — assigning it straight
+  // through put "[object Object]" in the src and 404'd on every card.
+  const page = (cards: unknown[]) => ({
+    props: { pageProps: { content: { newsArchive: { news: { cards } } } } },
+  });
+  const html = (data: unknown) =>
+    `<html><script id="__NEXT_DATA__" type="application/json">${JSON.stringify(data)}</script></html>`;
+
+  it("reads the nested image url and builds an absolute article link", async () => {
+    global.fetch = jest.fn(async () => ({
+      ok: true,
+      text: async () => html(page([{
+        title: "لا تلوموا الكرة السعودية",
+        url: "/ar/news/x",
+        teaser: "…",
+        publishTime: "2026-10-19T22:22:00Z",
+        image: { image: { src: "https://assets.goal.com/a.png", width: 1920 } },
+      }])),
+    })) as unknown as typeof fetch;
+
+    const [a] = await fetchGoal();
+    expect(a.source).toBe("goal");
+    expect(a.image).toBe("https://assets.goal.com/a.png");
+    expect(a.url).toBe("https://www.goal.com/ar/news/x");
+    expect(typeof a.image).toBe("string");
+  });
+
+  it("yields no image rather than an object when the shape changes", async () => {
+    global.fetch = jest.fn(async () => ({
+      ok: true,
+      text: async () => html(page([{ title: "خبر", url: "https://www.goal.com/ar/y" }])),
+    })) as unknown as typeof fetch;
+    const [a] = await fetchGoal();
+    expect(a.image).toBeNull();
   });
 });

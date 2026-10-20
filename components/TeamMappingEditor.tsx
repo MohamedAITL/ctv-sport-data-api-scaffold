@@ -13,7 +13,7 @@ interface Props {
 
 // Edit Arabic display names and upload logo overrides, keyed by stable teamId.
 // Official API logos stay unless you upload a replacement for a specific club;
-// "Revert" drops the override and restores that club's official logo. API stats
+// "تراجع" drops the override and restores that club's official logo. API stats
 // (position/played/wins/points) are shown read-only — never changed here.
 export default function TeamMappingEditor({
   rows,
@@ -33,11 +33,11 @@ export default function TeamMappingEditor({
 
   return (
     <details className="card collapsible" open>
-      <summary><h3>Teams — Arabic names & logos</h3><span className="chev" /></summary>
+      <summary><h3>الفرق — الأسماء والشعارات</h3><span className="chev" /></summary>
       <p className="muted">
-        Upload a logo from your computer to fix a wrong crest — every other club keeps its
-        official logo, and <b>Revert</b> restores the official one. Name &amp; logo edits are
-        saved locally and survive refresh. Stats are read-only API values.
+        ارفع شعاراً من جهازك لتصحيح شعار خاطئ — تحتفظ بقية الأندية بشعارها الرسمي،
+        و<b>تراجع</b> يعيد الشعار الأصلي. تُحفظ تعديلات الأسماء والشعارات على جهازك
+        وتبقى بعد التحديث. الأرقام تأتي من المصدر ولا يمكن تعديلها.
       </p>
       <div className="teamlist">
         {rows.map((r) => {
@@ -62,7 +62,7 @@ export default function TeamMappingEditor({
               />
               <span className="stats" title="played / wins / points">{r.played} · {r.wins} · {r.points}</span>
               <button className="btn tiny" onClick={() => fileInputs.current[r.teamId]?.click()}>
-                {custom ? "Change logo" : "Upload logo"}
+                {custom ? "تغيير الشعار" : "رفع شعار"}
               </button>
               {custom && (
                 <button className="btn tiny ghost" title="restore official logo" onClick={() => onClearLogo(r.teamId)}>

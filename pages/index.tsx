@@ -77,7 +77,7 @@ export default function Home() {
       const res = await fetch(`/api/standings?competition=${lg}`);
       const json = await res.json();
       if (!res.ok && !json.rows) {
-        commit(lg, { rows: [], season: null, warnings: [], validation: { ok: false, errors: [json.error || "Request failed"], warnings: [] }, stale: true, error: json.error });
+        commit(lg, { rows: [], season: null, warnings: [], validation: { ok: false, errors: [json.error || "فشل الطلب"], warnings: [] }, stale: true, error: json.error });
       } else {
         commit(lg, json);
       }
@@ -156,10 +156,10 @@ export default function Home() {
 
   // A knockout cup, or a competition between seasons, simply has no table yet.
   // That is a normal state, so say it plainly instead of surfacing the raw
-  // "Standings are empty" validation error.
+  // "الجدول فارغ" validation error.
   const noTable = Boolean(data) && !loading && rows.length === 0;
   const blocked = noTable
-    ? "no league table published for this competition right now"
+    ? "لا يوجد جدول ترتيب منشور لهذه المسابقة حالياً"
     : data && !data.validation.ok
     ? data.validation.errors.join("; ")
     : null;
@@ -168,7 +168,7 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>Standings Poster — Chouf TV</title>
+        <title>ملصق الترتيب — شوف تي في</title>
       </Head>
       <main className="app">
         <header className="topbar">
@@ -179,8 +179,8 @@ export default function Home() {
           <Nav />
         </header>
         <div className="pagehead">
-          <h1>Standings Poster</h1>
-          <span className="muted">{leagueById(league)?.name ?? "League"} · live 365scores table · exports 1080×1350 PNG</span>
+          <h1>ملصق الترتيب</h1>
+          <span className="muted">{leagueById(league)?.ar ?? "البطولة"} · جدول مباشر من 365scores · تصدير 1080×1350 PNG</span>
         </div>
 
         <div className="layout">
@@ -198,14 +198,14 @@ export default function Home() {
             />
             {noTable && (
               <div className="card">
-                <h3>No table</h3>
+                <h3>لا يوجد جدول</h3>
                 <p className="err" style={{ direction: "rtl" }}>لا يوجد جدول ترتيب لهذه المسابقة حاليا</p>
                 <p className="muted">365scores publishes a table only once a league or group stage is running. Pick another competition, or come back when it starts.</p>
               </div>
             )}
             {data && data.validation.warnings.length > 0 && (
               <div className="card">
-                <h3>Data warnings</h3>
+                <h3>ملاحظات على البيانات</h3>
                 <ul className="warnlist">
                   {data.validation.warnings.map((w, i) => (
                     <li key={i}>{w}</li>
@@ -228,7 +228,7 @@ export default function Home() {
 
           <section className="previewpane">
             <div className="previewsticky">
-              <h3 className="muted">Live preview</h3>
+              <h3 className="muted">معاينة مباشرة</h3>
               <div className="previewbox" style={{ width: PREVIEW_W, height: layout.height * scale }}>
                 <div style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}>
                   <Poster ref={posterRef} rows={rows} layout={effLayout} templateSrc={templateSrc} logoOverrides={logoOverrides} />

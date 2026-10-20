@@ -89,12 +89,12 @@ export default function Matchday() {
   const results = mode === "results";
   // A results poster with nothing played yet would be all dimmed kickoff times.
   const exportBlock = results && matches.length > 0 && finished + live === 0
-    ? "no match has finished yet — results appear once games end (press Refresh)"
+    ? "لم تنته أي مباراة بعد — تظهر النتائج بعد نهاية المباريات (اضغط تحديث)"
     : null;
 
   return (
     <>
-      <Head><title>Matchday Poster — Chouf TV</title></Head>
+      <Head><title>ملصق مباريات اليوم — شوف تي في</title></Head>
       <main className="app">
         <header className="topbar">
           <div className="brand">
@@ -104,31 +104,31 @@ export default function Matchday() {
           <Nav />
         </header>
         <div className="pagehead">
-          <h1>{results ? "Match Results Poster" : "Matchday Poster"}</h1>
-          <span className="muted">Botola Pro first, then the biggest games · live GOAL API · exports 1080×1350 PNG</span>
+          <h1>{results ? "ملصق نتائج اليوم" : "ملصق مباريات اليوم"}</h1>
+          <span className="muted">البطولة الاحترافية أولاً ثم أهم المباريات · تصدير 1080×1350 PNG</span>
         </div>
 
         <div className="layout">
           <section className="controls">
             <div className="card">
-              <h3>Matchday</h3>
-              <div className="seg" role="tablist" aria-label="Poster type">
-                <button role="tab" aria-selected={!results} className={!results ? "seg-btn on" : "seg-btn"} onClick={() => pickMode("fixtures")}>Fixtures · المباريات</button>
-                <button role="tab" aria-selected={results} className={results ? "seg-btn on" : "seg-btn"} onClick={() => pickMode("results")}>Results · النتائج</button>
+              <h3>مباريات اليوم</h3>
+              <div className="seg" role="tablist" aria-label="نوع الملصق">
+                <button role="tab" aria-selected={!results} className={!results ? "seg-btn on" : "seg-btn"} onClick={() => pickMode("fixtures")}>المباريات</button>
+                <button role="tab" aria-selected={results} className={results ? "seg-btn on" : "seg-btn"} onClick={() => pickMode("results")}>النتائج</button>
               </div>
-              <label className="field wide"><span>Date</span><input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></label>
-              <div className="kv"><span>Matches</span><b>{matches.length} / 10 (Botola: {botolaCount})</b></div>
+              <label className="field wide"><span>التاريخ</span><input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></label>
+              <div className="kv"><span>المباريات</span><b>{matches.length} / 10 (البطولة: {botolaCount})</b></div>
               {results && matches.length > 0 && (
-                <div className="kv"><span>Finished</span><b>{finished} of {matches.length}{live > 0 ? ` · ${live} live` : ""}</b></div>
+                <div className="kv"><span>انتهت</span><b>{finished} من {matches.length}{live > 0 ? ` · ${live} مباشرة` : ""}</b></div>
               )}
-              <div className="kv"><span>Last refresh</span><b>{dataForDate?.fetchedAt ? new Date(dataForDate.fetchedAt).toLocaleString() : "—"}</b></div>
-              <div className="kv"><span>Status</span><span className={loadingDate ? "pill" : dataForDate?.stale ? "pill warn" : "pill ok"}>{loadingDate ? "Loading…" : dataForDate?.stale ? "Cached (stale)" : "Connected"}</span></div>
+              <div className="kv"><span>آخر تحديث</span><b>{dataForDate?.fetchedAt ? new Date(dataForDate.fetchedAt).toLocaleString() : "—"}</b></div>
+              <div className="kv"><span>الحالة</span><span className={loadingDate ? "pill" : dataForDate?.stale ? "pill warn" : "pill ok"}>{loadingDate ? "جاري التحميل…" : dataForDate?.stale ? "نسخة مخزَّنة" : "متصل"}</span></div>
               {dataForDate?.errors && dataForDate.errors.length > 0 && (
                 <ul className="warnlist">{dataForDate.errors.map((e, i) => <li key={i}>{e}</li>)}</ul>
               )}
-              <button className="btn" disabled={loadingDate} onClick={() => fetchFixtures(date)}>{loadingDate ? "Refreshing…" : "Refresh"}</button>
+              <button className="btn" disabled={loadingDate} onClick={() => fetchFixtures(date)}>{loadingDate ? "جاري التحديث…" : "تحديث"}</button>
             </div>
-            <TemplateUploader isCustom={templateSrc !== null} onTemplate={onTemplate} defaultLabel="No template yet — using a plain background. Upload your matchday template." resetLabel="Remove template" />
+            <TemplateUploader isCustom={templateSrc !== null} onTemplate={onTemplate} defaultLabel="No template yet — using a plain background. Upload your matchday template." resetLabel="حذف القالب" />
             <ExportControls posterRef={posterRef} canExport={matches.length > 0} blocked={exportBlock} onResetDesign={() => updateLayout(DEFAULT_MATCHDAY_LAYOUT)} fileBase={results ? "choufsport-results" : "choufsport-matchday"} fileDate={date} />
             <MatchdayTeams matches={matches} nameOverrides={nameOverrides} logoOverrides={logoOverrides} onName={onName} onLogo={onLogo} onClearLogo={onClearLogo} />
             <MatchdayDesign layout={layout} onChange={updateLayout} />
@@ -136,7 +136,7 @@ export default function Matchday() {
 
           <section className="previewpane">
             <div className="previewsticky">
-              <h3 className="muted">Live preview</h3>
+              <h3 className="muted">معاينة مباشرة</h3>
               <div className="previewbox" style={{ width: PREVIEW_W, height: layout.height * scale }}>
                 <div style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}>
                   <MatchdayPoster ref={posterRef} mode={mode} matches={matches} layout={effLayout} templateSrc={templateSrc} nameOverrides={nameOverrides} logoOverrides={logoOverrides} />
