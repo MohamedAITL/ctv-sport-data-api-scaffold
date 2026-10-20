@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { LiveMatch, LiveTeam } from "@/types/live";
 
 // Crests 404 when the payload carried no imageVersion; show nothing rather than
@@ -21,6 +21,20 @@ interface Props {
   matches: LiveMatch[];
   selectedId: number | null;
   onSelect: (m: LiveMatch) => void;
+}
+
+// Which competitions the operator has folded away. Kept per browser so a wall
+// screen comes back up the way it was left.
+const CLOSED_KEY = "live.closedCompetitions";
+
+function loadClosed(): number[] {
+  try {
+    const raw = localStorage.getItem(CLOSED_KEY);
+    const ids = raw ? (JSON.parse(raw) as unknown) : [];
+    return Array.isArray(ids) ? ids.filter((n): n is number => typeof n === "number") : [];
+  } catch {
+    return [];
+  }
 }
 
 /**
@@ -48,16 +62,35 @@ export function groupByCompetition(matches: LiveMatch[]) {
 // only pointer, so there is no hover state to lean on.
 export default function LiveList({ matches, selectedId, onSelect }: Props) {
   const groups = groupByCompetition(matches);
+  const [closed, setClosed] = useState<number[]>([]);
+  // localStorage is read after mount so the server and the first client render
+  // agree.
+  useEffect(() => { setClosed(loadClosed()); }, []);
+
+  const toggle = (id: number) => {
+    setClosed((cur) => {
+      const next = cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id];
+      try { localStorage.setItem(CLOSED_KEY, JSON.stringify(next)); } catch { /* private mode */ }
+      return next;
+    });
+  };
+
   return (
     <div className="kl-list" dir="rtl">
       {groups.map((g) => (
-        <section key={g.id} className="kl-group">
-          <h3 className="kl-grouphead">
+        <section key={g.id} className={closed.includes(g.id) ? "kl-group closed" : "kl-group"}>
+          <button
+            type="button"
+            className="kl-grouphead"
+            aria-expanded={!closed.includes(g.id)}
+            onClick={() => toggle(g.id)}
+          >
             <CompLogo src={g.logo} />
             <span>{g.name}</span>
             <em>{g.matches.length}</em>
-          </h3>
-          {g.matches.map((m) => (
+            <i className="kl-chev" aria-hidden="true" />
+          </button>
+          {!closed.includes(g.id) && g.matches.map((m) => (
             <button
               key={m.id}
               type="button"

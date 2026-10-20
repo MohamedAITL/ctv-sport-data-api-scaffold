@@ -104,13 +104,27 @@ export interface FactBlock {
   rows: FactRow[];
 }
 
-/** Bio from the athlete endpoint — the match payload has none of this. */
+/** A player's season in one competition, as 365scores' own player page shows
+ *  it: appearances, goals, rating, cards, xG… */
+export interface AthleteSeason {
+  competition: string; // Arabic
+  top: PerformerStat[]; // the headline figures the source flags
+  stats: PerformerStat[]; // everything else it publishes
+}
+
+/** The athlete endpoint's `fullDetails` view — none of this is in the match
+ *  payload, and it is what the card shows beyond the 90 minutes on screen. */
 export interface AthleteBio {
   id: number;
   name: string;
   age: number | null;
   position: string | null;
   nationality: string | null;
+  shirt: number | null;
+  /** Birth date, height, preferred foot — whatever the source lists. */
+  details: PerformerStat[];
+  summary: string | null;
+  seasons: AthleteSeason[];
 }
 
 /** One of a player's headline season figures, e.g. "اهداف" → "7". */

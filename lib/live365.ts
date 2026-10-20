@@ -7,7 +7,7 @@
 //      Southern League and a Colombian second-division game). Every lineup field
 //      is therefore optional and the caller must cope with null.
 import type {
-  AthleteBio, FactBlock, FactRow, LineupPlayer, LineupRole, LiveDetail, LiveEvent,
+  AthleteBio, AthleteSeason, FactBlock, FactRow, LineupPlayer, LineupRole, LiveDetail, LiveEvent,
   LiveMatch, Performer, PerformerStat, StatGroup, StatRow, TeamLineup,
   TopPerformerRow,
 } from "@/types/live";
@@ -45,7 +45,7 @@ export const competitionLogo = (id: number) => `${COMP_IMG}/v1/Competitions/${id
 const score = (v?: number): number | null =>
   v === undefined || v === null || v < 0 ? null : Math.round(v);
 
-interface RawCompetitor { id?: number; name?: string; score?: number; imageVersion?: number }
+interface RawCompetitor { id?: number; name?: string; score?: number; imageVersion?: number; countryId?: number }
 interface RawGame {
   id?: number;
   sportId?: number;
@@ -79,9 +79,13 @@ export function toMatch(g: RawGame): LiveMatch | null {
   };
 }
 
-// The competitions the rest of the app already cares about, so the 180+ match
-// day doesn't open on the Guatemalan second division.
-const MAJOR = new Set(STANDINGS_LEAGUES.map((l) => l.id));
+// The competitions the rest of the app already cares about, in catalog order —
+// Morocco, Africa, Europe, international — which doubles as the fame order.
+const FAME = new Map(STANDINGS_LEAGUES.map((l, i) => [l.id, i]));
+// 365scores' country id for Morocco (the same one the app sends as
+// userCountryId). A Moroccan club or the national team outranks everything,
+// wherever they are playing.
+const MOROCCO = 127;
 
 /** "2026-10-18" -> "18/10/2026", the only date format allScores honours. */
 export function toApiDate(iso: string): string {
@@ -89,26 +93,65 @@ export function toApiDate(iso: string): string {
   return `${d}/${m}/${y}`;
 }
 
+interface RawCompetitionMeta { id?: number; countryId?: number; popularityRank?: number }
+
 /**
- * Football matches, live first, then the competitions we follow, then the rest.
- * Pass an ISO date for a past day — `date=`/`dates=` are silently ignored by the
- * source, only `startDate`/`endDate` work.
+ * Football matches, ordered the way the rail groups them: Morocco first, then
+ * the competitions the app follows in catalog order, then everything else by
+ * the source's own popularity. Matches of one competition stay contiguous, so
+ * grouping the list by competition preserves this order; inside a competition
+ * anything live comes first.
+ *
+ * Pass an ISO date for a past day — `date=`/`dates=` are silently ignored by
+ * the source, only `startDate`/`endDate` work.
  */
 export async function fetchLiveMatches(isoDate?: string): Promise<LiveMatch[]> {
   const day = isoDate ? `&startDate=${encodeURIComponent(toApiDate(isoDate))}&endDate=${encodeURIComponent(toApiDate(isoDate))}` : "";
-  const d = await get<{ games?: RawGame[] }>(`/games/allScores/?${Q}&live=true${day}`);
-  const all = (d.games ?? [])
+  const d = await get<{ games?: RawGame[]; competitions?: RawCompetitionMeta[] }>(`/games/allScores/?${Q}&live=true${day}`);
+  const meta = new Map((d.competitions ?? []).filter((c) => c.id).map((c) => [c.id as number, c]));
+
+  const moroccan = (g: RawGame) =>
+    g.homeCompetitor?.countryId === MOROCCO ||
+    g.awayCompetitor?.countryId === MOROCCO ||
+    meta.get(g.competitionId ?? 0)?.countryId === MOROCCO;
+
+  // A competition is ranked by its best match: one Moroccan side is enough to
+  // pull the whole competition to the top of the rail.
+  const tiers = new Map<number, [number, number]>();
+  for (const g of d.games ?? []) {
+    if (g.sportId !== FOOTBALL || !g.competitionId) continue;
+    const fame = FAME.get(g.competitionId);
+    // popularityRank 0 means "unranked" at the source, not "most popular".
+    const pop = meta.get(g.competitionId)?.popularityRank || Number.MAX_SAFE_INTEGER;
+    const rank: [number, number] = moroccan(g)
+      ? [0, fame ?? 0]
+      : fame !== undefined
+        ? [1, fame]
+        : [2, pop];
+    const held = tiers.get(g.competitionId);
+    if (!held || rank[0] < held[0] || (rank[0] === held[0] && rank[1] < held[1])) {
+      tiers.set(g.competitionId, rank);
+    }
+  }
+  const rankOf = (id: number) => tiers.get(id) ?? [2, Number.MAX_SAFE_INTEGER];
+  // …and inside a competition the Moroccan tie leads it.
+  const moroccanGames = new Set((d.games ?? []).filter((g) => g.id && moroccan(g)).map((g) => g.id as number));
+
+  return (d.games ?? [])
     .filter((g) => g.sportId === FOOTBALL)
     .map(toMatch)
-    .filter((m): m is LiveMatch => m !== null);
-  // Live always outranks not-live; within each band the competitions the app
-  // follows come first, so the rail never opens on a third-division fixture.
-  const rank = (m: LiveMatch) => {
-    const major = MAJOR.has(m.competitionId) ? 0 : 1;
-    const state = m.isLive ? 0 : m.isFinished ? 1 : 2;
-    return state * 2 + major;
-  };
-  return all.sort((x, y) => rank(x) - rank(y) || x.startTime.localeCompare(y.startTime));
+    .filter((m): m is LiveMatch => m !== null)
+    .sort((x, y) => {
+      const [tx, fx] = rankOf(x.competitionId);
+      const [ty, fy] = rankOf(y.competitionId);
+      return (
+        tx - ty || fx - fy ||
+        x.competitionId - y.competitionId ||       // keep a competition contiguous
+        Number(moroccanGames.has(y.id)) - Number(moroccanGames.has(x.id)) ||
+        Number(y.isLive) - Number(x.isLive) ||     // then live, inside it
+        x.startTime.localeCompare(y.startTime)
+      );
+    });
 }
 
 // ---- detail ----------------------------------------------------------------
@@ -290,19 +333,50 @@ export function toFacts(a: RawActualStats | undefined, homeId: number, awayId: n
   ].filter((b): b is FactBlock => b !== null);
 }
 
-/** A player's bio — none of this is in the match payload. */
+interface RawAthlete {
+  id?: number; name?: string; age?: number; jerseyNum?: number; shortBio?: string;
+  position?: { name?: string };
+  nationalityName?: string;
+  playerDetails?: Array<{ title?: string; value?: string }>;
+  highlightStats?: Array<{ name?: string; stats?: Array<{ name?: string; value?: string; isTop?: boolean }> }>;
+}
+
+// "-" is the source's "did not play / not published" marker; a card full of
+// dashes is worse than a shorter card.
+const hasValue = (v?: string) => Boolean(v && v !== "-");
+
+/**
+ * A player's own page, not just their 90 minutes: `fullDetails=true` is what
+ * 365scores' player page calls, and it carries the per-competition season
+ * stats (appearances, goals, rating, cards, xG…), the bio details and the
+ * shirt number. Without that flag the same endpoint returns a name and an age.
+ */
 export async function fetchAthlete(athleteId: number): Promise<AthleteBio | null> {
-  const d = await get<{ athletes?: Array<{ id?: number; name?: string; age?: number; position?: { name?: string }; nationalityName?: string }> }>(
-    `/athletes/?${Q}&athletes=${athleteId}`
-  );
+  const d = await get<{ athletes?: RawAthlete[] }>(`/athletes/?${Q}&athletes=${athleteId}&fullDetails=true`);
   const a = d.athletes?.[0];
   if (!a?.id) return null;
+  const seasons: AthleteSeason[] = (a.highlightStats ?? [])
+    .map((h) => {
+      const rows = (h.stats ?? []).filter((s) => s.name && hasValue(s.value));
+      return {
+        competition: h.name ?? "",
+        top: rows.filter((s) => s.isTop).map((s) => ({ name: s.name as string, value: s.value as string })),
+        stats: rows.filter((s) => !s.isTop).map((s) => ({ name: s.name as string, value: s.value as string })),
+      };
+    })
+    .filter((s) => s.top.length > 0 || s.stats.length > 0);
   return {
     id: a.id,
     name: a.name ?? "",
     age: typeof a.age === "number" ? a.age : null,
     position: a.position?.name ?? null,
     nationality: a.nationalityName ?? null,
+    shirt: typeof a.jerseyNum === "number" ? a.jerseyNum : null,
+    details: (a.playerDetails ?? [])
+      .filter((x) => x.title && hasValue(x.value))
+      .map((x) => ({ name: x.title as string, value: x.value as string })),
+    summary: a.shortBio ?? null,
+    seasons,
   };
 }
 

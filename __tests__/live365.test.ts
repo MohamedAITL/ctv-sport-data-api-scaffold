@@ -61,8 +61,10 @@ describe("fetchLiveMatches", () => {
     expect(out.map((m) => m.id)).toEqual([4, 1, 3]);
   });
 
-  // 180+ matches a day are mostly minor leagues; the rail must not open on them.
-  it("ranks competitions from the app's catalog above the rest in each band", async () => {
+  // 180+ matches a day are mostly minor leagues. The rail groups by
+  // competition, so a competition's matches stay together and the catalog ones
+  // lead — live first inside each.
+  it("keeps a competition contiguous and puts the catalog ones first", async () => {
     const minor = { competitionId: 99999, competitionDisplayName: "دوري صغير" };
     mock(() => ({ games: [
       game({ id: 1, statusGroup: 3, ...minor }),             // live, minor
@@ -71,7 +73,60 @@ describe("fetchLiveMatches", () => {
       game({ id: 4, statusGroup: 3 }),                       // live, La Liga
     ] }));
     const out = await fetchLiveMatches();
-    expect(out.map((m) => m.id)).toEqual([4, 1, 3, 2]);
+    expect(out.map((m) => m.id)).toEqual([4, 3, 1, 2]);
+  });
+
+  // Morocco outranks everything, in any competition.
+  it("puts a Moroccan side first even in a foreign competition", async () => {
+    const CAF = { competitionId: 624, competitionDisplayName: "دوري أبطال أفريقيا" };
+    mock(() => ({
+      competitions: [
+        { id: 557, countryId: 127, popularityRank: 5000 },   // Botola
+        { id: 624, countryId: 19, popularityRank: 300 },     // CAF CL
+        { id: 11, countryId: 2, popularityRank: 10 },        // La Liga
+        { id: 99999, countryId: 55, popularityRank: 40 },    // a minor league
+      ],
+      games: [
+        game({ id: 1 }),                                                        // La Liga
+        game({ id: 2, competitionId: 99999, competitionDisplayName: "صغير" }),  // minor
+        game({ id: 3, competitionId: 557, competitionDisplayName: "البطولة" }), // Botola
+        // a Moroccan club abroad: the competition itself is not Moroccan
+        game({ id: 4, ...CAF, homeCompetitor: { id: 9974, name: "نهضة بركان", countryId: 127, score: 0 } }),
+      ],
+    }));
+    const out = await fetchLiveMatches();
+    // Botola and the CAF tie (Moroccan club) lead, then La Liga, then the rest
+    expect(out.map((m) => m.id)).toEqual([3, 4, 1, 2]);
+  });
+
+  it("leads a competition with its Moroccan tie", async () => {
+    const WC = { competitionId: 6085, competitionDisplayName: "كأس العالم للسيدات تحت 17" };
+    mock(() => ({
+      competitions: [{ id: 6085, countryId: 19, popularityRank: 800 }],
+      games: [
+        game({ id: 1, ...WC, startTime: "2026-10-20T15:00:00+00:00" }),
+        game({ id: 2, ...WC, startTime: "2026-10-20T18:00:00+00:00",
+               homeCompetitor: { id: 1700, name: "المغرب تحت 17", countryId: 127, score: 0 } }),
+        game({ id: 3, ...WC, startTime: "2026-10-20T12:00:00+00:00" }),
+      ],
+    }));
+    const out = await fetchLiveMatches();
+    expect(out.map((m) => m.id)).toEqual([2, 3, 1]); // Morocco first, then by kickoff
+  });
+
+  it("treats popularityRank 0 as unranked, not most popular", async () => {
+    mock(() => ({
+      competitions: [
+        { id: 70001, countryId: 9, popularityRank: 0 },      // unranked
+        { id: 70002, countryId: 9, popularityRank: 900 },
+      ],
+      games: [
+        game({ id: 1, competitionId: 70001, competitionDisplayName: "بلا تصنيف" }),
+        game({ id: 2, competitionId: 70002, competitionDisplayName: "مصنّف" }),
+      ],
+    }));
+    const out = await fetchLiveMatches();
+    expect(out.map((m) => m.id)).toEqual([2, 1]);
   });
 
   it("asks for a past day with startDate/endDate", async () => {

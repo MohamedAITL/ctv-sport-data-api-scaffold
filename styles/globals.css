@@ -761,3 +761,27 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
 .kpc-list li span { color: var(--muted); }
 .kpc-list li b { font-variant-numeric: tabular-nums; }
 .kpc-none { color: var(--muted); font-size: 16px; margin: 0; }
+
+/* Player card: this match vs the season behind it. */
+.kpc-tabs { display: flex; gap: 8px; margin: 4px 0 16px; }
+.kpc-tabs button {
+  flex: 1; min-height: 64px; border-radius: 10px; cursor: pointer; font-family: inherit;
+  border: 1.5px solid var(--border-2); background: var(--panel-2); color: var(--muted);
+  font-size: 16px; font-weight: 800;
+  transition: background-color var(--fast) var(--ease), color var(--fast) var(--ease), border-color var(--fast) var(--ease);
+}
+.kpc-tabs button.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.kpc-season { margin-bottom: 18px; }
+.kpc-season h4 { margin: 0 0 10px; font-size: 16px; font-weight: 800; color: var(--accent); }
+
+/* Competition groups fold away — a 200-match day is only readable if you can
+   close what you do not care about. */
+.kl-grouphead { width: 100%; min-height: 64px; cursor: pointer; text-align: inherit; font-family: inherit; }
+.kl-grouphead:active { transform: scale(0.995); }
+.kl-chev {
+  flex: none; width: 10px; height: 10px; margin-inline-start: 2px;
+  border-left: 2.5px solid var(--muted); border-bottom: 2.5px solid var(--muted);
+  transform: rotate(-45deg); transition: transform var(--med) var(--ease);
+}
+.kl-group.closed .kl-chev { transform: rotate(135deg); }
+.kl-group.closed .kl-grouphead { background: var(--panel); border-style: dashed; }
