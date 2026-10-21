@@ -53,7 +53,7 @@ describe("LivePrevious", () => {
     expect(baseElement.querySelectorAll(".kpv section")[0].querySelectorAll(".kpv-row")).toHaveLength(4);
   });
 
-  it("leaves the head-to-head out when the sides have never met", async () => {
+  it("says so, rather than hiding the section, when the sides have never met", async () => {
     global.fetch = jest.fn(async () => ({
       json: async () => ({
         previous: {
@@ -68,7 +68,11 @@ describe("LivePrevious", () => {
 
     const { baseElement } = render(<LivePrevious d={detail} />);
     await waitFor(() => expect(baseElement.querySelector(".kpv")).not.toBeNull());
+    // no record panel, but the heading and an explanation stay on screen —
+    // an absent section reads as a failure, a sentence reads as an answer
     expect(baseElement.querySelector(".kh2h")).toBeNull();
+    expect(baseElement.querySelector(".kpv-empty")?.textContent).toContain("لم يسبق للفريقين أن التقيا");
+    expect(baseElement.textContent).toContain("المواجهات المباشرة");
     expect(baseElement.textContent).toContain("آخر مباريات");
   });
 });

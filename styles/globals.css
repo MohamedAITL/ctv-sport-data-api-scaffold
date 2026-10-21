@@ -1009,3 +1009,4 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
 .kh2h-side span { font-size: 13px; color: var(--muted); text-align: center; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .kh2h-side.draw b { color: var(--muted); }
 .kh2h-meta { grid-column: 1 / -1; margin: 2px 0 0; text-align: center; color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
+.kpv-empty { margin: 0 0 6px; padding: 14px 16px; color: var(--muted); font-size: 16px; background: var(--panel); border: 1px dashed var(--border-2); border-radius: var(--radius-lg); }

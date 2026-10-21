@@ -83,7 +83,7 @@ export default function LivePrevious({ d }: { d: LiveDetail }) {
   if (!data) return <div className="kp-none" dir="rtl"><p>جاري التحميل…</p></div>;
 
   const here = (name: string) => name === home.name || name === away.name;
-  const empty = data.h2h.length === 0 && data.home.length === 0 && data.away.length === 0 && table.length === 0;
+  const empty = data.home.length === 0 && data.away.length === 0 && table.length === 0 && data.h2h.length === 0;
   if (empty) {
     return (
       <div className="kp-none" dir="rtl">
@@ -95,9 +95,14 @@ export default function LivePrevious({ d }: { d: LiveDetail }) {
 
   return (
     <div className="kpv" dir="rtl">
-      {data.h2h.length > 0 && (
-        <section>
-          <h3>المواجهات المباشرة</h3>
+      {/* The section is always here: when two sides have never met, saying so
+          is information — hiding it just looks like something failed to load. */}
+      <section>
+        <h3>المواجهات المباشرة</h3>
+        {data.h2h.length === 0 ? (
+          <p className="kpv-empty">لم يسبق للفريقين أن التقيا — لا توجد مواجهات سابقة بينهما.</p>
+        ) : (
+          <>
           {data.record.played > 0 && (
             <div className="kh2h">
               <div className="kh2h-side">
@@ -117,9 +122,10 @@ export default function LivePrevious({ d }: { d: LiveDetail }) {
               </p>
             </div>
           )}
-          <ul>{data.h2h.map((m) => <Row key={m.id} m={m} team={home.name} />)}</ul>
-        </section>
-      )}
+            <ul>{data.h2h.map((m) => <Row key={m.id} m={m} team={home.name} />)}</ul>
+          </>
+        )}
+      </section>
       {data.home.length > 0 && (
         <section>
           <h3>آخر مباريات {home.name}</h3>
