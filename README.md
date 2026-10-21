@@ -123,8 +123,11 @@ GOAL_API_BASE=https://api.goal-api.com/v1
    saved locally and survive a refresh. API stats are read-only.
 3. **Template** — use the bundled reference poster or upload your own
    (PNG/JPG); reset anytime.
-4. **Design** — adjust row positions, fonts, logo size, column X positions, the
-   mask that covers the old rows, zone colors, and optional overlays.
+4. **Design** — every value the poster reads is editable from the page: row
+   positions, fonts and colours, column anchors, the mask over the old rows,
+   zone colours, the overlay lines, and (for a 20- or 36-team table) the
+   multi-column settings. A test keeps each panel in step with its layout, so a
+   new field cannot ship without a control.
 5. **Download PNG / JPEG** — exports exactly 1080×1350 as
    `botola-pro-standings-YYYY-MM-DD.png`. The preview is the export node, so what
    you see is what you get. **Reset design** restores layout defaults but keeps

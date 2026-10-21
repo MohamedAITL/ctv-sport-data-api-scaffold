@@ -32,7 +32,8 @@ export default function MatchdayDesign({ layout, onChange }: Props) {
         <div className="grid">
           <Text label="نص العنوان" value={L.title.text || ""} onChange={(v) => up((n) => (n.title.text = v))} />
           <Num label="حجم العنوان" value={L.title.fontSize} onChange={(v) => up((n) => (n.title.fontSize = v))} />
-          <Num label="موضع العنوان" value={L.title.y} onChange={(v) => up((n) => (n.title.y = v))} />
+          <Num label="موضع العنوان رأسياً" value={L.title.y} onChange={(v) => up((n) => (n.title.y = v))} />
+          <Num label="موضع العنوان أفقياً" value={L.title.x} onChange={(v) => up((n) => (n.title.x = v))} />
           <Color label="لون العنوان" value={L.title.color} onChange={(v) => up((n) => (n.title.color = v))} />
         </div>
       )}
@@ -40,8 +41,18 @@ export default function MatchdayDesign({ layout, onChange }: Props) {
         <div className="grid">
           <Text label="نص عنوان النتائج" value={L.resultsTitle.text || ""} onChange={(v) => up((n) => (n.resultsTitle.text = v))} />
           <Num label="حجم عنوان النتائج" value={L.resultsTitle.fontSize} onChange={(v) => up((n) => (n.resultsTitle.fontSize = v))} />
-          <Num label="موضع عنوان النتائج" value={L.resultsTitle.y} onChange={(v) => up((n) => (n.resultsTitle.y = v))} />
+          <Num label="موضع عنوان النتائج رأسياً" value={L.resultsTitle.y} onChange={(v) => up((n) => (n.resultsTitle.y = v))} />
+          <Num label="موضع عنوان النتائج أفقياً" value={L.resultsTitle.x} onChange={(v) => up((n) => (n.resultsTitle.x = v))} />
           <Color label="لون عنوان النتائج" value={L.resultsTitle.color} onChange={(v) => up((n) => (n.resultsTitle.color = v))} />
+        </div>
+      )}
+      {L.dateLabel.show && (
+        <div className="grid">
+          <Text label="نص التاريخ" value={L.dateLabel.text || ""} onChange={(v) => up((n) => (n.dateLabel.text = v))} />
+          <Num label="حجم التاريخ" value={L.dateLabel.fontSize} onChange={(v) => up((n) => (n.dateLabel.fontSize = v))} />
+          <Num label="موضع التاريخ أفقياً" value={L.dateLabel.x} onChange={(v) => up((n) => (n.dateLabel.x = v))} />
+          <Num label="موضع التاريخ رأسياً" value={L.dateLabel.y} onChange={(v) => up((n) => (n.dateLabel.y = v))} />
+          <Color label="لون التاريخ" value={L.dateLabel.color} onChange={(v) => up((n) => (n.dateLabel.color = v))} />
         </div>
       )}
       <h4>عناوين المسابقات</h4>
@@ -52,6 +63,7 @@ export default function MatchdayDesign({ layout, onChange }: Props) {
         <Color label="لون العنوان" value={L.groupHeader.color} onChange={(v) => up((n) => (n.groupHeader.color = v))} />
         <Num label="المسافة بين المجموعات" value={L.groupGap} onChange={(v) => up((n) => (n.groupGap = v))} />
         <Num label="موضع العناوين رأسياً" value={L.groupHeader.dy} onChange={(v) => up((n) => (n.groupHeader.dy = v))} />
+        <Num label="ارتفاع العنوان" value={L.groupHeader.height} onChange={(v) => up((n) => (n.groupHeader.height = v))} />
       </div>
 
       <h4>الصفوف</h4>
@@ -66,6 +78,9 @@ export default function MatchdayDesign({ layout, onChange }: Props) {
         <Color label="لون الوسط" value={L.centerColor} onChange={(v) => up((n) => (n.centerColor = v))} />
         <Num label="شفافية البطاقة" value={L.rowBg.opacity} step={0.02} onChange={(v) => up((n) => (n.rowBg.opacity = v))} />
         <Color label="لون البطاقة" value={L.rowBg.color} onChange={(v) => up((n) => (n.rowBg.color = v))} />
+        <Num label="ارتفاع البطاقة" value={L.rowBg.height} onChange={(v) => up((n) => (n.rowBg.height = v))} />
+        <Num label="الهامش الجانبي" value={L.rowBg.insetX} onChange={(v) => up((n) => (n.rowBg.insetX = v))} />
+        <Num label="استدارة البطاقة" value={L.rowBg.radius} onChange={(v) => up((n) => (n.rowBg.radius = v))} />
       </div>
       <h4>مواضع الأعمدة</h4>
       <div className="grid">

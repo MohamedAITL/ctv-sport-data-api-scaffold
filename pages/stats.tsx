@@ -5,6 +5,7 @@ import Nav from "@/components/Nav";
 import StatsPoster from "@/components/StatsPoster";
 import TemplateUploader from "@/components/TemplateUploader";
 import ExportControls from "@/components/ExportControls";
+import StatsDesign from "@/components/StatsDesign";
 import { DEFAULT_STATS_LAYOUT, type StatsLayout } from "@/config/statsLayout";
 import { leaguesByGroup, BOTOLA_LEAGUE, leagueById } from "@/config/standingsLeagues";
 import type { StatCategory } from "@/lib/scores365Stats";
@@ -126,34 +127,18 @@ export default function StatsPage() {
                   )}
                 </select>
               </label>
-              <label className="field wide">
-                <span>عرض الأوائل</span>
-                <input type="number" min={3} max={20} value={layout.topN} onChange={(e) => updateLayout({ ...layout, topN: Math.max(3, Math.min(20, Number(e.target.value) || 10)) })} />
-              </label>
               <div className="kv"><span>عدد السطور</span><b>{rows.length} سطر متاح</b></div>
               <div className="kv"><span>آخر تحديث</span><b>{forLeague?.fetchedAt ? new Date(forLeague.fetchedAt).toLocaleString() : "—"}</b></div>
               <div className="kv"><span>الحالة</span><span className={loading ? "pill" : forLeague?.error ? "pill warn" : "pill ok"}>{loading ? "جاري التحميل…" : forLeague?.error ? "خطأ" : "متصل"}</span></div>
-              {empty && <p className="err">365scores publishes no stat leaderboards for this competition.</p>}
+              {empty && <p className="err">لا ينشر 365scores تصنيفات إحصائية لهذه المسابقة.</p>}
               {forLeague?.error && <p className="err">{forLeague.error}</p>}
               <button className="btn" disabled={loading} onClick={() => fetchStats()}>{loading ? "جاري التحديث…" : "تحديث"}</button>
             </div>
 
-            <TemplateUploader isCustom={templateSrc !== null} onTemplate={onTemplate} defaultLabel="No template yet — using a plain background. Upload your stats template." resetLabel="حذف القالب" />
+            <TemplateUploader isCustom={templateSrc !== null} onTemplate={onTemplate} defaultLabel="لا يوجد قالب بعد — يتم استخدام خلفية بسيطة. ارفع قالب الإحصائيات." resetLabel="حذف القالب" />
             <ExportControls posterRef={posterRef} canExport={rows.length > 0} blocked={rows.length === 0 ? "لا توجد بيانات لهذه الإحصائية بعد" : null} onResetDesign={() => updateLayout(DEFAULT_STATS_LAYOUT)} fileBase={`choufsport-stats-${catKey || "none"}`} />
 
-            <div className="card">
-              <h3>التصميم</h3>
-              <div className="grid2">
-                <label className="field"><span>حجم العنوان</span><input type="number" value={layout.title.fontSize} onChange={(e) => updateLayout({ ...layout, title: { ...layout.title, fontSize: Number(e.target.value) } })} /></label>
-                <label className="field"><span>ارتفاع الصف</span><input type="number" value={layout.rowHeight} onChange={(e) => updateLayout({ ...layout, rowHeight: Number(e.target.value) })} /></label>
-                <label className="field"><span>موضع أول صف</span><input type="number" value={layout.firstRowCenterY} onChange={(e) => updateLayout({ ...layout, firstRowCenterY: Number(e.target.value) })} /></label>
-                <label className="field"><span>حجم الصورة</span><input type="number" value={layout.photoSize} onChange={(e) => updateLayout({ ...layout, photoSize: Number(e.target.value) })} /></label>
-                <label className="field"><span>حجم الاسم</span><input type="number" value={layout.nameFontSize} onChange={(e) => updateLayout({ ...layout, nameFontSize: Number(e.target.value) })} /></label>
-                <label className="field"><span>حجم القيمة</span><input type="number" value={layout.valueFontSize} onChange={(e) => updateLayout({ ...layout, valueFontSize: Number(e.target.value) })} /></label>
-              </div>
-              <label className="field"><span>إظهار السطر الإضافي</span><input type="checkbox" checked={layout.showSecondary} onChange={(e) => updateLayout({ ...layout, showSecondary: e.target.checked })} /></label>
-              <label className="field"><span>بطاقة الصف</span><input type="checkbox" checked={layout.rowBg.show} onChange={(e) => updateLayout({ ...layout, rowBg: { ...layout.rowBg, show: e.target.checked } })} /></label>
-            </div>
+            <StatsDesign layout={layout} onChange={updateLayout} />
           </section>
 
           <section className="previewpane">
