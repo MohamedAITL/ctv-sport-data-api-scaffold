@@ -17,12 +17,12 @@ const ar = (iso: string) => {
   return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()}`;
 };
 
-const centred = (x: number, y: number): CSSProperties => ({
+export const centred = (x: number, y: number): CSSProperties => ({
   position: "absolute", left: x, top: y,
   transform: "translate(-50%, -50%)", textAlign: "center", whiteSpace: "nowrap",
 });
 
-function Crest({ src, size, x, y }: { src: string | null; size: number; x: number; y: number }) {
+export function Crest({ src, size, x, y }: { src: string | null; size: number; x: number; y: number }) {
   const box: CSSProperties = {
     position: "absolute", left: x, top: y, transform: "translate(-50%, -50%)",
     width: size, height: size, objectFit: "contain",

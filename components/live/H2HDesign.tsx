@@ -1,41 +1,9 @@
 import type { H2HLayout } from "@/config/h2hLayout";
+import { Color, Num, Text, Toggle } from "./designControls";
 
 interface Props {
   layout: H2HLayout;
   onChange: (next: H2HLayout) => void;
-}
-
-function Num({ label, value, onChange, step = 1 }: { label: string; value: number; onChange: (v: number) => void; step?: number }) {
-  return (
-    <label className="field">
-      <span>{label}</span>
-      <input type="number" value={value} step={step} onChange={(e) => onChange(Number(e.target.value))} />
-    </label>
-  );
-}
-function Color({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
-  return (
-    <label className="field">
-      <span>{label}</span>
-      <input type="color" value={value} onChange={(e) => onChange(e.target.value)} />
-    </label>
-  );
-}
-function Toggle({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <label className="field check">
-      <input type="checkbox" checked={value} onChange={(e) => onChange(e.target.checked)} />
-      <span>{label}</span>
-    </label>
-  );
-}
-function Text({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
-  return (
-    <label className="field wide">
-      <span>{label}</span>
-      <input type="text" dir="rtl" value={value} onChange={(e) => onChange(e.target.value)} />
-    </label>
-  );
 }
 
 /** Every value the head-to-head poster reads, same as the other poster pages. */

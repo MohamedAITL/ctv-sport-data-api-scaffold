@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import PlayerCard from "./PlayerCard";
+import LineupExport from "./LineupExport";
 import type { LineupPlayer, LiveDetail, TeamLineup } from "@/types/live";
 
 // `line` is depth from a team's own goal (0-100) and `side` is lateral (0-100).
@@ -114,6 +115,7 @@ export default function LinePitch({ d }: { d: LiveDetail }) {
   // Tapping a player opens their card; the same pointer path also drags, so a
   // gesture only counts as a tap if it barely moved.
   const [open, setOpen] = useState<{ p: LineupPlayer; home: boolean } | null>(null);
+  const [exporting, setExporting] = useState(false);
   const tap = useRef<{ x: number; y: number } | null>(null);
   const ghostRef = useRef<{ p: LineupPlayer; home: boolean } | null>(null);
 
@@ -281,6 +283,9 @@ export default function LinePitch({ d }: { d: LiveDetail }) {
         <button type="button" className="kp-tool" onClick={toggleFull}>
           {big ? "خروج من ملء الشاشة" : "ملء الشاشة"}
         </button>
+        {positioned && (
+          <button type="button" className="kp-tool" onClick={() => setExporting(true)}>تصدير ملصق التشكيلة</button>
+        )}
         {Object.keys(moved).length > 0 && (
           <button type="button" className="kp-tool" onClick={reset}>إعادة الترتيب</button>
         )}
@@ -346,6 +351,8 @@ export default function LinePitch({ d }: { d: LiveDetail }) {
           onClose={() => setOpen(null)}
         />
       )}
+
+      {exporting && <LineupExport match={d.match} onClose={() => setExporting(false)} />}
 
       {ghost && (
         <div className={`kp-ghost ${ghost.home ? "home" : "away"}`} style={{ left: ghost.x, top: ghost.y }}>
