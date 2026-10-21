@@ -133,9 +133,20 @@ export interface PastMatch {
   away: { name: string; score: number | null; logo: string | null };
 }
 
+/** The head-to-head record between the two sides, over the meetings found. */
+export interface H2HRecord {
+  played: number;
+  homeWins: number;
+  draws: number;
+  awayWins: number;
+  homeGoals: number;
+  awayGoals: number;
+}
+
 /** What the مواجهات سابقة tab shows: the teams' meetings, and recent form. */
 export interface PreviousMatches {
   h2h: PastMatch[];
+  record: H2HRecord;
   home: PastMatch[];
   away: PastMatch[];
 }

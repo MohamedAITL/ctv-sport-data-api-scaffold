@@ -7,7 +7,7 @@
 //      Southern League and a Colombian second-division game). Every lineup field
 //      is therefore optional and the caller must cope with null.
 import type {
-  AthleteBio, AthleteSeason, FactBlock, FactRow, LineupPlayer, PastMatch, PreviousMatches, Shot, LineupRole, LiveDetail, LiveEvent,
+  AthleteBio, AthleteSeason, FactBlock, FactRow, H2HRecord, LineupPlayer, PastMatch, PreviousMatches, Shot, LineupRole, LiveDetail, LiveEvent,
   LiveMatch, Performer, PerformerStat, StatGroup, StatRow, TeamLineup,
   TopPerformerRow,
 } from "@/types/live";
@@ -472,9 +472,12 @@ const oldestId = (games: Map<number, RawGame>): number | null => {
 };
 
 export async function fetchPreviousMatches(homeId: number, awayId: number, limit = 6): Promise<PreviousMatches> {
+  // Both histories are walked back: a meeting missing from one side's results
+  // (a neutral-ground cup tie, a gap in the feed) is usually present in the
+  // other's, and the two walks run together so the wait is one of them.
   const [h, a] = await Promise.allSettled([
-    teamResults(homeId, H2H_PAGES),   // deep: this list also yields the meetings
-    teamResults(awayId, 0),           // shallow: the away side only needs its form
+    teamResults(homeId, H2H_PAGES),
+    teamResults(awayId, H2H_PAGES),
   ]);
   const games = (r: PromiseSettledResult<RawGame[]>) => (r.status === "fulfilled" ? r.value : []);
 
@@ -496,8 +499,29 @@ export async function fetchPreviousMatches(homeId: number, awayId: number, limit
     return true;
   });
 
+  // The record is counted from the raw games, which carry the competitor ids —
+  // a past match only knows names, and the two sides swap host and guest from
+  // one meeting to the next.
+  const record = meetings.reduce<H2HRecord>((r, g) => {
+    const host = score(g.homeCompetitor?.score);
+    const guest = score(g.awayCompetitor?.score);
+    if (host === null || guest === null) return r;
+    const weHosted = g.homeCompetitor?.id === homeId;
+    const ours = weHosted ? host : guest;
+    const theirs = weHosted ? guest : host;
+    return {
+      played: r.played + 1,
+      homeWins: r.homeWins + (ours > theirs ? 1 : 0),
+      draws: r.draws + (ours === theirs ? 1 : 0),
+      awayWins: r.awayWins + (ours < theirs ? 1 : 0),
+      homeGoals: r.homeGoals + ours,
+      awayGoals: r.awayGoals + theirs,
+    };
+  }, { played: 0, homeWins: 0, draws: 0, awayWins: 0, homeGoals: 0, awayGoals: 0 });
+
   return {
-    h2h: clean(meetings, () => true, 8),
+    h2h: clean(meetings, () => true, 10),
+    record,
     home: clean(games(h), (g) => !isMeeting(g), limit),
     away: clean(games(a), (g) => !isMeeting(g), limit),
   };

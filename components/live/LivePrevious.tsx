@@ -67,8 +67,27 @@ export default function LivePrevious({ d }: { d: LiveDetail }) {
     <div className="kpv" dir="rtl">
       {data.h2h.length > 0 && (
         <section>
-          <h3>مواجهات مباشرة</h3>
-          <ul>{data.h2h.map((m) => <Row key={m.id} m={m} />)}</ul>
+          <h3>المواجهات المباشرة</h3>
+          {data.record.played > 0 && (
+            <div className="kh2h">
+              <div className="kh2h-side">
+                <b>{data.record.homeWins}</b>
+                <span>{home.name}</span>
+              </div>
+              <div className="kh2h-side draw">
+                <b>{data.record.draws}</b>
+                <span>تعادل</span>
+              </div>
+              <div className="kh2h-side">
+                <b>{data.record.awayWins}</b>
+                <span>{away.name}</span>
+              </div>
+              <p className="kh2h-meta">
+                {data.record.played} مواجهة · الأهداف {data.record.homeGoals} - {data.record.awayGoals}
+              </p>
+            </div>
+          )}
+          <ul>{data.h2h.map((m) => <Row key={m.id} m={m} team={home.name} />)}</ul>
         </section>
       )}
       {data.home.length > 0 && (
