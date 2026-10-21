@@ -32,7 +32,7 @@ export default function H2HExport({ match, onClose }: { match: LiveMatch; onClos
       })
       .catch(() => { if (live) setError("تعذر تجهيز الملصق."); });
     return () => { live = false; };
-  }, [match]);
+  }, [match.id, match.matchupId, match.home.id, match.away.id, match.competitionId]);
 
   // The poster is about this tie in this competition: a Champions League night
   // is not told by two friendlies. The id, not the name — the same competition

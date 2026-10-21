@@ -23,6 +23,8 @@ interface Props<L> {
   design: (layout: L, onChange: (next: L) => void) => ReactNode;
   /** Shown under the preview, e.g. when the current settings leave it empty. */
   note?: (layout: L) => ReactNode;
+  /** What goes on the poster (not how it looks): above the template and design. */
+  aside?: ReactNode;
 }
 
 /**
@@ -31,7 +33,7 @@ interface Props<L> {
  * contract as the poster pages, in a window over the kiosk.
  */
 export default function PosterExport<L>({
-  title, layoutKey, templateKey, defaults, fileBase, ready, error, onClose, poster, design, note,
+  title, layoutKey, templateKey, defaults, fileBase, ready, error, onClose, poster, design, note, aside,
 }: Props<L>) {
   const posterRef = useRef<HTMLDivElement>(null);
   const [layout, setLayout] = useState<L>(defaults);
@@ -110,6 +112,7 @@ export default function PosterExport<L>({
               </div>
             </div>
             <div className="kxp-right">
+              {aside}
               <TemplateUploader isCustom={Boolean(templateSrc)} onTemplate={onTemplate} defaultLabel="لا يوجد قالب — تُستخدم خلفية الملصق الافتراضية." />
               {design(layout, updateLayout)}
             </div>

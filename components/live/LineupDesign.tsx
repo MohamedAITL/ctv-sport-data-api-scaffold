@@ -57,6 +57,12 @@ export default function LineupDesign({ layout, onChange }: Props) {
         <Color label="لون الخطة والمدرب" value={T.metaColor} onChange={(v) => up((n) => (n.teams.metaColor = v))} />
       </div>
 
+      <h4>الخصم (عند تصدير فريق واحد)</h4>
+      <Text label="النص قبل اسم الخصم" value={layout.opponent.text ?? ""} onChange={(v) => up((n) => (n.opponent.text = v))} />
+      <div className="grid">
+        <Toggle label="إظهار الخصم" value={layout.opponent.show} onChange={(v) => up((n) => (n.opponent.show = v))} />
+      </div>
+
       <h4>الملعب</h4>
       <div className="grid">
         <Num label="موضعه أفقياً" value={P.x} onChange={(v) => up((n) => (n.pitch.x = v))} />
@@ -92,6 +98,7 @@ export default function LineupDesign({ layout, onChange }: Props) {
         <Num label="أقصى عرض للاسم" value={M.nameMaxWidth} onChange={(v) => up((n) => (n.player.nameMaxWidth = v))} />
         <Color label="خلفية الاسم" value={M.nameBg} onChange={(v) => up((n) => (n.player.nameBg = v))} />
         <Num label="شفافية خلفية الاسم" value={M.nameBgOpacity} step={0.05} onChange={(v) => up((n) => (n.player.nameBgOpacity = v))} />
+        <Num label="تكبير اللاعبين (فريق واحد)" value={layout.singleScale} step={0.05} onChange={(v) => up((n) => (n.singleScale = v))} />
       </div>
 
       <h4>التذييل</h4>

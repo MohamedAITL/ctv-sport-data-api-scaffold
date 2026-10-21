@@ -56,35 +56,42 @@ export interface LineupLayout {
     nameBg: string;
     nameBgOpacity: number;
   };
+  /** One team alone has the whole pitch, so its players are drawn bigger. */
+  singleScale: number;
+  /** Alone, the bar under the pitch names who they are playing: "ضد …". */
+  opponent: { show: boolean; text?: string };
   footer: LineupText;
 }
 
-// Pitch 1040px tall: a 4-2-3-1 puts five rows in each half, and at this
-// height they sit ~98px apart, enough for a face plus its name.
+// A 4-2-3-1 puts five rows in each half. At 1052px with these gaps they sit
+// ~101px apart, and a 72px face with its name under it takes ~96 — the test
+// in lineupPoster.test.tsx fails if the two ever stop fitting.
 export const DEFAULT_LINEUP_LAYOUT: LineupLayout = {
   width: 1080,
   height: 1350,
   title: { show: true, text: "التشكيلة الرسمية", x: 540, y: 50, fontSize: 44, color: "#ffffff" },
   subtitle: { show: true, text: "", x: 540, y: 94, fontSize: 24, color: "#f6c744" },
   pitch: {
-    x: 50, y: 176, w: 980, h: 1040,
+    x: 50, y: 172, w: 980, h: 1052,
     color: "#19573a", stripeColor: "#1e6443", stripeHeight: 65,
     lineColor: "#ffffff", lineOpacity: 0.55, radius: 18,
-    goalPad: 62, midGap: 64, sidePad: 86,
+    goalPad: 62, midGap: 58, sidePad: 86,
   },
   teams: {
-    show: true, awayY: 140, homeY: 1254,
+    show: true, awayY: 138, homeY: 1260,
     crestSize: 50, crestX: 1000,
     nameFontSize: 28, nameColor: "#ffffff",
     formationShow: true, coachShow: true,
     metaX: 80, metaFontSize: 21, metaColor: "#d9cfe6",
   },
   player: {
-    size: 62, photos: true, ring: 3,
+    size: 72, photos: true, ring: 3,
     homeColor: "#fe8c0c", awayColor: "#645ba4", homeInk: "#1a1420", awayInk: "#ffffff",
-    numberShow: true, numberFontSize: 15,
-    nameShow: true, nameDy: 47, nameFontSize: 19, nameColor: "#ffffff", nameMaxWidth: 170,
+    numberShow: true, numberFontSize: 16,
+    nameShow: true, nameDy: 45, nameFontSize: 21, nameColor: "#ffffff", nameMaxWidth: 180,
     nameBg: "#000000", nameBgOpacity: 0.45,
   },
-  footer: { show: true, text: "Choufsport", x: 540, y: 1316, fontSize: 20, color: "#ffffff" },
+  singleScale: 1.4,
+  opponent: { show: true, text: "ضد" },
+  footer: { show: true, text: "Choufsport", x: 540, y: 1320, fontSize: 20, color: "#ffffff" },
 };

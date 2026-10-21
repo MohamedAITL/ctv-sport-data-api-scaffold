@@ -3,10 +3,14 @@ import { centred, Crest } from "./H2HPoster";
 import type { LineupLayout } from "@/config/lineupLayout";
 import type { LineupPlayer, LiveMatch, LiveTeam, TeamLineup } from "@/types/live";
 
+export type LineupTeams = "both" | "home" | "away";
+
 interface Props {
   match: LiveMatch;
   home: TeamLineup;
   away: TeamLineup;
+  /** Both XIs facing each other, or one team alone on the whole pitch. */
+  team: LineupTeams;
   layout: LineupLayout;
   templateSrc: string | null;
 }
@@ -26,13 +30,21 @@ const rgba = (hex: string, a: number) => {
  * 0. Home attacks up the poster, so its left is the viewer's left; the away
  * side faces it and is mirrored. Each half keeps its front line `midGap` short
  * of halfway, so two strike partnerships never land on top of each other.
+ *
+ * A team alone (`alone` = how much bigger it is drawn) attacks up whichever
+ * side it is and spreads over the whole pitch, its front line `midGap` short
+ * of the far end. Its keeper's gap grows with the players, or his bigger name
+ * would hang over the goal line.
  */
-export function spot(p: LineupPlayer, home: boolean, P: LineupLayout["pitch"]) {
-  const depth = (pct(p.line) / 100) * (P.h / 2 - P.goalPad - P.midGap);
+export function spot(p: LineupPlayer, home: boolean, P: LineupLayout["pitch"], alone?: number) {
+  const goal = alone ? P.goalPad * alone : P.goalPad;
+  const reach = alone ? P.h - 2 * goal - P.midGap : P.h / 2 - goal - P.midGap;
+  const depth = (pct(p.line) / 100) * reach;
   const lateral = (pct(p.side) / 100) * (P.w - 2 * P.sidePad);
+  const up = home || Boolean(alone);
   return {
-    x: P.x + (home ? P.sidePad + lateral : P.w - P.sidePad - lateral),
-    y: P.y + (home ? P.h - P.goalPad - depth : P.goalPad + depth),
+    x: P.x + (up ? P.sidePad + lateral : P.w - P.sidePad - lateral),
+    y: P.y + (up ? P.h - goal - depth : goal + depth),
   };
 }
 
@@ -78,10 +90,12 @@ function Markings({ w, h, color }: { w: number; h: number; color: string }) {
  * LineupLayout so the panel can edit it.
  */
 const LineupPoster = forwardRef<HTMLDivElement, Props>(function LineupPoster(
-  { match, home, away, layout, templateSrc },
+  { match, home, away, team, layout, templateSrc },
   ref
 ) {
   const L = layout;
+  const single = team !== "both";
+  const k = single ? L.singleScale : 1;
   const P = L.pitch;
   const T = L.teams;
   const M = L.player;
@@ -91,16 +105,17 @@ const LineupPoster = forwardRef<HTMLDivElement, Props>(function LineupPoster(
     : P.color;
 
   const man = (p: LineupPlayer, isHome: boolean) => {
-    const { x, y } = spot(p, isHome, P);
+    const { x, y } = spot(p, isHome, P, single ? k : undefined);
     const color = isHome ? M.homeColor : M.awayColor;
     const ink = isHome ? M.homeInk : M.awayInk;
     const face = M.photos && p.photo;
-    const badge = Math.round(M.numberFontSize * 1.75);
+    const size = M.size * k;
+    const badge = Math.round(M.numberFontSize * k * 1.75);
     return (
       <Fragment key={`${isHome ? "h" : "a"}${p.id}`}>
         <div style={{
           position: "absolute", left: x, top: y, transform: "translate(-50%, -50%)",
-          width: M.size, height: M.size, borderRadius: "50%", boxSizing: "border-box",
+          width: size, height: size, borderRadius: "50%", boxSizing: "border-box",
           border: `${M.ring}px solid ${color}`, background: face ? "#e9e4f0" : color, overflow: "hidden",
           display: "flex", alignItems: "center", justifyContent: "center",
         }}>
@@ -108,19 +123,19 @@ const LineupPoster = forwardRef<HTMLDivElement, Props>(function LineupPoster(
             // eslint-disable-next-line @next/next/no-img-element
             <img src={p.photo as string} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
           ) : (
-            M.numberShow && <span style={{ fontSize: M.size * 0.42, fontWeight: 900, color: ink }}>{p.number ?? ""}</span>
+            M.numberShow && <span style={{ fontSize: size * 0.42, fontWeight: 900, color: ink }}>{p.number ?? ""}</span>
           )}
         </div>
         {face && M.numberShow && p.number !== null && (
           <div style={{
-            ...centred(x + M.size * 0.38, y + M.size * 0.32), width: badge, height: badge, borderRadius: "50%",
-            background: color, color: ink, fontSize: M.numberFontSize, fontWeight: 900, lineHeight: `${badge}px`,
+            ...centred(x + size * 0.38, y + size * 0.32), width: badge, height: badge, borderRadius: "50%",
+            background: color, color: ink, fontSize: M.numberFontSize * k, fontWeight: 900, lineHeight: `${badge}px`,
           }}>{p.number}</div>
         )}
         {M.nameShow && (
           <div style={{
-            ...centred(x, y + M.nameDy), maxWidth: M.nameMaxWidth, overflow: "hidden", textOverflow: "ellipsis",
-            fontSize: M.nameFontSize, fontWeight: 800, color: M.nameColor, lineHeight: 1.35,
+            ...centred(x, y + M.nameDy * k), maxWidth: M.nameMaxWidth * k, overflow: "hidden", textOverflow: "ellipsis",
+            fontSize: M.nameFontSize * k, fontWeight: 800, color: M.nameColor, lineHeight: 1.35,
             background: rgba(M.nameBg, M.nameBgOpacity), padding: "1px 10px", borderRadius: 8,
           }}>{p.shortName || p.name}</div>
         )}
@@ -128,11 +143,13 @@ const LineupPoster = forwardRef<HTMLDivElement, Props>(function LineupPoster(
     );
   };
 
-  const bar = (team: LiveTeam, lu: TeamLineup, y: number) => {
-    const meta = [
+  // A team's bar: crest, name, and its formation and coach. The opponent's bar
+  // under a single team is the same shape, prefixed "ضد" and without the meta.
+  const bar = (team: LiveTeam, lu: TeamLineup | null, y: number, prefix = "") => {
+    const meta = lu ? [
       T.formationShow ? lu.formation : null,
       T.coachShow && lu.coach ? `المدرب: ${lu.coach.name}` : null,
-    ].filter(Boolean).join(" · ");
+    ].filter(Boolean).join(" · ") : "";
     return (
       <>
         <Crest src={team.logo} size={T.crestSize} x={T.crestX} y={y} />
@@ -140,7 +157,7 @@ const LineupPoster = forwardRef<HTMLDivElement, Props>(function LineupPoster(
           position: "absolute", right: L.width - (T.crestX - T.crestSize / 2 - 14), top: y, transform: "translateY(-50%)",
           maxWidth: 480, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
           fontSize: T.nameFontSize, fontWeight: 800, color: T.nameColor,
-        }}>{team.name}</div>
+        }}>{prefix ? `${prefix} ${team.name}` : team.name}</div>
         {meta && (
           <div style={{
             position: "absolute", left: T.metaX, top: y, transform: "translateY(-50%)",
@@ -177,7 +194,9 @@ const LineupPoster = forwardRef<HTMLDivElement, Props>(function LineupPoster(
         </div>
       )}
 
-      {T.show && bar(match.away, away, T.awayY)}
+      {/* Both: away above the pitch, home below. Alone: the team heads it. */}
+      {T.show && team !== "home" && bar(match.away, away, T.awayY)}
+      {T.show && team === "home" && bar(match.home, home, T.awayY)}
 
       <div style={{
         position: "absolute", left: P.x, top: P.y, width: P.w, height: P.h, boxSizing: "border-box",
@@ -186,10 +205,12 @@ const LineupPoster = forwardRef<HTMLDivElement, Props>(function LineupPoster(
         <Markings w={P.w - 2 * LINE} h={P.h - 2 * LINE} color={line} />
       </div>
 
-      {away.starting.map((p) => man(p, false))}
-      {home.starting.map((p) => man(p, true))}
+      {team !== "home" && away.starting.map((p) => man(p, false))}
+      {team !== "away" && home.starting.map((p) => man(p, true))}
 
-      {T.show && bar(match.home, home, T.homeY)}
+      {T.show && team === "both" && bar(match.home, home, T.homeY)}
+      {T.show && single && L.opponent.show &&
+        bar(team === "home" ? match.away : match.home, null, T.homeY, L.opponent.text || "ضد")}
 
       {L.footer.show && (
         <div style={{ ...centred(L.footer.x, L.footer.y), fontSize: L.footer.fontSize, fontWeight: 700, color: L.footer.color, opacity: 0.6 }}>

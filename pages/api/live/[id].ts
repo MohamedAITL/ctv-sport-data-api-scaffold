@@ -1,15 +1,16 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { fetchLiveDetail } from "@/lib/live365";
 import { inlineImages, toDataUrl } from "@/lib/inlineImage";
-import type { LiveDetail, TeamLineup } from "@/types/live";
+import type { LineupPlayer, LiveDetail, TeamLineup } from "@/types/live";
 
-// The lineups poster needs the crests and the starting faces as data URLs —
-// html-to-image cannot read cross-origin pixels. One team at a time: the
-// helper already batches, and 22 faces at once is the kind of burst the CDN
-// drops requests on.
+// The lineups poster needs the crests and the faces as data URLs — html-to-
+// image cannot read cross-origin pixels. The benches too: any substitute can
+// be swapped into the XI before export. The helper batches each list, so the
+// CDN never sees more than a chunk at once per team.
 async function inlineForPoster(d: LiveDetail): Promise<LiveDetail> {
+  const faces = (list: LineupPlayer[]) => inlineImages(list, (p) => p.photo, (p, photo) => ({ ...p, photo }));
   const xi = async (lu: TeamLineup | null) =>
-    lu && { ...lu, starting: await inlineImages(lu.starting, (p) => p.photo, (p, photo) => ({ ...p, photo })) };
+    lu && { ...lu, starting: await faces(lu.starting), bench: await faces(lu.bench) };
   const [homeLogo, awayLogo] = await Promise.all([toDataUrl(d.match.home.logo), toDataUrl(d.match.away.logo)]);
   const homeLineup = await xi(d.homeLineup);
   const awayLineup = await xi(d.awayLineup);
