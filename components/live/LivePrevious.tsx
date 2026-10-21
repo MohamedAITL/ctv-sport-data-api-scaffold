@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import H2HExport from "./H2HExport";
 import type { LiveDetail, PastMatch, PreviousMatches } from "@/types/live";
 import type { TeamRow } from "@/types/standings";
 
@@ -65,6 +66,7 @@ function Row({ m, team }: { m: PastMatch; team: string }) {
 
 export default function LivePrevious({ d }: { d: LiveDetail }) {
   const [data, setData] = useState<PreviousMatches | null>(null);
+  const [exporting, setExporting] = useState(false);
   const [table, setTable] = useState<TeamRow[]>([]);
   const [error, setError] = useState(false);
   const { home, away } = d.match;
@@ -127,9 +129,13 @@ export default function LivePrevious({ d }: { d: LiveDetail }) {
             </div>
           )}
             <ul>{data.h2h.map((m) => <Row key={m.id} m={m} team={home.name} />)}</ul>
+            <button type="button" className="kpv-export" onClick={() => setExporting(true)}>
+              تصدير ملصق آخر 5 مواجهات
+            </button>
           </>
         )}
       </section>
+      {exporting && <H2HExport match={d.match} onClose={() => setExporting(false)} />}
       {data.home.length > 0 && (
         <section>
           <h3>آخر مباريات {home.name}</h3>

@@ -2,9 +2,11 @@ import { fireEvent, render } from "@testing-library/react";
 import DesignSettings from "@/components/DesignSettings";
 import MatchdayDesign from "@/components/MatchdayDesign";
 import StatsDesign from "@/components/StatsDesign";
+import H2HDesign from "@/components/live/H2HDesign";
 import { DEFAULT_LAYOUT } from "@/config/defaultLayout";
 import { DEFAULT_MATCHDAY_LAYOUT } from "@/config/matchdayLayout";
 import { DEFAULT_STATS_LAYOUT, type StatsLayout } from "@/config/statsLayout";
+import { DEFAULT_H2H_LAYOUT } from "@/config/h2hLayout";
 
 // The canvas is fixed at 1080x1350; everything else on a poster is meant to be
 // editable from its page. The stats panel exposed eight of thirty-eight values,
@@ -37,11 +39,13 @@ const allShown = <T,>(layout: T): T => {
 const STANDINGS = allShown(DEFAULT_LAYOUT);
 const MATCHDAY = allShown(DEFAULT_MATCHDAY_LAYOUT);
 const STATS = allShown(DEFAULT_STATS_LAYOUT);
+const H2H = allShown(DEFAULT_H2H_LAYOUT);
 
 const PANELS = [
   ["الترتيب", <DesignSettings key="s" layout={STANDINGS} onChange={() => {}} />, STANDINGS],
   ["مباريات اليوم", <MatchdayDesign key="m" layout={MATCHDAY} onChange={() => {}} />, MATCHDAY],
   ["الإحصائيات", <StatsDesign key="t" layout={STATS} onChange={() => {}} />, STATS],
+  ["المواجهات المباشرة", <H2HDesign key="h" layout={H2H} onChange={() => {}} />, H2H],
 ] as const;
 
 describe("poster design panels", () => {

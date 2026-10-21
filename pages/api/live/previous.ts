@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { fetchPreviousMatches } from "@/lib/live365";
 import { fetch365Standings } from "@/lib/scores365";
+import { toDataUrl } from "@/lib/inlineImage";
 import type { PreviousMatches } from "@/types/live";
 import type { TeamRow } from "@/types/standings";
 
@@ -14,6 +15,24 @@ const TTL_MS = 10 * 60 * 1000;
 interface Payload { previous: PreviousMatches; table: TeamRow[] }
 const cache = new Map<string, { at: number; data: Payload }>();
 
+async function inlineCrests(previous: PreviousMatches): Promise<PreviousMatches> {
+  // Every meeting, not just the five the poster shows by default: the row
+  // count is editable. Both sides repeat down the list, so this is still two
+  // fetches — the Set dedupes before anything is downloaded.
+  const rows = previous.h2h;
+  const urls = Array.from(new Set(
+    rows.flatMap((m) => [m.home.logo, m.away.logo]).filter((u): u is string => Boolean(u))
+  ));
+  const inlined = new Map<string, string | null>();
+  await Promise.all(urls.map(async (u) => inlined.set(u, await toDataUrl(u))));
+  const swap = (side: { name: string; score: number | null; logo: string | null }) =>
+    ({ ...side, logo: side.logo ? inlined.get(side.logo) ?? null : null });
+  return {
+    ...previous,
+    h2h: rows.map((m) => ({ ...m, home: swap(m.home), away: swap(m.away) })),
+  };
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const home = Number(req.query.home);
   const away = Number(req.query.away);
@@ -26,7 +45,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: "Bad game or matchup id" });
   }
   const competition = Number(req.query.competition);
-  const key = `${game}-${home}-${away}-${competition || 0}`;
+  // The export needs its crests as data URLs — html-to-image cannot read
+  // cross-origin pixels, and a poster with holes where the badges go is worse
+  // than no poster. Inlined only when the kiosk asks, so the tab itself stays
+  // as quick as it was.
+  const inline = req.query.inline === "1";
+  const key = `${game}-${home}-${away}-${competition || 0}${inline ? ":inline" : ""}`;
   const hit = cache.get(key);
   if (hit && Date.now() - hit.at < TTL_MS) return res.status(200).json(hit.data);
   try {
@@ -42,6 +66,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       previous: prev.value,
       table: table.status === "fulfilled" ? table.value : [],
     };
+    if (inline) data.previous = await inlineCrests(data.previous);
     cache.set(key, { at: Date.now(), data });
     return res.status(200).json(data);
   } catch (e) {

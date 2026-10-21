@@ -1019,3 +1019,43 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
 .kh2h-side.draw b { color: var(--muted); }
 .kh2h-meta { grid-column: 1 / -1; margin: 2px 0 0; text-align: center; color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
 .kpv-empty { margin: 0 0 6px; padding: 14px 16px; color: var(--muted); font-size: 16px; background: var(--panel); border: 1px dashed var(--border-2); border-radius: var(--radius-lg); }
+
+/* ---- live: exporting the head-to-head poster ---- */
+.kpv-export {
+  min-height: 64px; padding: 0 22px; margin: 0 0 14px; border-radius: 10px; cursor: pointer;
+  border: 1.5px solid var(--accent); background: var(--accent); color: var(--accent-ink);
+  font-family: inherit; font-size: 16px; font-weight: 800;
+  display: inline-flex; align-items: center; gap: 10px;
+  transition: transform var(--fast) var(--ease), box-shadow var(--fast) var(--ease);
+}
+.kpv-export:active { transform: scale(0.98); }
+.kxp {
+  width: min(1000px, 100%); max-height: 92vh; overflow-y: auto; position: relative;
+  background: var(--panel); border: 1px solid var(--border-2); border-radius: 14px;
+  padding: 20px 22px 24px; animation: pop-in 220ms var(--ease) backwards;
+}
+.kxp h3 { margin: 0 0 14px; font-size: 22px; padding-inline-end: 70px; }
+.kxp-preview {
+  position: relative; overflow: hidden; direction: ltr;
+  border: 1px solid var(--border-2); border-radius: 12px; background: var(--panel-2);
+}
+.kxp-actions { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+.kxp-btn {
+  flex: 1; min-height: 64px; min-width: 180px; border-radius: 10px; cursor: pointer;
+  border: 1.5px solid var(--border-2); background: var(--panel-2); color: var(--text);
+  font-family: inherit; font-size: 16px; font-weight: 800;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+}
+.kxp-btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.kxp-btn:disabled { opacity: .6; }
+.kxp-err { color: var(--live-text); font-size: 16px; margin: 0 0 10px; }
+.kxp-wait { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 16px; margin: 0; }
+/* Preview on one side, the controls on the other, like the poster pages. */
+.kxp-body { display: grid; grid-template-columns: 420px minmax(0, 1fr); gap: 18px; align-items: start; }
+.kxp-left { position: sticky; top: 0; }
+.kxp-right { display: grid; gap: 12px; min-width: 0; }
+.kxp-right .card { margin: 0; }
+@media (max-width: 900px) {
+  .kxp-body { grid-template-columns: minmax(0, 1fr); }
+  .kxp-left { position: static; }
+}
