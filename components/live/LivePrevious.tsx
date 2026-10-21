@@ -25,32 +25,35 @@ function Crest({ src }: { src: string | null }) {
   return <img className="kpv-crest" src={src} alt="" onError={() => setBroken(true)} />;
 }
 
-function Row({ m, team }: { m: PastMatch; team?: string }) {
-  const r = team ? outcome(m, team) : null;
-  const hs = m.home.score;
-  const as = m.away.score;
-  // The winner is the side worth reading first, so it carries the weight.
-  const homeWon = hs !== null && as !== null && hs > as;
-  const awayWon = hs !== null && as !== null && as > hs;
+/**
+ * One past match, always read from `team`'s point of view: that side stays in
+ * the same column down the whole list, with the opponent opposite, so the
+ * crests and names line up instead of swapping places whenever the fixture was
+ * away. Where it was played is kept as a word next to the date rather than by
+ * moving the teams around.
+ */
+function Row({ m, team }: { m: PastMatch; team: string }) {
+  const weHosted = m.home.name === team;
+  const ours = weHosted ? m.home : m.away;
+  const theirs = weHosted ? m.away : m.home;
+  const r = outcome(m, team);
   return (
     <li className="kpv-row">
-      {/* The slot is always there so every row keeps the same columns, pill or
-          not — a row with one cell fewer silently shifts into the wrong ones. */}
       <i className={r ? `kpv-pill ${r}` : "kpv-pill none"} aria-hidden={!r}>
         {r === "w" ? "ف" : r === "l" ? "خ" : r === "d" ? "ت" : ""}
       </i>
       <span className="kpv-when">
         <b>{day(m.date)}</b>
-        <em>{m.competition}</em>
+        <em>{weHosted ? "على أرضه" : "خارج أرضه"} · {m.competition}</em>
       </span>
-      <span className={homeWon ? "kpv-team won" : "kpv-team"}>
-        <span className="kpv-name">{m.home.name}</span>
-        <Crest src={m.home.logo} />
+      <span className={r === "w" ? "kpv-team won" : "kpv-team"}>
+        <span className="kpv-name">{ours.name}</span>
+        <Crest src={ours.logo} />
       </span>
-      <b className="kpv-score">{hs ?? "-"}<i>-</i>{as ?? "-"}</b>
-      <span className={awayWon ? "kpv-team away won" : "kpv-team away"}>
-        <Crest src={m.away.logo} />
-        <span className="kpv-name">{m.away.name}</span>
+      <b className="kpv-score">{ours.score ?? "-"}<i>-</i>{theirs.score ?? "-"}</b>
+      <span className={r === "l" ? "kpv-team away won" : "kpv-team away"}>
+        <Crest src={theirs.logo} />
+        <span className="kpv-name">{theirs.name}</span>
       </span>
     </li>
   );
