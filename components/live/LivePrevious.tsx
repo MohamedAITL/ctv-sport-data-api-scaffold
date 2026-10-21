@@ -2,9 +2,12 @@ import { useEffect, useState } from "react";
 import type { LiveDetail, PastMatch, PreviousMatches } from "@/types/live";
 import type { TeamRow } from "@/types/standings";
 
+// Short and fixed-width, so the dates line up down the column.
 const day = (iso: string) => {
   const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? "" : d.toLocaleDateString("ar-MA", { day: "numeric", month: "short", year: "numeric" });
+  if (Number.isNaN(d.getTime())) return "";
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${String(d.getFullYear()).slice(2)}`;
 };
 
 // Win / draw / loss for the team whose form this is.
@@ -15,16 +18,40 @@ const outcome = (m: PastMatch, team: string): "w" | "d" | "l" | null => {
   return us > them ? "w" : us < them ? "l" : "d";
 };
 
+function Crest({ src }: { src: string | null }) {
+  const [broken, setBroken] = useState(false);
+  if (!src || broken) return <span className="kpv-crest" />;
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img className="kpv-crest" src={src} alt="" onError={() => setBroken(true)} />;
+}
+
 function Row({ m, team }: { m: PastMatch; team?: string }) {
   const r = team ? outcome(m, team) : null;
+  const hs = m.home.score;
+  const as = m.away.score;
+  // The winner is the side worth reading first, so it carries the weight.
+  const homeWon = hs !== null && as !== null && hs > as;
+  const awayWon = hs !== null && as !== null && as > hs;
   return (
     <li className="kpv-row">
-      {r && <i className={`kpv-pill ${r}`}>{r === "w" ? "ف" : r === "l" ? "خ" : "ت"}</i>}
-      <span className="kpv-date">{day(m.date)}</span>
-      <span className="kpv-team">{m.home.name}</span>
-      <b className="kpv-score">{m.home.score ?? "-"} - {m.away.score ?? "-"}</b>
-      <span className="kpv-team away">{m.away.name}</span>
-      <span className="kpv-comp">{m.competition}</span>
+      {/* The slot is always there so every row keeps the same columns, pill or
+          not — a row with one cell fewer silently shifts into the wrong ones. */}
+      <i className={r ? `kpv-pill ${r}` : "kpv-pill none"} aria-hidden={!r}>
+        {r === "w" ? "ف" : r === "l" ? "خ" : r === "d" ? "ت" : ""}
+      </i>
+      <span className="kpv-when">
+        <b>{day(m.date)}</b>
+        <em>{m.competition}</em>
+      </span>
+      <span className={homeWon ? "kpv-team won" : "kpv-team"}>
+        <span className="kpv-name">{m.home.name}</span>
+        <Crest src={m.home.logo} />
+      </span>
+      <b className="kpv-score">{hs ?? "-"}<i>-</i>{as ?? "-"}</b>
+      <span className={awayWon ? "kpv-team away won" : "kpv-team away"}>
+        <Crest src={m.away.logo} />
+        <span className="kpv-name">{m.away.name}</span>
+      </span>
     </li>
   );
 }
