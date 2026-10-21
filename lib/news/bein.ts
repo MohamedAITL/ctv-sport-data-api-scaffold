@@ -9,6 +9,7 @@
 // the other locales, not this one).
 import type { NewsItem } from "@/types/news";
 import { encodeNewsId } from "./id";
+import { isoOrNow } from "./date";
 
 const API = "https://prod-kontentadapter.beinsports.com/kp/domain/items/article";
 const SITE = "https://www.beinsports.com/ar-mena/article";
@@ -73,7 +74,7 @@ function toItem(a: RawBein): NewsItem | null {
     title: a.title,
     url,
     image: imageOf(a),
-    publishedAt: a.publication_date ? new Date(a.publication_date).toISOString() : new Date().toISOString(),
+    publishedAt: isoOrNow(a.publication_date),
     summary: a.teaser ?? a.subtitle ?? null,
     body: a.body?.text ?? null,
     bodyIsHtml: Boolean(a.body?.text),

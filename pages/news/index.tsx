@@ -91,7 +91,7 @@ export default function NewsPage() {
         <div className="pagehead newshead">
           <div>
             <h1>الأخبار</h1>
-            <span className="muted" dir="rtl">آخر الأخبار من هسبورت وهسبريس والبطولة وكووورة وبي إن سبورتس وسكاي نيوز وgoal والرياضة و365scores</span>
+            <span className="muted" dir="rtl">آخر الأخبار من هسبورت وهسبريس والبطولة وكووورة وبي إن سبورتس وسكاي نيوز وGoal والرياضة و365scores</span>
           </div>
           <div className="newshead-actions">
             {fresh !== null && (

@@ -1,17 +1,20 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { fetch365Stats, type StatCategory } from "@/lib/scores365Stats";
-import { inlineImages } from "@/lib/inlineImage";
+import { inlineUrls } from "@/lib/inlineImage";
 import { BOTOLA_LEAGUE, isStandingsLeague, leagueById } from "@/config/standingsLeagues";
 
 // Only the rows a poster can show are worth inlining — fetching every photo for
 // all 16 categories would be hundreds of images per refresh.
 const MAX_ROWS = 20;
 
-async function inlineCategory(c: StatCategory): Promise<StatCategory> {
-  const rows = c.rows.slice(0, MAX_ROWS);
-  const withMain = await inlineImages(rows, (r) => r.image, (r, image) => ({ ...r, image }));
-  const withClub = await inlineImages(withMain, (r) => r.clubImage, (r, clubImage) => ({ ...r, clubImage }));
-  return { ...c, rows: withClub };
+// One pass over every image any shown row needs. The same scorer appears in
+// goals, shots and minutes, and every club's crest on all its players' rows:
+// ~170 distinct images behind ~640 references.
+async function inlineAll(cats: StatCategory[]): Promise<StatCategory[]> {
+  const shown = cats.map((c) => ({ ...c, rows: c.rows.slice(0, MAX_ROWS) }));
+  const inlined = await inlineUrls(shown.flatMap((c) => c.rows.flatMap((r) => [r.image, r.clubImage])));
+  const pick = (u: string | null) => (u ? inlined.get(u) ?? null : null);
+  return shown.map((c) => ({ ...c, rows: c.rows.map((r) => ({ ...r, image: pick(r.image), clubImage: pick(r.clubImage) })) }));
 }
 
 // GET /api/stats?competition=<id> — all stat leaderboards for the league, with
@@ -21,7 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const competition = isStandingsLeague(q) ? q : BOTOLA_LEAGUE;
   try {
     const cats = await fetch365Stats(competition);
-    const categories = await Promise.all(cats.map(inlineCategory));
+    const categories = await inlineAll(cats);
     return res.status(200).json({
       competition,
       league: leagueById(competition)?.ar ?? "",

@@ -1,9 +1,10 @@
 import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Nav from "@/components/Nav";
 import { sourceName, type NewsItem } from "@/types/news";
+import { sanitizeArticle } from "@/lib/sanitize";
 
 // Publishers send the body as one blob: hesport uses blank lines, elbotola runs
 // paragraphs together with no space after the full stop. Both are handled here
@@ -70,6 +71,7 @@ export default function NewsDetail() {
 
   // Only ever shown for allowlisted publishers, and always beside attribution.
   const body = item?.body?.trim() || "";
+  const safeHtml = useMemo(() => (item?.bodyIsHtml && body ? sanitizeArticle(body) : ""), [item, body]);
   const summary = item?.summary?.trim() || "";
 
   return (
@@ -106,8 +108,8 @@ export default function NewsDetail() {
 
             {body ? (
               item.bodyIsHtml ? (
-                // Publisher-syndicated HTML from their own RSS feed.
-                <div className="articlebody" dangerouslySetInnerHTML={{ __html: body }} />
+                // Publisher HTML, sanitised: see lib/sanitize.ts.
+                <div className="articlebody" dangerouslySetInnerHTML={{ __html: safeHtml }} />
               ) : (
                 <div className="articlebody">
                   {splitParagraphs(body).map((p, i) => <p key={i}>{p}</p>)}

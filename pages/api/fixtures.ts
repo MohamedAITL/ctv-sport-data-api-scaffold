@@ -6,6 +6,7 @@ import { normalizeFixtures, selectMatchday } from "@/lib/fixtures";
 import { FEATURED_LEAGUES } from "@/config/featuredLeagues";
 import type { RawFixturesResponse, Match } from "@/types/fixtures";
 import seedNames from "@/data/botolaTeams.json";
+import { todayMA } from "@/lib/today";
 
 const CACHE = path.join(process.cwd(), "data", "matchday.json");
 
@@ -47,7 +48,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!hasApiKey())
     return res.status(500).json({ error: "GOAL_API_KEY is not set in .env.local" });
 
-  const date = (typeof req.query.date === "string" && req.query.date) || new Date().toISOString().slice(0, 10);
+  // The date goes into the upstream URL next to the API key: only a real
+  // YYYY-MM-DD gets through, anything else means today.
+  const raw = typeof req.query.date === "string" ? req.query.date : "";
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(raw) ? raw : todayMA();
   const names = nameMap();
 
   const results = await Promise.allSettled(

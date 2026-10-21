@@ -8,6 +8,7 @@
 import type { NewsItem } from "@/types/news";
 import { encodeNewsId } from "./id";
 import { decodeEntities } from "./rss";
+import { isoOrNow } from "./date";
 
 const API = "https://www.365scores.com/ar/news/magazine/wp-json/wp/v2/posts";
 const FOOTBALL_CATEGORY = 13; // "كرة قدم", the category in that URL
@@ -52,7 +53,7 @@ export async function fetchScores365News(page = 1, pageSize = 12): Promise<NewsI
       title,
       url,
       image: p._embedded?.["wp:featuredmedia"]?.[0]?.source_url ?? null,
-      publishedAt: p.date_gmt ? new Date(`${p.date_gmt}Z`).toISOString() : new Date().toISOString(),
+      publishedAt: isoOrNow(p.date_gmt ? `${p.date_gmt}Z` : null),
       summary: text(p.excerpt?.rendered) || null,
       body,
       bodyIsHtml: Boolean(body),

@@ -3,6 +3,7 @@
 import type { NewsItem } from "@/types/news";
 import { encodeNewsId } from "./id";
 import { nextData, pageProps } from "./nextdata";
+import { isoOrNow } from "./date";
 
 const SITE = "https://www.goal.com";
 const NEWS = `${SITE}/ar/%D8%A3%D8%AE%D8%A8%D8%A7%D8%B1`; // /ar/أخبار
@@ -35,7 +36,7 @@ export async function fetchGoal(): Promise<NewsItem[]> {
       title: c.title,
       url,
       image: imageOf(c.image),
-      publishedAt: c.publishTime ? new Date(c.publishTime).toISOString() : new Date().toISOString(),
+      publishedAt: isoOrNow(c.publishTime),
       summary: c.teaser ?? null,
     }];
   });

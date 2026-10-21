@@ -11,6 +11,7 @@ import { leaguesByGroup, BOTOLA_LEAGUE, leagueById } from "@/config/standingsLea
 import type { StatCategory } from "@/lib/scores365Stats";
 import { deepMerge } from "@/lib/persist";
 import { getTemplate, setTemplate, clearTemplate } from "@/lib/db";
+import { useFitWidth } from "@/lib/useFitWidth";
 
 const PREVIEW_W = 480;
 const LKEY = "botola.statsLayout";
@@ -26,6 +27,7 @@ interface StatsState { competition: number; categories: StatCategory[]; fetchedA
 
 export default function StatsPage() {
   const posterRef = useRef<HTMLDivElement>(null);
+  const [paneRef, previewW] = useFitWidth<HTMLElement>(PREVIEW_W);
   const [league, setLeague] = useState<number>(BOTOLA_LEAGUE);
   const [catKey, setCatKey] = useState<string>("");
   const [layout, setLayout] = useState<StatsLayout>(DEFAULT_STATS_LAYOUT);
@@ -46,13 +48,18 @@ export default function StatsPage() {
   const readStats = useCallback(async (): Promise<StatsState> => {
     const res = await fetch(`/api/stats?competition=${league}`);
     const json = await res.json();
+    // Thrown, not returned: an empty answer would replace the leaderboards on
+    // screen and the cached copy.
+    if (!res.ok) throw new Error(json.error || "فشل الطلب");
     return { competition: league, categories: json.categories ?? [], fetchedAt: json.fetchedAt, error: json.error };
   }, [league]);
 
-  const { data, loading, busy, refresh: fetchStats } =
+  const { data, loading, busy, error: loadError, refresh: fetchStats } =
     useCachedData<StatsState>(`stats:${league}`, readStats);
 
   const forLeague = data && data.competition === league ? data : null;
+  // A failed refresh keeps the last data on screen and says why.
+  const shownError = loadError ?? forLeague?.error ?? null;
   const categories = useMemo(() => forLeague?.categories ?? [], [forLeague]);
 
   useEffect(() => {
@@ -77,7 +84,7 @@ export default function StatsPage() {
     return parts.filter(Boolean).join(" · ");
   }, [league, category]);
 
-  const scale = PREVIEW_W / layout.width;
+  const scale = previewW / layout.width;
   const rows = category?.rows ?? [];
   const empty = !loading && forLeague !== null && categories.length === 0;
 
@@ -129,9 +136,9 @@ export default function StatsPage() {
               </label>
               <div className="kv"><span>عدد السطور</span><b>{rows.length} سطر متاح</b></div>
               <div className="kv"><span>آخر تحديث</span><b>{forLeague?.fetchedAt ? new Date(forLeague.fetchedAt).toLocaleString() : "—"}</b></div>
-              <div className="kv"><span>الحالة</span><span className={loading ? "pill" : forLeague?.error ? "pill warn" : "pill ok"}>{loading ? "جاري التحميل…" : forLeague?.error ? "خطأ" : "متصل"}</span></div>
+              <div className="kv"><span>الحالة</span><span className={loading ? "pill" : shownError ? "pill warn" : "pill ok"}>{loading ? "جاري التحميل…" : shownError ? "خطأ" : "متصل"}</span></div>
               {empty && <p className="err">لا ينشر 365scores تصنيفات إحصائية لهذه المسابقة.</p>}
-              {forLeague?.error && <p className="err">{forLeague.error}</p>}
+              {shownError && <p className="err">{shownError}</p>}
               <button className="btn" disabled={loading} onClick={() => fetchStats()}>{loading ? "جاري التحديث…" : "تحديث"}</button>
             </div>
 
@@ -141,10 +148,10 @@ export default function StatsPage() {
             <StatsDesign layout={layout} onChange={updateLayout} />
           </section>
 
-          <section className="previewpane">
+          <section className="previewpane" ref={paneRef}>
             <div className="previewsticky">
               <h3 className="muted">معاينة مباشرة</h3>
-              <div className={busy ? "previewbox busy" : "previewbox"} style={{ width: PREVIEW_W, height: layout.height * scale }}>
+              <div className={busy ? "previewbox busy" : "previewbox"} style={{ width: previewW, height: layout.height * scale }}>
                 <div style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}>
                   <StatsPoster ref={posterRef} title={category?.name ?? ""} subtitle={subtitle} rows={rows} layout={layout} templateSrc={templateSrc} kind={category?.kind ?? "player"} />
                 </div>

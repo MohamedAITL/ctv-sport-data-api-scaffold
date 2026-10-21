@@ -20,6 +20,7 @@ import {
   setTemplate,
   clearTemplate,
 } from "@/lib/db";
+import { useFitWidth } from "@/lib/useFitWidth";
 
 const BOTOLA_TEMPLATE = "/templates/botola.jpg";
 // Only Botola ships with a bundled template; other leagues start on a plain
@@ -43,6 +44,7 @@ interface StandingsState {
 
 export default function Home() {
   const posterRef = useRef<HTMLDivElement>(null);
+  const [paneRef, previewW] = useFitWidth<HTMLElement>(PREVIEW_W);
   const [league, setLeague] = useState<number>(DEFAULT_LEAGUE);
   const [layout, setLayout] = useState<LayoutConfig>(DEFAULT_LAYOUT);
   const [nameOverrides, setNameOverrides] = useState<Record<string, string>>({});
@@ -67,13 +69,13 @@ export default function Home() {
   const readStandings = useCallback(async (): Promise<StandingsState> => {
     const res = await fetch(`/api/standings?competition=${league}`);
     const json = await res.json();
-    if (!res.ok && !json.rows) {
-      return { rows: [], season: null, warnings: [], validation: { ok: false, errors: [json.error || "فشل الطلب"], warnings: [] }, stale: true, error: json.error } as StandingsState;
-    }
+    // A failed request must not replace the table on screen (or the cached one)
+    // with an empty one: throwing keeps what we have and reports the error.
+    if (!res.ok && !json.rows) throw new Error(json.error || "فشل الطلب");
     return json as StandingsState;
   }, [league]);
 
-  const { data, loading, busy, refresh: refreshStandings } =
+  const { data, loading, busy, error: loadError, refresh: refreshStandings } =
     useCachedData<StandingsState>(`standings:${league}`, readStandings);
   const fetchStandings = refreshStandings;
 
@@ -132,10 +134,16 @@ export default function Home() {
 
   // The full-canvas preset ships a blank heading; fill it with the league's
   // Arabic name, since no template supplies one for those leagues.
+  // The bundled template is the reference poster with an old table baked in,
+  // so its rows are always masked; an uploaded (clean) template follows the
+  // switch in the design panel.
   const effLayout = useMemo(() => {
-    if (layout.heading.text) return layout;
-    return { ...layout, heading: { ...layout.heading, text: leagueById(league)?.ar ?? "" } };
-  }, [layout, league]);
+    const masked = templateSrc === BOTOLA_TEMPLATE && !layout.mask.show
+      ? { ...layout, mask: { ...layout.mask, show: true } }
+      : layout;
+    if (masked.heading.text) return masked;
+    return { ...masked, heading: { ...masked.heading, text: leagueById(league)?.ar ?? "" } };
+  }, [layout, league, templateSrc]);
 
   // A knockout cup, or a competition between seasons, simply has no table yet.
   // That is a normal state, so say it plainly instead of surfacing the raw
@@ -146,7 +154,7 @@ export default function Home() {
     : data && !data.validation.ok
     ? data.validation.errors.join("; ")
     : null;
-  const scale = PREVIEW_W / layout.width;
+  const scale = previewW / layout.width;
 
   return (
     <>
@@ -175,7 +183,7 @@ export default function Home() {
               count={rows.length}
               fetchedAt={data?.fetchedAt}
               stale={Boolean(data?.stale)}
-              error={data?.error}
+              error={loadError ?? data?.error}
               loading={loading || busy}
               onRefresh={fetchStandings}
             />
@@ -209,10 +217,10 @@ export default function Home() {
             <DesignSettings layout={layout} onChange={updateLayout} />
           </section>
 
-          <section className="previewpane">
+          <section className="previewpane" ref={paneRef}>
             <div className="previewsticky">
               <h3 className="muted">معاينة مباشرة</h3>
-              <div className={busy ? "previewbox busy" : "previewbox"} style={{ width: PREVIEW_W, height: layout.height * scale }}>
+              <div className={busy ? "previewbox busy" : "previewbox"} style={{ width: previewW, height: layout.height * scale }}>
                 <div style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}>
                   <Poster ref={posterRef} rows={rows} layout={effLayout} templateSrc={templateSrc} logoOverrides={logoOverrides} />
                 </div>

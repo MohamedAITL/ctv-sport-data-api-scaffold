@@ -67,7 +67,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       table: table.status === "fulfilled" ? table.value : [],
     };
     if (inline) data.previous = await inlineCrests(data.previous);
-    cache.set(key, { at: Date.now(), data });
+    // Expired entries go when a new one comes in: an always-on kiosk opens
+    // hundreds of matches, and an inlined export entry is ~400KB.
+    const now = Date.now();
+    cache.forEach((v, k) => { if (now - v.at >= TTL_MS) cache.delete(k); });
+    cache.set(key, { at: now, data });
     return res.status(200).json(data);
   } catch (e) {
     return res.status(502).json({ error: (e as Error).message });

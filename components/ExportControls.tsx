@@ -14,14 +14,17 @@ interface Props {
 // so what you see is what downloads (no separate "generate" step).
 export default function ExportControls({ posterRef, canExport, blocked, onResetDesign, fileBase = "botola-pro-standings", fileDate }: Props) {
   const [busy, setBusy] = useState<string | null>(null);
+  // Inline, not alert(): a native dialog blocks the kiosk until someone taps it.
+  const [failed, setFailed] = useState<string | null>(null);
 
   async function run(format: "png" | "jpeg") {
     if (!posterRef.current) return;
     setBusy(format);
+    setFailed(null);
     try {
       await downloadPoster(posterRef.current, format, posterFilename(format, fileBase, fileDate));
     } catch (e) {
-      alert("Export failed: " + (e as Error).message);
+      setFailed("تعذر التصدير: " + (e as Error).message);
     } finally {
       setBusy(null);
     }
@@ -31,6 +34,7 @@ export default function ExportControls({ posterRef, canExport, blocked, onResetD
     <div className="card">
       <h3>التصدير</h3>
       {blocked && <p className="err">تعذر التصدير: {blocked}</p>}
+      {failed && <p className="err">{failed}</p>}
       <div className="row">
         <button className="btn primary" disabled={!canExport || !!busy || !!blocked} onClick={() => run("png")}>
           {busy === "png" ? "جاري التجهيز…" : "تحميل PNG (1080×1350)"}

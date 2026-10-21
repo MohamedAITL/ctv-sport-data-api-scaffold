@@ -1,4 +1,5 @@
 import * as htmlToImage from "html-to-image";
+import { todayMA } from "@/lib/today";
 
 const W = 1080;
 const H = 1350;
@@ -59,6 +60,6 @@ export async function downloadPoster(
 
 export function posterFilename(ext: "png" | "jpeg", base = "botola-pro-standings", date?: string): string {
   // Name the file after the data's date, not the day it was exported.
-  const d = date || new Date().toISOString().slice(0, 10);
+  const d = date || todayMA();
   return `${base}-${d}.${ext === "jpeg" ? "jpg" : "png"}`;
 }

@@ -3,6 +3,7 @@
 // parser, extracted so a second WordPress feed costs a URL and a source key.
 import type { NewsItem, NewsSourceKey } from "@/types/news";
 import { encodeNewsId } from "./id";
+import { isoOrNow } from "./date";
 
 export const unwrap = (s: string): string =>
   s.replace(/^\s*<!\[CDATA\[/, "").replace(/\]\]>\s*$/, "").trim();
@@ -58,7 +59,7 @@ export async function fetchWordpressFeed(feed: string, source: NewsSourceKey): P
       title: decodeEntities(title),
       url,
       image: firstImage(block),
-      publishedAt: pub ? new Date(pub).toISOString() : new Date().toISOString(),
+      publishedAt: isoOrNow(pub),
       author: tag(block, "dc:creator"),
       section: tag(block, "category"),
       summary: summary ? decodeEntities(summary).replace(/<[^>]+>/g, "").trim() : null,

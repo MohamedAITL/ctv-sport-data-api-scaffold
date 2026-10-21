@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { fetchLiveMatches } from "@/lib/live365";
 import type { LiveMatch } from "@/types/live";
+import { todayMA } from "@/lib/today";
 
 // Today refreshes every ~5s upstream, so a short cache keeps an always-on wall
 // screen from hammering it. A past day never changes, so it is cached for long.
@@ -8,7 +9,7 @@ const TTL_TODAY_MS = 10_000;
 const TTL_PAST_MS = 60 * 60_000;
 const cache = new Map<string, { at: number; items: LiveMatch[] }>();
 
-const todayIso = () => new Date().toISOString().slice(0, 10);
+const todayIso = () => todayMA();
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const refresh = req.query.refresh === "1";

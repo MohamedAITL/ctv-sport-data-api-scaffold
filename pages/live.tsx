@@ -8,12 +8,13 @@ import LiveStats from "@/components/live/LiveStats";
 import LiveEvents from "@/components/live/LiveEvents";
 import LivePrevious from "@/components/live/LivePrevious";
 import type { LiveDetail, LiveMatch } from "@/types/live";
+import { todayMA } from "@/lib/today";
 
 const POLL_MS = 15_000; // the source itself caches for 5s
 type Tab = "lineup" | "stats" | "events" | "previous";
 type Filter = "live" | "done" | "all";
 
-const isoToday = () => new Date().toISOString().slice(0, 10);
+const isoToday = () => todayMA();
 const shiftDay = (iso: string, days: number) => {
   const d = new Date(iso + "T12:00:00Z");
   d.setUTCDate(d.getUTCDate() + days);

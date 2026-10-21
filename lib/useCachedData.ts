@@ -45,7 +45,7 @@ export function useCachedData<T>(
       setAt(new Date().toISOString());
       void writeCache(k, next);
     } catch (e) {
-      if (latest.current === k) setError(String(e));
+      if (latest.current === k) setError(e instanceof Error ? e.message : String(e));
     } finally {
       if (latest.current === k) { setLoading(false); setBusy(false); }
     }

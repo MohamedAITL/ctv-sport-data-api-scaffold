@@ -11,6 +11,8 @@ import { DEFAULT_MATCHDAY_LAYOUT, type MatchdayLayout } from "@/config/matchdayL
 import type { Match } from "@/types/fixtures";
 import { loadNameOverrides, saveNameOverrides, deepMerge } from "@/lib/persist";
 import { getLogoOverrides, setLogoOverride, clearLogoOverride, getTemplate, setTemplate, clearTemplate } from "@/lib/db";
+import { todayMA } from "@/lib/today";
+import { useFitWidth } from "@/lib/useFitWidth";
 
 const PREVIEW_W = 480;
 const LKEY = "botola.matchdayLayout";
@@ -20,13 +22,14 @@ const loadLayout = (): MatchdayLayout => {
 const saveLayout = (l: MatchdayLayout) => { try { localStorage.setItem(LKEY, JSON.stringify(l)); } catch { /* ignore */ } };
 type Mode = "fixtures" | "results";
 const MODE_KEY = "botola.matchdayMode";
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => todayMA();
 
 interface FixturesState { date: string; matches: Match[]; fetchedAt?: string; stale: boolean; errors?: string[] }
 
 
 export default function Matchday() {
   const posterRef = useRef<HTMLDivElement>(null);
+  const [paneRef, previewW] = useFitWidth<HTMLElement>(PREVIEW_W);
   const [date, setDate] = useState(today());
   const [layout, setLayout] = useState<MatchdayLayout>(DEFAULT_MATCHDAY_LAYOUT);
   const [nameOverrides, setNameOverrides] = useState<Record<string, string>>({});
@@ -46,10 +49,13 @@ export default function Matchday() {
   const readFixtures = useCallback(async (): Promise<FixturesState> => {
     const res = await fetch(`/api/fixtures?date=${date}`);
     const json = await res.json();
+    // Thrown, not returned: an empty answer would replace the day on screen and
+    // the cached copy. A partial answer (some leagues failed) is still data.
+    if (!res.ok && !json.matches?.length) throw new Error(json.error || json.errors?.join(" · ") || "فشل الطلب");
     return { date: json.date ?? date, matches: json.matches ?? [], fetchedAt: json.fetchedAt, stale: Boolean(json.stale), errors: json.errors };
   }, [date]);
 
-  const { data, loading, busy, refresh: fetchFixtures } =
+  const { data, loading, busy, error: loadError, refresh: fetchFixtures } =
     useCachedData<FixturesState>(`matchday:${date}`, readFixtures);
 
   const pickMode = (m: Mode) => { setMode(m); try { localStorage.setItem(MODE_KEY, m); } catch { /* ignore */ } };
@@ -66,7 +72,7 @@ export default function Matchday() {
   const matches = dataForDate?.matches ?? [];
   const loadingDate = loading || (data !== null && data.date !== date);
   const effLayout = useMemo(() => ({ ...layout, dateLabel: { ...layout.dateLabel, text: layout.dateLabel.text || date } }), [layout, date]);
-  const scale = PREVIEW_W / layout.width;
+  const scale = previewW / layout.width;
   const botolaCount = matches.filter((m) => m.leagueName === "Botola Pro").length;
   const finished = matches.filter((m) => m.isFinished).length;
   const live = matches.filter((m) => m.isLive).length;
@@ -106,22 +112,23 @@ export default function Matchday() {
                 <div className="kv"><span>انتهت</span><b>{finished} من {matches.length}{live > 0 ? ` · ${live} مباشرة` : ""}</b></div>
               )}
               <div className="kv"><span>آخر تحديث</span><b>{dataForDate?.fetchedAt ? new Date(dataForDate.fetchedAt).toLocaleString() : "—"}</b></div>
-              <div className="kv"><span>الحالة</span><span className={loadingDate ? "pill" : dataForDate?.stale ? "pill warn" : "pill ok"}>{loadingDate ? "جاري التحميل…" : dataForDate?.stale ? "نسخة مخزَّنة" : "متصل"}</span></div>
+              <div className="kv"><span>الحالة</span><span className={loadingDate ? "pill" : loadError || dataForDate?.stale ? "pill warn" : "pill ok"}>{loadingDate ? "جاري التحميل…" : loadError ? "خطأ" : dataForDate?.stale ? "نسخة مخزَّنة" : "متصل"}</span></div>
+              {loadError && <p className="err">{loadError}</p>}
               {dataForDate?.errors && dataForDate.errors.length > 0 && (
                 <ul className="warnlist">{dataForDate.errors.map((e, i) => <li key={i}>{e}</li>)}</ul>
               )}
               <button className="btn" disabled={loadingDate} onClick={() => fetchFixtures()}>{loadingDate ? "جاري التحديث…" : "تحديث"}</button>
             </div>
-            <TemplateUploader isCustom={templateSrc !== null} onTemplate={onTemplate} defaultLabel="No template yet — using a plain background. Upload your matchday template." resetLabel="حذف القالب" />
+            <TemplateUploader isCustom={templateSrc !== null} onTemplate={onTemplate} defaultLabel="لا يوجد قالب بعد — تُستخدم خلفية بسيطة. ارفع قالب مباريات اليوم." resetLabel="حذف القالب" />
             <ExportControls posterRef={posterRef} canExport={matches.length > 0} blocked={exportBlock} onResetDesign={() => updateLayout(DEFAULT_MATCHDAY_LAYOUT)} fileBase={results ? "choufsport-results" : "choufsport-matchday"} fileDate={date} />
             <MatchdayTeams matches={matches} nameOverrides={nameOverrides} logoOverrides={logoOverrides} onName={onName} onLogo={onLogo} onClearLogo={onClearLogo} />
             <MatchdayDesign layout={layout} onChange={updateLayout} />
           </section>
 
-          <section className="previewpane">
+          <section className="previewpane" ref={paneRef}>
             <div className="previewsticky">
               <h3 className="muted">معاينة مباشرة</h3>
-              <div className={busy ? "previewbox busy" : "previewbox"} style={{ width: PREVIEW_W, height: layout.height * scale }}>
+              <div className={busy ? "previewbox busy" : "previewbox"} style={{ width: previewW, height: layout.height * scale }}>
                 <div style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}>
                   <MatchdayPoster ref={posterRef} mode={mode} matches={matches} layout={effLayout} templateSrc={templateSrc} nameOverrides={nameOverrides} logoOverrides={logoOverrides} />
                 </div>

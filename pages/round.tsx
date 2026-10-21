@@ -13,6 +13,7 @@ import { UNSCHEDULED_ROUND } from "@/lib/scores365Games";
 import type { Match } from "@/types/fixtures";
 import { loadNameOverrides, saveNameOverrides, deepMerge } from "@/lib/persist";
 import { getLogoOverrides, setLogoOverride, clearLogoOverride, getTemplate, setTemplate, clearTemplate } from "@/lib/db";
+import { useFitWidth } from "@/lib/useFitWidth";
 
 const PREVIEW_W = 480;
 const LKEY = "botola.roundLayout";
@@ -29,6 +30,7 @@ interface RoundState { competition: number; matches: Match[]; rounds: number[]; 
 
 export default function RoundPage() {
   const posterRef = useRef<HTMLDivElement>(null);
+  const [paneRef, previewW] = useFitWidth<HTMLElement>(PREVIEW_W);
   const [league, setLeague] = useState<number>(BOTOLA_LEAGUE);
   const [round, setRound] = useState<number | null>(null);
   const [layout, setLayout] = useState<MatchdayLayout>(DEFAULT_MATCHDAY_LAYOUT);
@@ -50,14 +52,19 @@ export default function RoundPage() {
   const readRound = useCallback(async (): Promise<RoundState> => {
     const res = await fetch(`/api/round?competition=${league}`);
     const json = await res.json();
+    // Thrown, not returned: an empty answer would replace the round on screen
+    // and the cached copy. An unpublished schedule still arrives as a 200.
+    if (!res.ok) throw new Error(json.error || "فشل الطلب");
     return { competition: league, matches: json.matches ?? [], rounds: json.rounds ?? [], fetchedAt: json.fetchedAt, error: json.error };
   }, [league]);
 
-  const { data, loading, busy, refresh: fetchRound } =
+  const { data, loading, busy, error: loadError, refresh: fetchRound } =
     useCachedData<RoundState>(`round:${league}`, readRound);
 
   // Default to the newest round available for the league currently shown.
   const forLeague = data && data.competition === league ? data : null;
+  // A failed refresh keeps the last data on screen and says why.
+  const shownError = loadError ?? forLeague?.error ?? null;
   const rounds = useMemo(() => forLeague?.rounds ?? [], [forLeague]);
   useEffect(() => {
     if (rounds.length === 0) { setRound(null); return; }
@@ -106,7 +113,7 @@ export default function RoundPage() {
     };
   }, [layout, round, dateRange]);
 
-  const scale = PREVIEW_W / layout.width;
+  const scale = previewW / layout.width;
   // No games for a league means 365scores hasn't published its schedule yet —
   // a normal state, so say so plainly instead of exporting an empty poster.
   const empty = !loading && forLeague !== null && rounds.length === 0;
@@ -153,23 +160,23 @@ export default function RoundPage() {
               </label>
               <div className="kv"><span>المباريات</span><b>{matches.length}{matches.length > 0 ? ` · ${finished} انتهت` : ""}</b></div>
               <div className="kv"><span>آخر تحديث</span><b>{forLeague?.fetchedAt ? new Date(forLeague.fetchedAt).toLocaleString() : "—"}</b></div>
-              <div className="kv"><span>الحالة</span><span className={loading ? "pill" : forLeague?.error ? "pill warn" : "pill ok"}>{loading ? "جاري التحميل…" : forLeague?.error ? "خطأ" : "متصل"}</span></div>
+              <div className="kv"><span>الحالة</span><span className={loading ? "pill" : shownError ? "pill warn" : "pill ok"}>{loading ? "جاري التحميل…" : shownError ? "خطأ" : "متصل"}</span></div>
               {empty && (
                 <p className="err">365scores has not published a schedule for this league yet. It will appear here once the next round is announced.</p>
               )}
-              {forLeague?.error && <p className="err">{forLeague.error}</p>}
+              {shownError && <p className="err">{shownError}</p>}
               <button className="btn" disabled={loading} onClick={() => fetchRound()}>{loading ? "جاري التحديث…" : "تحديث"}</button>
             </div>
-            <TemplateUploader isCustom={templateSrc !== null} onTemplate={onTemplate} defaultLabel="No template yet — using a plain background. Upload your round template." resetLabel="حذف القالب" />
+            <TemplateUploader isCustom={templateSrc !== null} onTemplate={onTemplate} defaultLabel="لا يوجد قالب بعد — تُستخدم خلفية بسيطة. ارفع قالب الجولة." resetLabel="حذف القالب" />
             <ExportControls posterRef={posterRef} canExport={matches.length > 0} blocked={exportBlock} onResetDesign={() => updateLayout(DEFAULT_MATCHDAY_LAYOUT)} fileBase={`choufsport-${leagueById(league)?.id === BOTOLA_LEAGUE ? "botola1" : "botola2"}-round${round ?? ""}`} fileDate={matches[0]?.date} />
             <MatchdayTeams matches={matches} nameOverrides={nameOverrides} logoOverrides={logoOverrides} onName={onName} onLogo={onLogo} onClearLogo={onClearLogo} />
             <MatchdayDesign layout={layout} onChange={updateLayout} />
           </section>
 
-          <section className="previewpane">
+          <section className="previewpane" ref={paneRef}>
             <div className="previewsticky">
               <h3 className="muted">معاينة مباشرة</h3>
-              <div className={busy ? "previewbox busy" : "previewbox"} style={{ width: PREVIEW_W, height: layout.height * scale }}>
+              <div className={busy ? "previewbox busy" : "previewbox"} style={{ width: previewW, height: layout.height * scale }}>
                 <div style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}>
                   <MatchdayPoster ref={posterRef} groupBy="date" mode={results ? "results" : "fixtures"} matches={matches} layout={effLayout} templateSrc={templateSrc} nameOverrides={nameOverrides} logoOverrides={logoOverrides} />
                 </div>

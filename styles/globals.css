@@ -1068,3 +1068,41 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
   .kxp-body { grid-template-columns: minmax(0, 1fr); }
   .kxp-left { position: static; }
 }
+
+/* ---- phones ----
+   The six tabs do not fit a phone: they scroll sideways in their own strip
+   instead of pushing the page wider than the screen. */
+@media (max-width: 720px) {
+  .topbar { flex-wrap: wrap; }
+  .nav { display: flex; max-width: 100%; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .nav::-webkit-scrollbar { display: none; }
+  .navlink { white-space: nowrap; flex: none; padding: 7px 12px; }
+}
+/* The live kiosk is laid out for a wall screen; on a phone the match list
+   stacks above the match instead of squeezing it to a sliver. */
+@media (max-width: 760px) {
+  /* minmax(0, …): a bare 1fr will not shrink below its widest child, and the
+     kiosk's overflow:hidden would quietly clip the rest. */
+  .kiosk { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 44vh) minmax(0, 1fr); }
+  .kiosk-rail { border-left: 0; border-bottom: 1px solid var(--border); }
+  .kiosk-railhead { padding: 10px 12px; }
+  .kh { padding: 12px 12px 8px; }
+  /* Crest above the name, so the name gets the width and may wrap. */
+  .kh-score { gap: 8px; }
+  .kh-side, .kh-score .kh-side:last-child { flex-direction: column; gap: 6px; }
+  .kh-side img { width: 44px; height: 44px; }
+  .kh-side span { font-size: 16px; white-space: normal; text-align: center; line-height: 1.3; }
+  .kh-nums { font-size: 44px; gap: 8px; }
+  .kh-soon b { font-size: 34px; }
+  .kiosk-tabs { gap: 6px; padding: 10px 12px; }
+  .kiosk-tabs button { font-size: 15px; }
+  .kiosk-pane { padding: 8px 12px 16px; }
+  .kiosk-foot { padding: 10px 12px; }
+  /* A phone pitch is ~350px wide: full-size markers put both keepers half off
+     it. Scaling keeps the positions (drag works off the pitch box, not these). */
+  .kp-man { transform: translate(-50%, -50%) scale(.62); }
+  /* …and the pitch is inset so the keepers, at 2% and 98%, stay on screen.
+     A definite width: with `auto`, min-height and the 16/9 ratio would size the
+     width from the height instead. */
+  .kp-pitch { width: calc(100% - 44px); margin-inline: auto; }
+}

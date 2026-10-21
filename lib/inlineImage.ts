@@ -29,16 +29,29 @@ export async function toDataUrl(url: string | null): Promise<string | null> {
   return null;
 }
 
-// Inline `urlOf(item)` for every item, in chunks, returning a new array.
+// Every distinct URL fetched once, in chunks. A leaderboard repeats each club's
+// crest on every row of every category, and the CDN should be asked for it
+// once, not three hundred times.
+export async function inlineUrls(urls: Array<string | null>): Promise<Map<string, string | null>> {
+  const unique = Array.from(new Set(urls.filter((u): u is string => Boolean(u))));
+  const out = new Map<string, string | null>();
+  for (let i = 0; i < unique.length; i += CHUNK) {
+    const slice = unique.slice(i, i + CHUNK);
+    const got = await Promise.all(slice.map(toDataUrl));
+    slice.forEach((u, j) => out.set(u, got[j]));
+  }
+  return out;
+}
+
+// Inline `urlOf(item)` for every item, returning a new array.
 export async function inlineImages<T>(
   items: T[],
   urlOf: (item: T) => string | null,
   withUrl: (item: T, dataUrl: string | null) => T
 ): Promise<T[]> {
-  const out: T[] = [];
-  for (let i = 0; i < items.length; i += CHUNK) {
-    const slice = items.slice(i, i + CHUNK);
-    out.push(...(await Promise.all(slice.map(async (it) => withUrl(it, await toDataUrl(urlOf(it)))))));
-  }
-  return out;
+  const inlined = await inlineUrls(items.map(urlOf));
+  return items.map((it) => {
+    const u = urlOf(it);
+    return withUrl(it, u ? inlined.get(u) ?? null : null);
+  });
 }
