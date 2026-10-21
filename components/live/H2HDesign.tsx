@@ -108,6 +108,7 @@ export default function H2HDesign({ layout, onChange }: Props) {
       <h4>الصفوف</h4>
       <div className="grid">
         <Num label="عدد المواجهات" value={layout.rows} onChange={(v) => up((n) => (n.rows = Math.max(1, Math.min(8, v || 5))))} />
+        <Toggle label="هذه المسابقة فقط" value={layout.sameCompetitionOnly} onChange={(v) => up((n) => (n.sameCompetitionOnly = v))} />
         <Num label="موضع أول صف" value={layout.firstRowY} onChange={(v) => up((n) => (n.firstRowY = v))} />
         <Num label="ارتفاع الصف" value={layout.rowHeight} onChange={(v) => up((n) => (n.rowHeight = v))} />
         <Num label="حجم النتيجة" value={layout.rowScoreFontSize} onChange={(v) => up((n) => (n.rowScoreFontSize = v))} />

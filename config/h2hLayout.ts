@@ -6,6 +6,8 @@ export interface H2HLayout {
   width: number;
   height: number;
   rows: number; // meetings shown (the feature is "last 5", but it is a value)
+  /** Only the meetings played in the competition this match belongs to. */
+  sameCompetitionOnly: boolean;
   title: H2HText;
   subtitle: H2HText;
   teams: {
@@ -53,6 +55,7 @@ export const DEFAULT_H2H_LAYOUT: H2HLayout = {
   width: 1080,
   height: 1350,
   rows: 5,
+  sameCompetitionOnly: true,
   title: { show: true, text: "المواجهات المباشرة", x: 540, y: 108, fontSize: 58, color: "#ffffff" },
   subtitle: { show: true, text: "", x: 540, y: 168, fontSize: 28, color: "#f6c744" },
   teams: {

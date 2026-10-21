@@ -422,6 +422,7 @@ const toPast = (g: RawGame): PastMatch | null =>
     ? {
         id: g.id,
         date: g.startTime ?? "",
+        competitionId: g.competitionId ?? 0,
         competition: g.competitionDisplayName ?? "",
         home: pastSide(g.homeCompetitor),
         away: pastSide(g.awayCompetitor),

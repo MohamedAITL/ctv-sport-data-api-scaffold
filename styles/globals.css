@@ -1050,6 +1050,7 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
 .kxp-btn:disabled { opacity: .6; }
 .kxp-err { color: var(--live-text); font-size: 16px; margin: 0 0 10px; }
 .kxp-wait { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 16px; margin: 0; }
+.kxp-note { margin: 12px 0 0; font-size: 15px; line-height: 1.5; color: var(--muted); }
 /* Preview on one side, the controls on the other, like the poster pages. */
 .kxp-body { display: grid; grid-template-columns: 420px minmax(0, 1fr); gap: 18px; align-items: start; }
 .kxp-left { position: sticky; top: 0; }

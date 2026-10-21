@@ -128,6 +128,8 @@ export interface Shot {
 export interface PastMatch {
   id: number;
   date: string; // ISO
+  /** Same competition across seasons and stages — the display name is not. */
+  competitionId: number;
   competition: string;
   home: { name: string; score: number | null; logo: string | null };
   away: { name: string; score: number | null; logo: string | null };

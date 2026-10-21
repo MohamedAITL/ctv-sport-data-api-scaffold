@@ -7,6 +7,7 @@ import { DEFAULT_H2H_LAYOUT, type H2HLayout } from "@/config/h2hLayout";
 import { clearTemplate, getTemplate, setTemplate } from "@/lib/db";
 import { downloadPoster, posterFilename } from "@/lib/exportPoster";
 import { deepMerge } from "@/lib/persist";
+import { h2hRecord } from "@/lib/h2hRecord";
 import type { H2HRecord, LiveMatch, PastMatch } from "@/types/live";
 
 const PREVIEW_W = 420;
@@ -89,6 +90,15 @@ export default function H2HExport({ match, onClose }: { match: LiveMatch; onClos
 
   if (!host) return null;
   const scale = PREVIEW_W / 1080;
+  // The poster is about this tie in this competition: a Champions League night
+  // is not told by two friendlies. The id, not the name — the same competition
+  // reads "… - ربع النهائي" once the knockout starts.
+  const meetings = rows && layout.sameCompetitionOnly
+    ? rows.filter((m) => m.competitionId === match.competitionId)
+    : rows;
+  const shownRecord = rows && record
+    ? (layout.sameCompetitionOnly ? h2hRecord(meetings ?? [], match.home.name) : record)
+    : null;
 
   return createPortal(
     <div className="kpc-back" role="dialog" aria-modal="true" onClick={onClose}>
@@ -99,15 +109,18 @@ export default function H2HExport({ match, onClose }: { match: LiveMatch; onClos
         {error && <p className="kxp-err">{error}</p>}
         {!rows && !error && <p className="kxp-wait"><i className="spinner" />جاري تجهيز الملصق…</p>}
 
-        {rows && record && (
+        {rows && meetings && shownRecord && (
           <div className="kxp-body">
             <div className="kxp-left">
               {/* The preview is the export node, so it is scaled, never resized. */}
               <div className="kxp-preview" style={{ width: PREVIEW_W, height: 1350 * scale }}>
                 <div style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}>
-                  <H2HPoster ref={posterRef} match={match} meetings={rows} record={record} layout={layout} templateSrc={templateSrc} />
+                  <H2HPoster ref={posterRef} match={match} meetings={meetings} record={shownRecord} layout={layout} templateSrc={templateSrc} />
                 </div>
               </div>
+              {meetings.length === 0 && (
+                <p className="kxp-note">لم يلتق الفريقان من قبل في {match.competition} — أطفئ «هذه المسابقة فقط» لعرض كل المواجهات.</p>
+              )}
               <div className="kxp-actions">
                 <button type="button" className="kxp-btn primary" disabled={busy} onClick={() => save("png")}>
                   {busy && <i className="spinner" />}تحميل PNG (1080×1350)
