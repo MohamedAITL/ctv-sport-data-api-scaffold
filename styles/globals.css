@@ -851,7 +851,7 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
 .kpv ul { list-style: none; margin: 0; padding: 0; }
 .kpv-row {
   display: grid;
-  grid-template-columns: 32px 154px minmax(0, 1fr) 92px minmax(0, 1fr);
+  grid-template-columns: 32px 154px minmax(0, 1fr);
   align-items: center; gap: 14px;
   padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 17px;
 }
@@ -865,25 +865,34 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
 .kpv-pill.w { background: var(--ok); color: #06240f; }
 .kpv-pill.l { background: var(--live); color: #fff; }
 .kpv-pill.d { background: var(--warn); color: var(--accent-ink); }
+.kpv-match {
+  display: grid; grid-template-columns: minmax(0, 1fr) 96px minmax(0, 1fr);
+  align-items: center; gap: 14px; min-width: 0;
+}
 .kpv-when { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .kpv-when b { font-size: 14px; font-weight: 800; color: var(--muted); font-variant-numeric: tabular-nums; }
 .kpv-when em {
   font-style: normal; font-size: 12px; color: var(--muted); opacity: .75;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px;
 }
-.kpv-team { display: flex; align-items: center; gap: 10px; min-width: 0; justify-content: flex-start; }
-.kpv-team.away { flex-direction: row; justify-content: flex-end; }
-.kpv-team .kpv-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); }
+/* Both sides hug the score instead of being pinned to the far edges of the
+   row — otherwise a wide pane leaves half a screen of nothing between a club's
+   badge and its result, which is what made the list look scattered. */
+.kpv-team { display: flex; align-items: center; gap: 10px; min-width: 0; justify-content: flex-end; }
+.kpv-team.away { justify-content: flex-start; }
+.kpv-team .kpv-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); max-width: 230px; }
 .kpv-team.won .kpv-name { color: var(--text); font-weight: 800; }
-.kpv-crest { width: 30px; height: 30px; flex: none; object-fit: contain; border-radius: 50%; background: var(--panel-2); }
+.kpv-crest { width: 32px; height: 32px; flex: none; object-fit: contain; border-radius: 50%; background: var(--panel-2); padding: 2px; }
 .kpv-score {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  min-width: 92px; padding: 6px 0; border-radius: 9px; background: var(--panel-2);
-  font-size: 19px; font-weight: 900; font-variant-numeric: tabular-nums; direction: ltr;
+  min-width: 96px; padding: 7px 0; border-radius: 10px; background: var(--panel-2);
+  border: 1px solid var(--border); font-size: 19px; font-weight: 900;
+  font-variant-numeric: tabular-nums; direction: ltr;
 }
 .kpv-score i { font-style: normal; opacity: .45; font-weight: 700; }
 @media (max-width: 1100px) {
-  .kpv-row { grid-template-columns: 32px 74px minmax(0, 1fr) 80px minmax(0, 1fr); gap: 10px; font-size: 15px; }
+  .kpv-row { grid-template-columns: 32px 74px minmax(0, 1fr); gap: 10px; font-size: 15px; }
+  .kpv-match { grid-template-columns: minmax(0, 1fr) 80px minmax(0, 1fr); gap: 10px; }
   .kpv-when em { display: none; }
 }
 

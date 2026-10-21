@@ -46,14 +46,18 @@ function Row({ m, team }: { m: PastMatch; team: string }) {
         <b>{day(m.date)}</b>
         <em>{weHosted ? "على أرضه" : "خارج أرضه"} · {m.competition}</em>
       </span>
-      <span className={r === "w" ? "kpv-team won" : "kpv-team"}>
-        <span className="kpv-name">{ours.name}</span>
-        <Crest src={ours.logo} />
-      </span>
-      <b className="kpv-score">{ours.score ?? "-"}<i>-</i>{theirs.score ?? "-"}</b>
-      <span className={r === "l" ? "kpv-team away won" : "kpv-team away"}>
-        <Crest src={theirs.logo} />
-        <span className="kpv-name">{theirs.name}</span>
+      {/* The two sides and the score are one block, so it centres itself in
+          whatever room is left beside the date rather than drifting. */}
+      <span className="kpv-match">
+        <span className={r === "w" ? "kpv-team won" : "kpv-team"}>
+          <span className="kpv-name">{ours.name}</span>
+          <Crest src={ours.logo} />
+        </span>
+        <b className="kpv-score">{ours.score ?? "-"}<i>-</i>{theirs.score ?? "-"}</b>
+        <span className={r === "l" ? "kpv-team away won" : "kpv-team away"}>
+          <Crest src={theirs.logo} />
+          <span className="kpv-name">{theirs.name}</span>
+        </span>
       </span>
     </li>
   );
