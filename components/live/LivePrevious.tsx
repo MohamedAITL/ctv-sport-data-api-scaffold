@@ -39,7 +39,7 @@ export default function LivePrevious({ d }: { d: LiveDetail }) {
     let live = true;
     setData(null);
     setError(false);
-    fetch(`/api/live/previous?home=${home.id}&away=${away.id}&competition=${d.match.competitionId}`)
+    fetch(`/api/live/previous?game=${d.match.id}&matchup=${encodeURIComponent(d.match.matchupId)}&home=${home.id}&away=${away.id}&competition=${d.match.competitionId}`)
       .then((r) => r.json())
       .then((j) => {
         if (!live) return;
@@ -47,7 +47,7 @@ export default function LivePrevious({ d }: { d: LiveDetail }) {
       })
       .catch(() => { if (live) setError(true); });
     return () => { live = false; };
-  }, [home.id, away.id, d.match.competitionId]);
+  }, [d.match.id, d.match.matchupId, home.id, away.id, d.match.competitionId]);
 
   if (error) return <div className="kp-none" dir="rtl"><p>تعذر تحميل المواجهات السابقة</p></div>;
   if (!data) return <div className="kp-none" dir="rtl"><p>جاري التحميل…</p></div>;

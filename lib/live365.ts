@@ -431,53 +431,34 @@ const toPast = (g: RawGame): PastMatch | null =>
 /**
  * The مواجهات سابقة tab.
  *
- * `recentMatches` on a competitor is only a list of game ids and there is no
- * bulk game-by-id endpoint, but results filtered by competitor give a team's
- * games in one call — and the `paging` anchors on that response walk further
- * back. One page holds a couple of months, which for two Botola sides found a
- * single meeting; walking back a few pages finds the real head-to-head (five
- * for Berkane v FAR, league and CAF).
+ * The meetings come from the endpoint 365scores' own match page uses for its
+ * head-to-head block: `/games/h2h/` keyed by gameId AND matchupId (the pair of
+ * ids in either order). It answers with `h2hGames` — the full record, fifteen
+ * meetings for PSG v Barcelona going back to 2017, not the couple of months a
+ * results feed reaches. Earlier probes missed it because they guessed
+ * `games=` and `competitors=` as the parameters.
+ *
+ * Recent form still comes from each team's own results, one page each.
  */
-const H2H_PAGES = 6;
-
-async function teamResults(competitorId: number, pages: number): Promise<RawGame[]> {
-  const first = await get<{ games?: RawGame[]; paging?: { previousPage?: string } }>(
-    `/games/results/?${Q}&competitors=${competitorId}`
-  );
-  const byId = new Map<number, RawGame>();
-  for (const g of first.games ?? []) if (g.id) byId.set(g.id, g);
-
-  // The links the API returns carry `timezoneId=1`, which would shift every
-  // kickoff, so the anchor is rebuilt with our own query.
-  let anchor = oldestId(byId);
-  for (let i = 0; i < pages && anchor; i++) {
-    const page = await get<{ games?: RawGame[] }>(
-      `/games/?${Q}&competitors=${competitorId}&games=1&aftergame=${anchor}&direction=-1`
-    ).catch(() => ({ games: [] as RawGame[] }));
-    let added = 0;
-    for (const g of page.games ?? []) if (g.id && !byId.has(g.id)) { byId.set(g.id, g); added++; }
-    if (added === 0) break;
-    anchor = oldestId(byId);
-  }
-  return Array.from(byId.values());
+async function teamResults(competitorId: number): Promise<RawGame[]> {
+  const r = await get<{ games?: RawGame[] }>(`/games/results/?${Q}&competitors=${competitorId}`);
+  return r.games ?? [];
 }
 
-const oldestId = (games: Map<number, RawGame>): number | null => {
-  let best: RawGame | null = null;
-  for (const g of Array.from(games.values())) {
-    if (!g.startTime) continue;
-    if (!best || g.startTime < (best.startTime ?? "~")) best = g;
-  }
-  return best?.id ?? null;
-};
+async function h2hGames(gameId: number, matchupId: string): Promise<RawGame[]> {
+  const r = await get<{ game?: { h2hGames?: RawGame[] } }>(
+    `/games/h2h/?${Q}&gameId=${gameId}&matchupId=${encodeURIComponent(matchupId)}`
+  );
+  return r.game?.h2hGames ?? [];
+}
 
-export async function fetchPreviousMatches(homeId: number, awayId: number, limit = 6): Promise<PreviousMatches> {
-  // Both histories are walked back: a meeting missing from one side's results
-  // (a neutral-ground cup tie, a gap in the feed) is usually present in the
-  // other's, and the two walks run together so the wait is one of them.
-  const [h, a] = await Promise.allSettled([
-    teamResults(homeId, H2H_PAGES),
-    teamResults(awayId, H2H_PAGES),
+export async function fetchPreviousMatches(
+  gameId: number, matchupId: string, homeId: number, awayId: number, limit = 6
+): Promise<PreviousMatches> {
+  const [meet, h, a] = await Promise.allSettled([
+    h2hGames(gameId, matchupId),
+    teamResults(homeId),
+    teamResults(awayId),
   ]);
   const games = (r: PromiseSettledResult<RawGame[]>) => (r.status === "fulfilled" ? r.value : []);
 
@@ -491,17 +472,11 @@ export async function fetchPreviousMatches(homeId: number, awayId: number, limit
   const clean = (list: RawGame[], keep: (g: RawGame) => boolean, take: number) =>
     list.filter(keep).map(toPast).filter((m): m is PastMatch => m !== null && played(m)).sort(byDate).slice(0, take);
 
-  const all = [...games(h), ...games(a)];
-  const seen = new Set<number>();
-  const meetings = all.filter((g) => {
-    if (!g.id || seen.has(g.id) || !isMeeting(g)) return false;
-    seen.add(g.id);
-    return true;
-  });
+  // The tie being watched is in its own h2h list; it is not a previous meeting.
+  const meetings = games(meet).filter((g) => g.id !== gameId);
 
-  // The record is counted from the raw games, which carry the competitor ids —
-  // a past match only knows names, and the two sides swap host and guest from
-  // one meeting to the next.
+  // Counted from the raw games, which carry the competitor ids — a past match
+  // only knows names, and the two sides swap host and guest between meetings.
   const record = meetings.reduce<H2HRecord>((r, g) => {
     const host = score(g.homeCompetitor?.score);
     const guest = score(g.awayCompetitor?.score);
@@ -520,7 +495,7 @@ export async function fetchPreviousMatches(homeId: number, awayId: number, limit
   }, { played: 0, homeWins: 0, draws: 0, awayWins: 0, homeGoals: 0, awayGoals: 0 });
 
   return {
-    h2h: clean(meetings, () => true, 10),
+    h2h: clean(meetings, () => true, 12),
     record,
     home: clean(games(h), (g) => !isMeeting(g), limit),
     away: clean(games(a), (g) => !isMeeting(g), limit),

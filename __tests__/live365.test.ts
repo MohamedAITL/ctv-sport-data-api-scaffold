@@ -1,4 +1,4 @@
-import { toMatch, pairStats, fetchLiveMatches, fetchLiveDetail, toApiDate, toTopPerformers, toFacts, toShots } from "@/lib/live365";
+import { toMatch, pairStats, fetchLiveMatches, fetchLiveDetail, toApiDate, toTopPerformers, toFacts, toShots, fetchPreviousMatches } from "@/lib/live365";
 
 const game = (over: Record<string, unknown> = {}) => ({
   id: 100, sportId: 1, competitionId: 11, competitionDisplayName: "الدوري الإسباني",
@@ -354,5 +354,52 @@ describe("toShots", () => {
 
   it("is empty when the source charts no shots", () => {
     expect(toShots(undefined, members)).toEqual([]);
+  });
+});
+
+describe("fetchPreviousMatches", () => {
+  const realFetch = global.fetch;
+  afterEach(() => { global.fetch = realFetch; });
+
+  // The meetings come from /games/h2h/, the endpoint 365scores' own match page
+  // uses. Earlier attempts guessed `games=`/`competitors=` and got 404/500; the
+  // parameters are gameId AND matchupId. For PSG v Barcelona it answers with
+  // fifteen meetings back to 2017 — a results feed reaches a couple of months.
+  const meeting = (id: number, date: string, homeId: number, hs: number, awayId: number, as: number) => ({
+    id, startTime: `${date}T19:00:00+00:00`, competitionDisplayName: "دوري أبطال اوروبا",
+    homeCompetitor: { id: homeId, name: homeId === 480 ? "باريس سان جيرمان" : "برشلونة", score: hs },
+    awayCompetitor: { id: awayId, name: awayId === 480 ? "باريس سان جيرمان" : "برشلونة", score: as },
+  });
+
+  it("reads the head-to-head endpoint and counts the record from both sides", async () => {
+    const seen: string[] = [];
+    global.fetch = jest.fn(async (url: string) => {
+      seen.push(url);
+      if (url.includes("/games/h2h/")) {
+        return { ok: true, json: async () => ({ game: { h2hGames: [
+          meeting(4828461, "2026-10-20", 480, 4, 132, 2), // the tie being watched
+          meeting(1, "2025-10-01", 132, 1, 480, 2),       // Barcelona lost at home
+          meeting(2, "2021-03-10", 480, 1, 132, 1),       // draw
+          meeting(3, "2017-03-08", 132, 6, 480, 1),       // Barcelona won
+        ] } }) };
+      }
+      return { ok: true, json: async () => ({ games: [] }) };
+    }) as unknown as typeof fetch;
+
+    const out = await fetchPreviousMatches(4828461, "480-132-572", 480, 132);
+    // the match on screen is not one of its own previous meetings
+    expect(out.h2h.map((m) => m.id)).toEqual([1, 2, 3]);
+    expect(out.record).toEqual({ played: 3, homeWins: 1, draws: 1, awayWins: 1, homeGoals: 4, awayGoals: 8 });
+    expect(seen.some((u) => u.includes("/games/h2h/") && u.includes("gameId=4828461") && u.includes("matchupId=480-132-572"))).toBe(true);
+  });
+
+  it("reports an empty record for two sides that have never met", async () => {
+    global.fetch = jest.fn(async (url: string) => ({
+      ok: true,
+      json: async () => (url.includes("/games/h2h/") ? { game: { h2hGames: [] } } : { games: [] }),
+    })) as unknown as typeof fetch;
+    const out = await fetchPreviousMatches(1, "1-2-3", 1, 2);
+    expect(out.h2h).toEqual([]);
+    expect(out.record.played).toBe(0);
   });
 });
