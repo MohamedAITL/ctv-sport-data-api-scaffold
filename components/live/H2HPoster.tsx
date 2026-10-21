@@ -94,6 +94,11 @@ const H2HPoster = forwardRef<HTMLDivElement, Props>(function H2HPoster(
           <div style={{ ...centred(T.nearX, R.y), fontSize: R.fontSize, fontWeight: 900, color: R.color }}>{record.homeWins}</div>
           <div style={{ ...centred(L.width / 2, R.y), fontSize: R.fontSize, fontWeight: 900, color: R.drawColor }}>{record.draws}</div>
           <div style={{ ...centred(T.farX, R.y), fontSize: R.fontSize, fontWeight: 900, color: R.color }}>{record.awayWins}</div>
+          {R.drawLabel.show && (
+            <div style={{ ...centred(L.width / 2, R.y + R.drawLabel.dy), fontSize: R.drawLabel.fontSize, fontWeight: 800, color: R.drawLabel.color }}>
+              {R.drawLabel.text || "تعادل"}
+            </div>
+          )}
           <div style={{ ...centred(L.width / 2, R.y + R.metaDy), fontSize: R.metaFontSize, fontWeight: 700, color: R.metaColor, opacity: 0.75 }}>
             {record.played} مواجهة · الأهداف{" "}
             {/* Pinned left-to-right and ordered like the crests above it —

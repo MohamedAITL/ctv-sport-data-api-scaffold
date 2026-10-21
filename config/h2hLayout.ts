@@ -26,6 +26,8 @@ export interface H2HLayout {
     fontSize: number;
     color: string;
     drawColor: string;
+    /** The word under the draws figure; the two wins have team names above. */
+    drawLabel: { show: boolean; text?: string; dy: number; fontSize: number; color: string };
     metaDy: number;
     metaFontSize: number;
     metaColor: string;
@@ -59,6 +61,7 @@ export const DEFAULT_H2H_LAYOUT: H2HLayout = {
   },
   record: {
     show: true, y: 470, fontSize: 64, color: "#ffffff", drawColor: "#f6c744",
+    drawLabel: { show: true, text: "تعادل", dy: -46, fontSize: 24, color: "#f6c744" },
     metaDy: 52, metaFontSize: 24, metaColor: "#ffffff",
   },
   firstRowY: 620,

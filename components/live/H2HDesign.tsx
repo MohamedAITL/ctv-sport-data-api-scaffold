@@ -89,12 +89,17 @@ export default function H2HDesign({ layout, onChange }: Props) {
       </div>
 
       <h4>السجل</h4>
+      <Text label="كلمة التعادل" value={layout.record.drawLabel.text ?? ""} onChange={(v) => up((n) => (n.record.drawLabel.text = v))} />
       <div className="grid">
         <Toggle label="إظهار السجل" value={R.show} onChange={(v) => up((n) => (n.record.show = v))} />
         <Num label="موضعه رأسياً" value={R.y} onChange={(v) => up((n) => (n.record.y = v))} />
         <Num label="حجم الأرقام" value={R.fontSize} onChange={(v) => up((n) => (n.record.fontSize = v))} />
         <Color label="لون الأرقام" value={R.color} onChange={(v) => up((n) => (n.record.color = v))} />
         <Color label="لون التعادل" value={R.drawColor} onChange={(v) => up((n) => (n.record.drawColor = v))} />
+        <Toggle label="إظهار كلمة التعادل" value={R.drawLabel.show} onChange={(v) => up((n) => (n.record.drawLabel.show = v))} />
+        <Num label="موضع الكلمة" value={R.drawLabel.dy} onChange={(v) => up((n) => (n.record.drawLabel.dy = v))} />
+        <Num label="حجم الكلمة" value={R.drawLabel.fontSize} onChange={(v) => up((n) => (n.record.drawLabel.fontSize = v))} />
+        <Color label="لون الكلمة" value={R.drawLabel.color} onChange={(v) => up((n) => (n.record.drawLabel.color = v))} />
         <Num label="مسافة السطر" value={R.metaDy} onChange={(v) => up((n) => (n.record.metaDy = v))} />
         <Num label="حجم السطر" value={R.metaFontSize} onChange={(v) => up((n) => (n.record.metaFontSize = v))} />
         <Color label="لون السطر" value={R.metaColor} onChange={(v) => up((n) => (n.record.metaColor = v))} />
