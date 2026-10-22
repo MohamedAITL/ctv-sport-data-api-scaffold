@@ -14,25 +14,25 @@ import type {
 import { STANDINGS_LEAGUES } from "@/config/standingsLeagues";
 
 const B = "https://webws.365scores.com/web";
-const Q = "appTypeId=5&langId=27&timezoneName=Africa%2FCasablanca&userCountryId=127";
+export const Q = "appTypeId=5&langId=27&timezoneName=Africa%2FCasablanca&userCountryId=127";
 // `d_…` is Cloudinary's default-image transform: 365scores serves its own
 // placeholder instead of a 404 when a crest or player photo is missing, which
 // keeps a wall display free of broken images and the console free of noise.
 const IMG = "https://imagecache.365scores.com/image/upload/f_png,w_120,h_120,c_limit,q_auto";
 const CREST_IMG = `${IMG},d_Competitors:default1.png`;
-const FACE_IMG = `${IMG},d_Athletes:default.png`;
+export const FACE_IMG = `${IMG},d_Athletes:default.png`;
 
 const FOOTBALL = 1;
 const STATUS_LIVE = 3;
 const STATUS_FINISHED = 4;
 
-async function get<T>(path: string): Promise<T> {
+export async function get<T>(path: string): Promise<T> {
   const r = await fetch(`${B}${path}`, { headers: { Accept: "application/json" } });
   if (!r.ok) throw new Error(`365scores ${r.status} for ${path}`);
   return (await r.json()) as T;
 }
 
-const crest = (id?: number, v?: number) =>
+export const crest = (id?: number, v?: number) =>
   id ? `${CREST_IMG}/v${v ?? 1}/Competitors/${id}` : null;
 
 // There is no Competitions default asset — verified 404 on competitions 5677

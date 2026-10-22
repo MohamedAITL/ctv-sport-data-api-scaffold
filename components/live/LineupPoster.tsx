@@ -36,7 +36,7 @@ const rgba = (hex: string, a: number) => {
  * of the far end. Its keeper's gap grows with the players, or his bigger name
  * would hang over the goal line.
  */
-export function spot(p: LineupPlayer, home: boolean, P: LineupLayout["pitch"], alone?: number) {
+export function spot(p: Pick<LineupPlayer, "line" | "side">, home: boolean, P: LineupLayout["pitch"], alone?: number) {
   const goal = alone ? P.goalPad * alone : P.goalPad;
   const reach = alone ? P.h - 2 * goal - P.midGap : P.h / 2 - goal - P.midGap;
   const depth = (pct(p.line) / 100) * reach;
@@ -49,7 +49,7 @@ export function spot(p: LineupPlayer, home: boolean, P: LineupLayout["pitch"], a
 }
 
 /** Halfway line, centre circle and spot, and both ends: box, six-yard box, spot, D. */
-function Markings({ w, h, color }: { w: number; h: number; color: string }) {
+export function Markings({ w, h, color }: { w: number; h: number; color: string }) {
   const stroke = `${LINE}px solid ${color}`;
   const box = (bw: number, bh: number, top: boolean): CSSProperties => ({
     position: "absolute", left: (w - bw) / 2, width: bw, height: bh, boxSizing: "border-box", border: stroke,

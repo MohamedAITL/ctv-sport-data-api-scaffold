@@ -8,12 +8,15 @@
 
 const ATTEMPTS = 3;
 const CHUNK = 8;
+// The CDN sometimes stalls a single image for 30s+; without a deadline one
+// stalled photo holds its whole chunk, and the poster, hostage.
+const TIMEOUT_MS = 6000;
 
 export async function toDataUrl(url: string | null): Promise<string | null> {
   if (!url) return null;
   for (let attempt = 1; attempt <= ATTEMPTS; attempt++) {
     try {
-      const r = await fetch(url);
+      const r = await fetch(url, { signal: AbortSignal.timeout(TIMEOUT_MS) });
       if (r.ok) {
         const ct = r.headers.get("content-type") || "image/png";
         const buf = Buffer.from(await r.arrayBuffer());

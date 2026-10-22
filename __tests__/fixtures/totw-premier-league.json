@@ -1,0 +1,468 @@
+{
+ "teamOfTheWeek": {
+  "key": "7_132_1_7_1",
+  "lineup": {
+   "formation": "4-4-2",
+   "hasFieldPositions": true,
+   "members": [
+    {
+     "status": 0,
+     "position": {
+      "id": 4,
+      "name": "الهجوم",
+      "shortName": "Attacker"
+     },
+     "formation": {
+      "id": 12,
+      "name": "المهاجم الصريح",
+      "shortName": "Centre Forward"
+     },
+     "yardFormation": {
+      "line": 5,
+      "fieldLine": 99,
+      "fieldSide": 25
+     },
+     "ranking": 9.2,
+     "hasHighestRanking": false,
+     "hasStats": true,
+     "popularityRank": 1025,
+     "competitorId": 110,
+     "gameId": 4742043,
+     "nationalId": 27,
+     "createdAt": "2016-05-08T15:46:34.42Z",
+     "id": 3072169,
+     "athleteId": 65760,
+     "name": "إيرلينج هالاند",
+     "shortName": "هالاند",
+     "jerseyNumber": 9,
+     "nameForURL": "erling-haaland",
+     "imageVersion": 90
+    },
+    {
+     "status": 0,
+     "position": {
+      "id": 4,
+      "name": "الهجوم",
+      "shortName": "Attacker"
+     },
+     "formation": {
+      "id": 12,
+      "name": "المهاجم الصريح",
+      "shortName": "Centre Forward"
+     },
+     "yardFormation": {
+      "line": 5,
+      "fieldLine": 99,
+      "fieldSide": 75
+     },
+     "ranking": 8.7,
+     "hasHighestRanking": false,
+     "hasStats": true,
+     "popularityRank": 0,
+     "competitorId": 50,
+     "gameId": 4742039,
+     "nationalId": 21,
+     "createdAt": "2019-09-29T18:27:08.027Z",
+     "id": 39229340,
+     "athleteId": 71258,
+     "name": "فرانشيسكو إيفانيلسون",
+     "shortName": "إيفانيلسون",
+     "jerseyNumber": 9,
+     "nameForURL": "evanilson",
+     "imageVersion": 49
+    },
+    {
+     "status": 0,
+     "position": {
+      "id": 2,
+      "name": "الدفاع",
+      "shortName": "Defender"
+     },
+     "formation": {
+      "id": 5,
+      "name": "قلب الدفاع",
+      "shortName": "Centre Back"
+     },
+     "yardFormation": {
+      "line": 2,
+      "fieldLine": 33,
+      "fieldSide": 33
+     },
+     "ranking": 7.8,
+     "hasHighestRanking": false,
+     "hasStats": true,
+     "popularityRank": 0,
+     "competitorId": 36,
+     "gameId": 4742034,
+     "nationalId": 57,
+     "createdAt": "2021-04-25T11:45:12.19Z",
+     "id": 58340010,
+     "athleteId": 91699,
+     "name": "طارق موهاريموفيتش",
+     "shortName": "موهاريموفيتش",
+     "jerseyNumber": 5,
+     "nameForURL": "tarik-muharemovic",
+     "imageVersion": 30
+    },
+    {
+     "status": 0,
+     "position": {
+      "id": 2,
+      "name": "الدفاع",
+      "shortName": "Defender"
+     },
+     "formation": {
+      "id": 5,
+      "name": "قلب الدفاع",
+      "shortName": "Centre Back"
+     },
+     "yardFormation": {
+      "line": 2,
+      "fieldLine": 33,
+      "fieldSide": 100
+     },
+     "ranking": 7.4,
+     "hasHighestRanking": false,
+     "hasStats": true,
+     "popularityRank": 0,
+     "competitorId": 105,
+     "gameId": 4742034,
+     "nationalId": 5,
+     "createdAt": "2022-04-20T16:15:38.7Z",
+     "id": 65521968,
+     "athleteId": 110736,
+     "name": "ليني يورو",
+     "shortName": "يورو",
+     "jerseyNumber": 15,
+     "nameForURL": "leny-yoro",
+     "imageVersion": 36
+    },
+    {
+     "status": 0,
+     "position": {
+      "id": 3,
+      "name": "الوسط",
+      "shortName": "Midfielder"
+     },
+     "formation": {
+      "id": 9,
+      "name": "لاعب الوسط المهاجم",
+      "shortName": "Attacking Midfield"
+     },
+     "yardFormation": {
+      "line": 4,
+      "fieldLine": 66,
+      "fieldSide": 66
+     },
+     "ranking": 8.3,
+     "hasHighestRanking": false,
+     "hasStats": true,
+     "popularityRank": 0,
+     "competitorId": 109,
+     "gameId": 4742050,
+     "nationalId": 15,
+     "createdAt": "2024-02-03T12:32:44.447Z",
+     "id": 71391398,
+     "athleteId": 179809,
+     "name": "يوهان مانزامبي",
+     "shortName": "مانزامبي",
+     "jerseyNumber": 44,
+     "nameForURL": "johan-manzambi",
+     "imageVersion": 33
+    },
+    {
+     "status": 0,
+     "position": {
+      "id": 3,
+      "name": "الوسط",
+      "shortName": "Midfielder"
+     },
+     "yardFormation": {
+      "line": 4,
+      "fieldLine": 66,
+      "fieldSide": 0
+     },
+     "ranking": 8.6,
+     "hasHighestRanking": false,
+     "hasStats": true,
+     "popularityRank": 65,
+     "competitorId": 120,
+     "gameId": 4742035,
+     "nationalId": 83,
+     "createdAt": "2014-12-09T18:49:12.493Z",
+     "id": 598010,
+     "athleteId": 12673,
+     "name": "أليكس إيوبي",
+     "shortName": "إيووبي",
+     "jerseyNumber": 17,
+     "nameForURL": "alex-iwobi",
+     "imageVersion": 82
+    },
+    {
+     "status": 0,
+     "position": {
+      "id": 2,
+      "name": "الدفاع",
+      "shortName": "Defender"
+     },
+     "formation": {
+      "id": 5,
+      "name": "قلب الدفاع",
+      "shortName": "Centre Back"
+     },
+     "yardFormation": {
+      "line": 2,
+      "fieldLine": 33,
+      "fieldSide": 0
+     },
+     "ranking": 8.1,
+     "hasHighestRanking": false,
+     "hasStats": true,
+     "popularityRank": 0,
+     "competitorId": 38,
+     "gameId": 4742037,
+     "nationalId": 5,
+     "createdAt": "2015-03-01T15:34:41.003Z",
+     "id": 624429,
+     "athleteId": 14588,
+     "name": "اوليفير بوسكجالي",
+     "shortName": "بوسكجالي",
+     "jerseyNumber": 21,
+     "nameForURL": "olivier-boscagli",
+     "imageVersion": 40
+    },
+    {
+     "status": 0,
+     "position": {
+      "id": 3,
+      "name": "الوسط",
+      "shortName": "Midfielder"
+     },
+     "formation": {
+      "id": 9,
+      "name": "لاعب الوسط المهاجم",
+      "shortName": "Attacking Midfield"
+     },
+     "yardFormation": {
+      "line": 4,
+      "fieldLine": 66,
+      "fieldSide": 33
+     },
+     "ranking": 8.4,
+     "hasHighestRanking": false,
+     "hasStats": true,
+     "popularityRank": 285,
+     "competitorId": 110,
+     "gameId": 4742043,
+     "nationalId": 1,
+     "createdAt": "2016-10-19T13:13:34.18Z",
+     "id": 3172759,
+     "athleteId": 46494,
+     "name": "فيل فودين",
+     "shortName": "فودين",
+     "jerseyNumber": 47,
+     "nameForURL": "phil-foden",
+     "imageVersion": 69
+    },
+    {
+     "status": 0,
+     "position": {
+      "id": 0,
+      "name": "الإدارة",
+      "shortName": "Management"
+     },
+     "formation": {
+      "id": 16,
+      "name": "المدرب",
+      "shortName": "Coach"
+     },
+     "yardFormation": {
+      "line": 5
+     },
+     "hasHighestRanking": false,
+     "hasStats": false,
+     "popularityRank": 3,
+     "competitorId": 106,
+     "gameId": 4742036,
+     "nationalId": 2,
+     "id": 78005,
+     "athleteId": 124,
+     "name": "تشابي الونسو",
+     "shortName": "ألونسو",
+     "jerseyNumber": -1,
+     "nameForURL": "xabi-alonso",
+     "imageVersion": 20
+    },
+    {
+     "status": 0,
+     "position": {
+      "id": 1,
+      "name": "حارس مرمى",
+      "shortName": "Goalkeeper"
+     },
+     "formation": {
+      "id": 1,
+      "name": "حارس مرمى",
+      "shortName": "Goalkeeper"
+     },
+     "yardFormation": {
+      "line": 1,
+      "fieldLine": 0,
+      "fieldSide": 50
+     },
+     "ranking": 7.6,
+     "hasHighestRanking": false,
+     "hasStats": true,
+     "popularityRank": 4,
+     "competitorId": 106,
+     "gameId": 4742036,
+     "nationalId": 10,
+     "id": 407632,
+     "athleteId": 6787,
+     "name": "إيميليانو مارتينيز",
+     "shortName": "مارتينيز",
+     "jerseyNumber": 1,
+     "nameForURL": "emiliano-martinez",
+     "imageVersion": 68
+    },
+    {
+     "status": 0,
+     "position": {
+      "id": 4,
+      "name": "الهجوم",
+      "shortName": "Attacker"
+     },
+     "formation": {
+      "id": 14,
+      "name": "مهاجم أيمن",
+      "shortName": "Right Forward"
+     },
+     "yardFormation": {
+      "line": 4,
+      "fieldLine": 66,
+      "fieldSide": 100
+     },
+     "ranking": 9.6,
+     "hasHighestRanking": true,
+     "hasStats": true,
+     "popularityRank": 0,
+     "competitorId": 106,
+     "gameId": 4742036,
+     "nationalId": 11,
+     "createdAt": "2016-02-12T01:30:52.813Z",
+     "id": 2558704,
+     "athleteId": 48680,
+     "name": "بيدرو نيتو",
+     "shortName": "نيتو",
+     "jerseyNumber": 7,
+     "nameForURL": "pedro-neto",
+     "imageVersion": 91
+    },
+    {
+     "status": 0,
+     "position": {
+      "id": 2,
+      "name": "الدفاع",
+      "shortName": "Defender"
+     },
+     "formation": {
+      "id": 5,
+      "name": "قلب الدفاع",
+      "shortName": "Centre Back"
+     },
+     "yardFormation": {
+      "line": 2,
+      "fieldLine": 33,
+      "fieldSide": 66
+     },
+     "ranking": 7.7,
+     "hasHighestRanking": false,
+     "hasStats": true,
+     "popularityRank": 1,
+     "competitorId": 38,
+     "gameId": 4742037,
+     "nationalId": 1,
+     "id": 236532,
+     "athleteId": 4074,
+     "name": "لويس دانك",
+     "shortName": "دانك",
+     "jerseyNumber": 5,
+     "nameForURL": "lewis-dunk",
+     "imageVersion": 89
+    }
+   ]
+  }
+ },
+ "teamOfTheWeekList": [
+  {
+   "name": "الجولة 7",
+   "key": "7_132_1_7_1"
+  },
+  {
+   "name": "الجولة 6",
+   "key": "7_132_1_6_3"
+  },
+  {
+   "name": "الجولة 5",
+   "key": "7_132_1_5_6"
+  },
+  {
+   "name": "الجولة 4",
+   "key": "7_132_1_4_5"
+  },
+  {
+   "name": "الجولة 3",
+   "key": "7_132_1_3_3"
+  },
+  {
+   "name": "الجولة 2",
+   "key": "7_132_1_2_1"
+  },
+  {
+   "name": "الجولة 1",
+   "key": "7_132_1_1_1"
+  }
+ ],
+ "competitors": [
+  {
+   "id": 110,
+   "name": "مانشستر سيتي",
+   "imageVersion": 3
+  },
+  {
+   "id": 50,
+   "name": "بورنموث",
+   "imageVersion": 7
+  },
+  {
+   "id": 36,
+   "name": "ليدز يونايتد",
+   "imageVersion": 6
+  },
+  {
+   "id": 105,
+   "name": "مانشستر يونايتد",
+   "imageVersion": 3
+  },
+  {
+   "id": 109,
+   "name": "أستون فيلا",
+   "imageVersion": 6
+  },
+  {
+   "id": 120,
+   "name": "فولهام",
+   "imageVersion": 4
+  },
+  {
+   "id": 38,
+   "name": "برايتون",
+   "imageVersion": 4
+  },
+  {
+   "id": 106,
+   "name": "تشيلسي",
+   "imageVersion": 4
+  }
+ ]
+}
