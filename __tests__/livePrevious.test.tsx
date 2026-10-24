@@ -13,10 +13,11 @@ const match: LiveMatch = {
 };
 const detail = { match, homeLineup: null, awayLineup: null, events: [], statGroups: [], facts: [], shots: [], topPerformers: [], venue: null, referee: null, tv: [] } as LiveDetail;
 
+const CLUB: Record<string, number> = { "نهضة بركان": 9974, "الجيش الملكي": 5455 };
 const past = (id: number, date: string, h: string, hs: number, as: number, a: string) => ({
   id, date, competition: "الدوري المغربي",
-  home: { name: h, score: hs, logo: null },
-  away: { name: a, score: as, logo: null },
+  home: { id: CLUB[h] ?? 0, name: h, score: hs, logo: null },
+  away: { id: CLUB[a] ?? 0, name: a, score: as, logo: null },
 });
 
 describe("LivePrevious", () => {

@@ -48,9 +48,9 @@ const H2HPoster = forwardRef<HTMLDivElement, Props>(function H2HPoster(
   // — the live match's own URLs point at the CDN and the export canvas cannot
   // read cross-origin pixels.
   const sides = shown.flatMap((m) => [m.home, m.away]);
-  const crestOf = (name: string) => sides.find((s) => s.name === name)?.logo ?? null;
-  const home = { ...match.home, logo: crestOf(match.home.name) };
-  const away = { ...match.away, logo: crestOf(match.away.name) };
+  const crestOf = (id: number) => sides.find((s) => s.id === id)?.logo ?? null;
+  const home = { ...match.home, logo: crestOf(match.home.id) };
+  const away = { ...match.away, logo: crestOf(match.away.id) };
   const T = L.teams;
   const R = L.record;
 
@@ -110,7 +110,7 @@ const H2HPoster = forwardRef<HTMLDivElement, Props>(function H2HPoster(
 
       {shown.map((m, i) => {
         const y = L.firstRowY + i * L.rowHeight;
-        const weHosted = m.home.name === match.home.name;
+        const weHosted = m.home.id === match.home.id;
         const ours = weHosted ? m.home : m.away;
         const theirs = weHosted ? m.away : m.home;
         const name: CSSProperties = {

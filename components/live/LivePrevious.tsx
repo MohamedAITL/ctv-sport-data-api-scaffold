@@ -12,9 +12,9 @@ const day = (iso: string) => {
 };
 
 // Win / draw / loss for the team whose form this is.
-const outcome = (m: PastMatch, team: string): "w" | "d" | "l" | null => {
+const outcome = (m: PastMatch, team: number): "w" | "d" | "l" | null => {
   if (m.home.score === null || m.away.score === null) return null;
-  const isHome = m.home.name === team;
+  const isHome = m.home.id === team;
   const [us, them] = isHome ? [m.home.score, m.away.score] : [m.away.score, m.home.score];
   return us > them ? "w" : us < them ? "l" : "d";
 };
@@ -33,8 +33,8 @@ function Crest({ src }: { src: string | null }) {
  * away. Where it was played is kept as a word next to the date rather than by
  * moving the teams around.
  */
-function Row({ m, team }: { m: PastMatch; team: string }) {
-  const weHosted = m.home.name === team;
+function Row({ m, team }: { m: PastMatch; team: number }) {
+  const weHosted = m.home.id === team;
   const ours = weHosted ? m.home : m.away;
   const theirs = weHosted ? m.away : m.home;
   const r = outcome(m, team);
@@ -128,7 +128,7 @@ export default function LivePrevious({ d }: { d: LiveDetail }) {
               </p>
             </div>
           )}
-            <ul>{data.h2h.map((m) => <Row key={m.id} m={m} team={home.name} />)}</ul>
+            <ul>{data.h2h.map((m) => <Row key={m.id} m={m} team={home.id} />)}</ul>
             <button type="button" className="kpv-export" onClick={() => setExporting(true)}>
               تصدير ملصق آخر 5 مواجهات
             </button>
@@ -139,13 +139,13 @@ export default function LivePrevious({ d }: { d: LiveDetail }) {
       {data.home.length > 0 && (
         <section>
           <h3>آخر مباريات {home.name}</h3>
-          <ul>{data.home.map((m) => <Row key={m.id} m={m} team={home.name} />)}</ul>
+          <ul>{data.home.map((m) => <Row key={m.id} m={m} team={home.id} />)}</ul>
         </section>
       )}
       {data.away.length > 0 && (
         <section>
           <h3>آخر مباريات {away.name}</h3>
-          <ul>{data.away.map((m) => <Row key={m.id} m={m} team={away.name} />)}</ul>
+          <ul>{data.away.map((m) => <Row key={m.id} m={m} team={away.id} />)}</ul>
         </section>
       )}
       {table.length > 0 && (

@@ -133,8 +133,9 @@ export interface PastMatch {
   /** Same competition across seasons and stages — the display name is not. */
   competitionId: number;
   competition: string;
-  home: { name: string; score: number | null; logo: string | null };
-  away: { name: string; score: number | null; logo: string | null };
+  /** `id` is the club: names can change between seasons, ids do not. */
+  home: { id: number; name: string; score: number | null; logo: string | null };
+  away: { id: number; name: string; score: number | null; logo: string | null };
 }
 
 /** The head-to-head record between the two sides, over the meetings found. */

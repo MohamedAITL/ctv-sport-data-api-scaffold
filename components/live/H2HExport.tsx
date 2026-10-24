@@ -41,7 +41,7 @@ export default function H2HExport({ match, onClose }: { match: LiveMatch; onClos
     const all = rows ?? [];
     if (!l.sameCompetitionOnly) return { meetings: all, rec: record };
     const meetings = all.filter((m) => m.competitionId === match.competitionId);
-    return { meetings, rec: h2hRecord(meetings, match.home.name) };
+    return { meetings, rec: h2hRecord(meetings, match.home.id) };
   };
 
   return (

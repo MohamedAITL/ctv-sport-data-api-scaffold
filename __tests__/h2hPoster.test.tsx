@@ -15,8 +15,8 @@ const match = {
 // Bayern — the match's home side — lost this meeting 1-3 away.
 const meeting: PastMatch = {
   id: 9, date: "2025-11-26T20:00:00Z", competitionId: 3, competition: "دوري أبطال اوروبا",
-  home: { name: "أرسنال", score: 3, logo: null },
-  away: { name: "بايرن ميونخ", score: 1, logo: null },
+  home: { id: 2, name: "أرسنال", score: 3, logo: null },
+  away: { id: 1, name: "بايرن ميونخ", score: 1, logo: null },
 };
 const record = { played: 1, homeWins: 0, draws: 0, awayWins: 1, homeGoals: 1, awayGoals: 3 };
 

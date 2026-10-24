@@ -25,7 +25,7 @@ async function inlineCrests(previous: PreviousMatches): Promise<PreviousMatches>
   ));
   const inlined = new Map<string, string | null>();
   await Promise.all(urls.map(async (u) => inlined.set(u, await toDataUrl(u))));
-  const swap = (side: { name: string; score: number | null; logo: string | null }) =>
+  const swap = (side: PreviousMatches["h2h"][number]["home"]) =>
     ({ ...side, logo: side.logo ? inlined.get(side.logo) ?? null : null });
   return {
     ...previous,

@@ -417,6 +417,7 @@ export function toShots(chart: RawChart | undefined, members: RawMember[]): Shot
 }
 
 const pastSide = (c?: RawCompetitor) => ({
+  id: c?.id ?? 0,
   name: c?.name ?? "",
   score: score(c?.score),
   logo: crest(c?.id, c?.imageVersion),
@@ -501,7 +502,10 @@ export async function fetchPreviousMatches(
   }, { played: 0, homeWins: 0, draws: 0, awayWins: 0, homeGoals: 0, awayGoals: 0 });
 
   return {
-    h2h: clean(meetings, () => true, 12),
+    // Every meeting, uncapped: the poster recounts the record over one
+    // competition's meetings, and a list cut at 12 undercounted it (Chelsea and
+    // Tottenham have 14; ten in the league, the poster saw nine).
+    h2h: clean(meetings, () => true, Infinity),
     record,
     home: clean(games(h), (g) => !isMeeting(g), limit),
     away: clean(games(a), (g) => !isMeeting(g), limit),
