@@ -54,6 +54,8 @@ export interface LineupPlayer {
 export interface TeamLineup {
   formation: string | null;
   hasFieldPositions: boolean;
+  /** Positions worked out from each player's role: the source has not placed them yet. */
+  estimated?: boolean;
   starting: LineupPlayer[];
   bench: LineupPlayer[];
   missing: LineupPlayer[];

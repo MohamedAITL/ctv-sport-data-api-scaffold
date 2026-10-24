@@ -41,6 +41,10 @@ export function liveEleven(lu: TeamLineup): { eleven: LineupPlayer[]; off: Map<n
 }
 
 type Pos = { x: number; y: number };
+
+// The list fallback reads keeper to attack, like a team sheet.
+const ROLES = ["حارس مرمى", "الدفاع", "الوسط", "الهجوم"];
+const LIST_ORDER = (p: LineupPlayer) => { const i = ROLES.indexOf(p.position ?? ""); return i < 0 ? ROLES.length : i; };
 type Moved = Record<string, Pos>;
 
 const key = (gameId: number) => `live.pitch.${gameId}`;
@@ -95,7 +99,8 @@ function Bench({
   const replaced = [...lineup.starting, ...lineup.bench].filter((p) => off.has(p.id));
   return (
     <div className="kp-bench">
-      <h4>{title}{lineup.formation ? ` · ${lineup.formation}` : ""}</h4>
+      {/* Isolated left-to-right: inside Arabic text "3-3-2-2" displayed as 2-2-3-3. */}
+      <h4>{title}{lineup.formation && <> · <bdi dir="ltr">{lineup.formation}</bdi></>}</h4>
       {lineup.bench.length > 0 && (
         <ul>
           {lineup.bench.map((p) =>
@@ -345,6 +350,9 @@ export default function LinePitch({ d }: { d: LiveDetail }) {
         )}
         <span className="kp-hint">اضغط على لاعب لعرض إحصائياته — اسحبه لتغيير مكانه، أو خارج الملعب لإرجاعه</span>
       </div>
+      {(h?.estimated || a?.estimated) && (
+        <p className="kp-est">المواقع تقريبية حسب مركز كل لاعب — ينشر المصدر المواقع الدقيقة عند انطلاق المباراة.</p>
+      )}
 
       {positioned ? (
         <div className="kp-pitch" ref={pitchRef}>
@@ -372,9 +380,9 @@ export default function LinePitch({ d }: { d: LiveDetail }) {
           {[h, a].map((lu, i) =>
             lu ? (
               <div key={i}>
-                <h4>{i === 0 ? d.match.home.name : d.match.away.name}{lu.formation ? ` · ${lu.formation}` : ""}</h4>
+                <h4>{i === 0 ? d.match.home.name : d.match.away.name}{lu.formation && <> · <bdi dir="ltr">{lu.formation}</bdi></>}</h4>
                 <ul>
-                  {lu.starting.map((p) => (
+                  {[...lu.starting].sort((x, y) => LIST_ORDER(x) - LIST_ORDER(y)).map((p) => (
                     <li key={p.id} className="kp-tapable" onClick={() => setOpen({ p, home: i === 0 })}>
                       <PlayerFace p={p} size={34} />
                       <span>{p.name}</span>

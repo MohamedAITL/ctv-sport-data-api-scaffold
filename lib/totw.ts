@@ -5,7 +5,7 @@
 // none for Botola, the Throne Cup or the CAF club competitions, and those
 // matches carry no player ratings either, so there the team is picked by hand
 // from everyone who started the round: `fetchRoundPool`.
-import { crest, FACE_IMG, fetchLiveDetail, get, Q } from "./live365";
+import { crest, FACE_IMG, fetchLiveDetail, get, Q, rowSides } from "./live365";
 import { fetch365Games, matchesInRound } from "./scores365Games";
 
 export interface TotwClub { id: number; name: string; logo: string | null }
@@ -135,11 +135,9 @@ export async function fetchRoundPool(competitionId: number, round: number): Prom
 // lineups are: one player centred, two at 25/75, three at 20/50/80, more even.
 export function formationSlots(formation: string): Array<{ line: number; side: number }> {
   const rows = formation.split("-").map(Number).filter((n) => Number.isInteger(n) && n > 0);
-  const sides = (n: number) =>
-    n === 1 ? [50] : n === 2 ? [25, 75] : n === 3 ? [20, 50, 80] : Array.from({ length: n }, (_, i) => Math.round((i / (n - 1)) * 100));
   return [
     { line: 0, side: 50 },
-    ...rows.flatMap((n, i) => sides(n).map((side) => ({ line: Math.round(((i + 1) / rows.length) * 99), side }))),
+    ...rows.flatMap((n, i) => rowSides(n).map((side) => ({ line: Math.round(((i + 1) / rows.length) * 99), side }))),
   ];
 }
 

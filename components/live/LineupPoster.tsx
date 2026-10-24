@@ -146,10 +146,8 @@ const LineupPoster = forwardRef<HTMLDivElement, Props>(function LineupPoster(
   // A team's bar: crest, name, and its formation and coach. The opponent's bar
   // under a single team is the same shape, prefixed "ضد" and without the meta.
   const bar = (team: LiveTeam, lu: TeamLineup | null, y: number, prefix = "") => {
-    const meta = lu ? [
-      T.formationShow ? lu.formation : null,
-      T.coachShow && lu.coach ? `المدرب: ${lu.coach.name}` : null,
-    ].filter(Boolean).join(" · ") : "";
+    const formation = lu && T.formationShow ? lu.formation : null;
+    const coachLine = lu && T.coachShow && lu.coach ? `المدرب: ${lu.coach.name}` : null;
     return (
       <>
         <Crest src={team.logo} size={T.crestSize} x={T.crestX} y={y} />
@@ -158,12 +156,17 @@ const LineupPoster = forwardRef<HTMLDivElement, Props>(function LineupPoster(
           maxWidth: 480, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
           fontSize: T.nameFontSize, fontWeight: 800, color: T.nameColor,
         }}>{prefix ? `${prefix} ${team.name}` : team.name}</div>
-        {meta && (
+        {(formation || coachLine) && (
           <div style={{
             position: "absolute", left: T.metaX, top: y, transform: "translateY(-50%)",
             maxWidth: 420, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
             fontSize: T.metaFontSize, fontWeight: 700, color: T.metaColor,
-          }}>{meta}</div>
+          }}>
+            {/* Isolated left-to-right: inside Arabic text "4-2-3-1" displayed as 1-3-2-4. */}
+            {formation && <bdi dir="ltr">{formation}</bdi>}
+            {formation && coachLine && " · "}
+            {coachLine}
+          </div>
         )}
       </>
     );

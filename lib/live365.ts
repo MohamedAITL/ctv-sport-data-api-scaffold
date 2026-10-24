@@ -163,7 +163,9 @@ interface RawPlayerStat { name?: string; value?: string; isTop?: boolean }
 interface RawLineupMember {
   id?: number;
   status?: number;
-  position?: { name?: string };
+  position?: { name?: string; shortName?: string };
+  /** The detailed role, e.g. "Left Back", "Attacking Midfield". */
+  formation?: { shortName?: string };
   yardFormation?: { fieldLine?: number; fieldSide?: number };
   /** The source's match rating, and this player's own stat line. */
   ranking?: number;
@@ -217,6 +219,42 @@ interface RawStats {
   actualGameStatistics?: RawActualStats;
 }
 
+/** How 365scores spaces n players across a row: 1 centred, 2 at 25/75, 3 at 20/50/80, more evenly. */
+export const rowSides = (n: number): number[] =>
+  n === 1 ? [50] : n === 2 ? [25, 75] : n === 3 ? [20, 50, 80] : Array.from({ length: n }, (_, i) => Math.round((i / (n - 1)) * 100));
+
+// 0 keeper, 1 defence, 2 holding midfield, 3 midfield, 4 attacking midfield, 5 attack.
+function roleRow(pos = "", role = ""): number {
+  if (pos === "Goalkeeper" || /Goalkeeper/.test(role)) return 0;
+  if (/Defensive Midfield/.test(role)) return 2;
+  if (/Attacking Midfield/.test(role)) return 4;
+  if (/Back|Defender|Sweeper/.test(role)) return 1;
+  if (/Forward|Striker|Wing/.test(role)) return 5;
+  if (/Midfield/.test(role)) return 3;
+  // No role, or one we do not recognise: the broad position still says the line.
+  return pos === "Defender" ? 1 : pos === "Attacker" ? 5 : 3;
+}
+
+/**
+ * Pitch spots from roles alone: rows from the role, flanks from Left/Right in
+ * it (side 0 is the team's own left), each row spaced like 365scores' own
+ * lineups, and the formation read off the rows ("4-2-3-1").
+ */
+export function estimatePositions(members: RawLineupMember[]) {
+  const rows = members.map((m) => roleRow(m.position?.shortName, m.formation?.shortName));
+  const flank = (m: RawLineupMember) => (/Left/.test(m.formation?.shortName ?? "") ? 0 : /Right/.test(m.formation?.shortName ?? "") ? 2 : 1);
+  const outfield = Array.from(new Set(rows.filter((r) => r > 0))).sort((a, b) => a - b);
+  const spots: Array<{ line: number; side: number }> = members.map(() => ({ line: 0, side: 50 }));
+  outfield.forEach((row, i) => {
+    const line = Math.round(((i + 1) / outfield.length) * 99);
+    const inRow = members.map((m, j) => ({ m, j })).filter(({ j }) => rows[j] === row);
+    inRow.sort((x, y) => flank(x.m) - flank(y.m) || x.j - y.j);
+    rowSides(inRow.length).forEach((side, k) => { spots[inRow[k].j] = { line, side }; });
+  });
+  const formation = outfield.map((r) => rows.filter((x) => x === r).length).join("-");
+  return { spots, formation };
+}
+
 function buildLineup(lu: RawLineups | undefined, members: RawMember[]): TeamLineup | null {
   if (!lu?.members?.length) return null; // league publishes no lineup
   const byId = new Map(members.map((m) => [m.id, m]));
@@ -242,10 +280,19 @@ function buildLineup(lu: RawLineups | undefined, members: RawMember[]): TeamLine
     };
   });
   const of = (r: LineupRole) => players.filter((p) => p.role === r);
+  const starting = of("starting");
+  // Freshly published lineups (Botola, before kickoff) name each starter's
+  // role but not where he stands: place them from the role until 365scores
+  // does, rather than falling back to a list.
+  const estimate = !lu.hasFieldPositions && starting.length >= 7
+    ? estimatePositions(starting.map((p) => lu.members!.find((m) => m.id === p.id) ?? {}))
+    : null;
+  if (estimate) starting.forEach((p, i) => Object.assign(p, estimate.spots[i]));
   return {
-    formation: lu.formation ?? null,
-    hasFieldPositions: Boolean(lu.hasFieldPositions),
-    starting: of("starting"),
+    formation: lu.formation || estimate?.formation || null,
+    hasFieldPositions: Boolean(lu.hasFieldPositions) || Boolean(estimate),
+    estimated: Boolean(estimate),
+    starting,
     bench: of("substitute"),
     missing: of("missing"),
     coach: of("coach")[0] ?? null,
