@@ -168,6 +168,8 @@ interface RawLineupMember {
   /** The source's match rating, and this player's own stat line. */
   ranking?: number;
   stats?: RawPlayerStat[];
+  /** On a substitute who has come on: who he replaced (`playerId`) and when. */
+  substitution?: { playerId?: number; time?: number };
 }
 interface RawLineups { formation?: string; hasFieldPositions?: boolean; members?: RawLineupMember[] }
 interface RawDetailCompetitor extends RawCompetitor { lineups?: RawLineups }
@@ -234,6 +236,9 @@ function buildLineup(lu: RawLineups | undefined, members: RawMember[]): TeamLine
       topStats: playerStats(lm.stats).filter((_, i) => (lm.stats ?? [])[i]?.isTop),
       line: lm.yardFormation?.fieldLine ?? null,
       side: lm.yardFormation?.fieldSide ?? null,
+      subbedIn: lm.substitution?.playerId
+        ? { replaces: lm.substitution.playerId, minute: Math.round(lm.substitution.time ?? 0) }
+        : null,
     };
   });
   const of = (r: LineupRole) => players.filter((p) => p.role === r);

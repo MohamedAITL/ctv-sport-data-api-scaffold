@@ -3,15 +3,42 @@ import PlayerCard from "./PlayerCard";
 import LineupExport from "./LineupExport";
 import type { LineupPlayer, LiveDetail, TeamLineup } from "@/types/live";
 
-// `line` is depth from a team's own goal (0-100) and `side` is lateral (0-100).
-// Home sits on the right, matching the right-to-left header and match list.
-const formationSpot = (p: LineupPlayer, home: boolean) => {
-  const depth = ((p.line ?? 50) / 100) * 46; // keep clear of the touchline
+// `line` is depth from a team's own goal (0-100) and `side` runs from the
+// team's own left (0) to its right (100). Home sits on the right, matching the
+// right-to-left header and match list, and attacks leftwards — so its left is
+// the bottom of the screen; away faces it with its left at the top.
+// Each half stops 6% short of halfway so the two front lines never collide,
+// and the flanks stay 10% in from the touchlines so faces and ratings fit.
+export const formationSpot = (p: Pick<LineupPlayer, "line" | "side">, home: boolean) => {
+  const depth = (Math.min(100, Math.max(0, p.line ?? 50)) / 100) * 39;
+  const side = 10 + Math.min(100, Math.max(0, p.side ?? 50)) * 0.8;
   return {
-    x: home ? 98 - depth : 2 + depth,
-    y: Math.min(94, Math.max(6, p.side ?? 50)),
+    x: home ? 95 - depth : 5 + depth,
+    y: home ? 100 - side : side,
   };
 };
+
+/**
+ * Who is on the pitch now. A substitute who came on takes the spot of the
+ * player he replaced (following chains: a sub can be replaced too); `off` is
+ * when each replaced player left.
+ */
+export function liveEleven(lu: TeamLineup): { eleven: LineupPlayer[]; off: Map<number, number> } {
+  const subFor = new Map(lu.bench.filter((b) => b.subbedIn).map((b) => [b.subbedIn!.replaces, b]));
+  const off = new Map<number, number>();
+  const eleven = lu.starting.map((s) => {
+    let cur = s;
+    const seen = new Set<number>();
+    while (subFor.has(cur.id) && !seen.has(cur.id)) {
+      seen.add(cur.id);
+      const next = subFor.get(cur.id)!;
+      off.set(cur.id, next.subbedIn!.minute);
+      cur = next;
+    }
+    return cur === s ? s : { ...cur, line: s.line, side: s.side };
+  });
+  return { eleven, off };
+}
 
 type Pos = { x: number; y: number };
 type Moved = Record<string, Pos>;
@@ -56,31 +83,55 @@ function PlayerFace({ p, size }: { p: LineupPlayer; size: number }) {
 }
 
 function Bench({
-  lineup, title, home, onBenchDown, placed, compact, onOpen,
+  lineup, title, home, onBenchDown, placed, compact, onOpen, off,
 }: {
   lineup: TeamLineup; title: string; home: boolean;
   onBenchDown: (p: LineupPlayer, home: boolean) => (e: React.PointerEvent) => void;
   placed: (p: LineupPlayer, home: boolean) => boolean;
   compact?: boolean;
   onOpen: (p: LineupPlayer, home: boolean) => void;
+  off: Map<number, number>;
 }) {
+  const replaced = [...lineup.starting, ...lineup.bench].filter((p) => off.has(p.id));
   return (
     <div className="kp-bench">
       <h4>{title}{lineup.formation ? ` · ${lineup.formation}` : ""}</h4>
       {lineup.bench.length > 0 && (
         <ul>
-          {lineup.bench.map((p) => (
-            <li
-              key={p.id}
-              className={`kp-draggable${placed(p, home) ? " on-pitch" : ""}`}
-              onPointerDown={onBenchDown(p, home)}
-            >
-              <PlayerFace p={p} size={34} />
-              <span>{p.shortName || p.name}</span>
-              {placed(p, home) && <em className="kp-onpitch">في الملعب</em>}
-            </li>
-          ))}
+          {lineup.bench.map((p) =>
+            p.subbedIn ? (
+              // Already on: he is on the pitch, so not something to drag on.
+              <li key={p.id} className="on-pitch kp-came-on" onClick={() => onOpen(p, home)}>
+                <PlayerFace p={p} size={34} />
+                <span>{p.shortName || p.name}</span>
+                <em className="kp-onpitch">دخل {p.subbedIn.minute}&apos;</em>
+              </li>
+            ) : (
+              <li
+                key={p.id}
+                className={`kp-draggable${placed(p, home) ? " on-pitch" : ""}`}
+                onPointerDown={onBenchDown(p, home)}
+              >
+                <PlayerFace p={p} size={34} />
+                <span>{p.shortName || p.name}</span>
+                {placed(p, home) && <em className="kp-onpitch">في الملعب</em>}
+              </li>
+            )
+          )}
         </ul>
+      )}
+      {replaced.length > 0 && (
+        <>
+          <h5>خرجوا</h5>
+          <ul className="kp-out">
+            {replaced.map((p) => (
+              <li key={p.id} onClick={() => onOpen(p, home)}>
+                <span>{p.shortName || p.name}</span>
+                <em className="kp-onpitch">خرج {off.get(p.id)}&apos;</em>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
       {!compact && lineup.missing.length > 0 && (
         <>
@@ -255,6 +306,8 @@ export default function LinePitch({ d }: { d: LiveDetail }) {
     );
   }
   const positioned = Boolean(h?.hasFieldPositions && a?.hasFieldPositions);
+  const liveH = h ? liveEleven(h) : { eleven: [], off: new Map<number, number>() };
+  const liveA = a ? liveEleven(a) : { eleven: [], off: new Map<number, number>() };
   const big = full || cssFull;
 
   const shirt = (p: LineupPlayer, home: boolean) => {
@@ -273,6 +326,7 @@ export default function LinePitch({ d }: { d: LiveDetail }) {
         <PlayerFace p={p} size={big ? 72 : 54} />
         {p.rating !== null && <b className={`kp-rate${p.rating >= 7.5 ? " good" : p.rating < 6 ? " poor" : ""}`}>{p.rating.toFixed(1)}</b>}
         <span className="kp-name">{p.shortName || p.name}</span>
+        {p.subbedIn && <i className="kp-in">↑ {p.subbedIn.minute}&apos;</i>}
       </div>
     );
   };
@@ -307,10 +361,11 @@ export default function LinePitch({ d }: { d: LiveDetail }) {
               <i className="kp-net" />
             </div>
           ))}
-          {h?.starting.map((p) => shirt(p, true))}
-          {a?.starting.map((p) => shirt(p, false))}
-          {h?.bench.filter((p) => isPlaced(p, true)).map((p) => shirt(p, true))}
-          {a?.bench.filter((p) => isPlaced(p, false)).map((p) => shirt(p, false))}
+          {liveH.eleven.map((p) => shirt(p, true))}
+          {liveA.eleven.map((p) => shirt(p, false))}
+          {/* Dragged on by hand — unless the match already brought him on. */}
+          {h?.bench.filter((p) => !p.subbedIn && isPlaced(p, true)).map((p) => shirt(p, true))}
+          {a?.bench.filter((p) => !p.subbedIn && isPlaced(p, false)).map((p) => shirt(p, false))}
         </div>
       ) : (
         <div className="kp-xi">
@@ -340,8 +395,8 @@ export default function LinePitch({ d }: { d: LiveDetail }) {
         onPointerUp={onBenchUp}
         onPointerCancel={onBenchUp}
       >
-        {h && <Bench lineup={h} title={d.match.home.name} home onBenchDown={onBenchDown} placed={isPlaced} compact={big} onOpen={(p, side) => setOpen({ p, home: side })} />}
-        {a && <Bench lineup={a} title={d.match.away.name} home={false} onBenchDown={onBenchDown} placed={isPlaced} compact={big} onOpen={(p, side) => setOpen({ p, home: side })} />}
+        {h && <Bench lineup={h} title={d.match.home.name} home onBenchDown={onBenchDown} placed={isPlaced} compact={big} onOpen={(p, side) => setOpen({ p, home: side })} off={liveH.off} />}
+        {a && <Bench lineup={a} title={d.match.away.name} home={false} onBenchDown={onBenchDown} placed={isPlaced} compact={big} onOpen={(p, side) => setOpen({ p, home: side })} off={liveA.off} />}
       </div>
 
       {open && (

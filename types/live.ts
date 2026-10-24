@@ -47,6 +47,8 @@ export interface LineupPlayer {
   /** Pitch coordinates, 0–100. `line` is depth from own goal, `side` lateral. */
   line: number | null;
   side: number | null;
+  /** A substitute who has come on: the member he replaced, and the minute. */
+  subbedIn?: { replaces: number; minute: number } | null;
 }
 
 export interface TeamLineup {
