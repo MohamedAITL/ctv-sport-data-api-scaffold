@@ -133,7 +133,7 @@ html, body {
 .field { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--muted); }
 .field.wide { grid-column: 1 / -1; }
 .field.check { justify-content: flex-start; gap: 6px; }
-.field input[type="number"], .field input[type="text"], .field input[type="date"] { width: 96px; background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 6px 8px; font-family: inherit; font-size: 13px; }
+.field input[type="number"], .field input[type="text"], .field input[type="date"], .field input[type="search"] { width: 96px; background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 6px 8px; font-family: inherit; font-size: 13px; }
 .field input:focus { outline: none; border-color: var(--accent); }
 .field.wide input[type="text"], .field.wide input[type="date"] { width: 100%; }
 .field input[type="color"] { width: 42px; height: 30px; padding: 0; border: 1px solid var(--border); border-radius: 7px; background: none; cursor: pointer; }
@@ -1114,11 +1114,15 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
 }
 
 /* Matchday: which matches go on the poster, grouped by competition. */
-.pick-group { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
-.pick-group > summary { display: flex; align-items: center; gap: 10px; cursor: pointer; min-height: 40px; list-style: none; }
+/* Hundreds of games: the list scrolls in its own box instead of stretching the page. */
+.pick-list { max-height: 60vh; overflow-y: auto; overscroll-behavior: contain; margin-top: 8px; border-top: 1px solid var(--border); }
+.pick-group { margin: 0; padding: 0; border-bottom: 1px solid var(--border); }
+.pick-group > summary { display: flex; align-items: center; gap: 10px; cursor: pointer; min-height: 36px; padding: 2px 0; list-style: none; }
+.pick-group[open] > summary { position: sticky; top: 0; background: var(--panel); z-index: 1; }
 .pick-group > summary::-webkit-details-marker { display: none; }
 .pick-group > summary input { width: 20px; height: 20px; flex: none; }
 .pick-match { margin-inline-start: 22px; }
+.field.wide input[type="search"] { flex: 1; width: auto; min-width: 0; }
 .pick-match span { font-size: 14px; }
 
 /* A game with a Morocco international abroad: a red edge and his face. */

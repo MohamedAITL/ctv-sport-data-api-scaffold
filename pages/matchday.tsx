@@ -209,6 +209,7 @@ export default function Matchday() {
                   <input type="search" dir="rtl" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="مثال: الوداد، ريال مدريد، دوري أبطال" />
                 </label>
                 <p className="muted">{candidates.length} مباراة في {byCompetition.length} مسابقة{query ? " (بعد البحث)" : ""}</p>
+                <div className="pick-list">
                 {byCompetition.map(([league, list]) => {
                   const on = list.filter((m) => chosen.has(m.id)).length;
                   return (
@@ -230,6 +231,7 @@ export default function Matchday() {
                     </details>
                   );
                 })}
+                </div>
               </details>
             )}
             <ExportControls posterRef={posterRef} canExport={matches.length > 0} blocked={exportBlock} onResetDesign={() => updateLayout(DEFAULT_MATCHDAY_LAYOUT)} fileBase={results ? "choufsport-results" : "choufsport-matchday"} fileDate={date} />
