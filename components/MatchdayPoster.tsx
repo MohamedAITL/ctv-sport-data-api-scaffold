@@ -81,17 +81,33 @@ const MatchdayPoster = forwardRef<HTMLDivElement, Props>(function MatchdayPoster
   const badgeOf = (id: string, fallback: string | null) => logoOverrides[id] || fallback;
   const groups = groupBy === "date" ? groupByDate(matches) : groupByLeague(matches);
 
-  // Auto-fit: however many matches are picked, everything scales together —
-  // spacing, and the crests and text inside each row — so the day still fits
-  // one 1080x1350 poster instead of running off its bottom.
-  const headerCount = L0.groupHeader.show ? groups.length : 0;
+  // Auto-fit: however many matches are picked, the day fits one 1080x1350
+  // poster. Spacing gives way first — the gap between competitions, then rows
+  // and headers down to the cards themselves — so crests and names keep their
+  // size; only a day too long even then scales everything down together.
+  const headers = L0.groupHeader.show ? groups.length : 0;
   const bottomMargin = 46;
-  const avail = L0.height - L0.firstRowCenterY + L0.rowHeight / 2 - bottomMargin;
-  // A header sits as close to the card above it as to its own first card, so
-  // each group after the first takes (rowHeight - header height) less.
-  const tighten = headerCount > 1 ? (headerCount - 1) * (L0.rowHeight - L0.groupHeader.height) : 0;
-  const needed = headerCount * L0.groupHeader.height + matches.length * L0.rowHeight + groups.length * L0.groupGap - tighten;
-  const fit = needed > avail && needed > 0 ? avail / needed : 1;
+  const avail = L0.height - bottomMargin - L0.firstRowCenterY;
+  // Space from the first element's centre to the bottom of the last row.
+  const need = (r: number, h: number, g: number) =>
+    headers * h + matches.length * r + Math.max(groups.length - 1, 0) * g - (headers ? h / 2 : r / 2);
+  const rowH0 = L0.rowHeight, headH0 = L0.groupHeader.height;
+  const minRow = Math.min(rowH0, (L0.rowBg.show ? L0.rowBg.height : L0.badgeSize) + 4);
+  const minHead = Math.min(headH0, Math.max(L0.groupHeader.fontSize * 1.35, L0.groupHeader.logoSize + 4));
+  let rowH = rowH0, headH = headH0, gap = L0.groupGap, fit = 1;
+  if (!L0.keepSizes && need(rowH0, headH0, gap) > avail) {
+    fit = avail / need(rowH0, headH0, gap);
+    rowH *= fit; headH *= fit; gap *= fit;
+  } else if (need(rowH0, headH0, gap) > avail) {
+    gap = groups.length > 1 ? Math.max(0, (avail - need(rowH0, headH0, 0)) / (groups.length - 1)) : 0;
+    const full = need(rowH0, headH0, 0), tight = need(minRow, minHead, 0);
+    if (full > avail) {
+      const t = full > tight ? Math.min(1, (full - avail) / (full - tight)) : 1;
+      rowH = rowH0 - t * (rowH0 - minRow);
+      headH = headH0 - t * (headH0 - minHead);
+      if (tight > avail) { fit = avail / tight; rowH = minRow * fit; headH = minHead * fit; }
+    }
+  }
   const L: MatchdayLayout = fit === 1 ? L0 : {
     ...L0,
     badgeSize: L0.badgeSize * fit,
@@ -99,10 +115,7 @@ const MatchdayPoster = forwardRef<HTMLDivElement, Props>(function MatchdayPoster
     centerFontSize: L0.centerFontSize * fit,
     groupHeader: { ...L0.groupHeader, fontSize: L0.groupHeader.fontSize * fit, logoSize: L0.groupHeader.logoSize * fit },
   };
-  const rowH = L.rowHeight * fit;
-  const headH = L.groupHeader.height * fit;
-  const gap = L.groupGap * fit;
-  const cardH = L.rowBg.height * fit;
+  const cardH = Math.min(L.rowBg.height * fit, rowH);
 
   // Centre of each card: kickoff time (Fixtures), or the score (Results).
   // Home sits on the right and away on the left, so the away score goes on the
@@ -130,16 +143,18 @@ const MatchdayPoster = forwardRef<HTMLDivElement, Props>(function MatchdayPoster
     );
   };
 
-  // Lay out headers + rows top-to-bottom with a running y cursor.
+  // Lay out headers + rows top-to-bottom; y is the top edge of the next slot.
+  // A header owns its own slot, so it sits midway between the competition
+  // above and its first row, never closer to one than the other.
   const nodes: React.ReactNode[] = [];
   const headerNodes: React.ReactNode[] = [];
-  let y = L.firstRowCenterY;
+  let y = L.firstRowCenterY - (headers ? headH / 2 : rowH / 2);
 
-  groups.forEach((g, gi) => {
+  groups.forEach((g) => {
     if (L.groupHeader.show) {
-      if (gi > 0) y -= rowH - headH;
+      const headY = y + headH / 2;
       headerNodes.push(
-        <div key={"h-" + g.key} style={{ position: "absolute", left: L.rowBg.insetX, width: L.width - 2 * L.rowBg.insetX, top: y + L.groupHeader.dy, transform: "translateY(-50%)", display: "flex", alignItems: "center", justifyContent: "center", gap: 12, direction: "rtl" }}>
+        <div key={"h-" + g.key} style={{ position: "absolute", left: L.rowBg.insetX, width: L.width - 2 * L.rowBg.insetX, top: headY + L.groupHeader.dy, transform: "translateY(-50%)", display: "flex", alignItems: "center", justifyContent: "center", gap: 12, direction: "rtl" }}>
           {g.logo && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={g.logo} alt="" width={L.groupHeader.logoSize} height={L.groupHeader.logoSize} style={{ width: L.groupHeader.logoSize, height: L.groupHeader.logoSize, objectFit: "contain" }} />
@@ -151,7 +166,7 @@ const MatchdayPoster = forwardRef<HTMLDivElement, Props>(function MatchdayPoster
     }
 
     for (const m of g.matches) {
-      const rowY = y;
+      const rowY = y + rowH / 2;
       const homeBadge = badgeOf(m.home.id, m.home.badge);
       const awayBadge = badgeOf(m.away.id, m.away.badge);
       nodes.push(

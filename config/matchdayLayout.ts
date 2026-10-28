@@ -13,6 +13,8 @@ export interface MatchdayLayout {
   rowHeight: number;
   groupHeader: { show: boolean; height: number; fontSize: number; color: string; logoSize: number; dy: number };
   groupGap: number;
+  /** Crowded day: squeeze spacing before shrinking crests and names (else all shrink together). */
+  keepSizes: boolean;
   rowBg: { show: boolean; color: string; opacity: number; radius: number; insetX: number; height: number };
   badgeSize: number;
   nameFontSize: number;
@@ -34,12 +36,13 @@ export const DEFAULT_MATCHDAY_LAYOUT: MatchdayLayout = {
   resultsTitle: { show: true, text: "نتائج مباريات اليوم", x: 540, y: 92, fontSize: 54, color: "#ffffff" },
   dateLabel: { show: true, text: "", x: 540, y: 150, fontSize: 28, color: "#f6c744" },
   firstRowCenterY: 205,
-  rowHeight: 78,
+  rowHeight: 84,
   groupHeader: { show: true, height: 62, fontSize: 32, color: "#f6c744", logoSize: 40, dy: 0 },
   groupGap: 8,
-  rowBg: { show: true, color: "#3b2a5e", opacity: 0.85, radius: 16, insetX: 40, height: 70 },
-  badgeSize: 50,
-  nameFontSize: 27,
+  keepSizes: true,
+  rowBg: { show: true, color: "#3b2a5e", opacity: 0.85, radius: 16, insetX: 40, height: 76 },
+  badgeSize: 60,
+  nameFontSize: 31,
   nameColor: "#ffffff",
   nameMaxWidth: 300,
   centerX: 540,

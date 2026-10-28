@@ -55,30 +55,35 @@ export default function MatchdayDesign({ layout, onChange }: Props) {
           <Color label="لون التاريخ" value={L.dateLabel.color} onChange={(v) => up((n) => (n.dateLabel.color = v))} />
         </div>
       )}
+      <h4>الأحجام والمسافات</h4>
+      <div className="grid">
+        <Toggle label="حافظ على حجم الشعارات والأسماء (عند كثرة المباريات تُضغط المسافات أولاً)" value={L.keepSizes} onChange={(v) => up((n) => (n.keepSizes = v))} />
+        <Num label="حجم شعار النادي" value={L.badgeSize} onChange={(v) => up((n) => (n.badgeSize = v))} />
+        <Num label="حجم اسم النادي" value={L.nameFontSize} onChange={(v) => up((n) => (n.nameFontSize = v))} />
+        <Num label="حجم التوقيت / النتيجة" value={L.centerFontSize} onChange={(v) => up((n) => (n.centerFontSize = v))} />
+        <Num label="المسافة بين المباريات (ارتفاع الصف)" value={L.rowHeight} step={0.5} onChange={(v) => up((n) => (n.rowHeight = v))} />
+        <Num label="المسافة بين المسابقات" value={L.groupGap} onChange={(v) => up((n) => (n.groupGap = v))} />
+        <Num label="مساحة عنوان المسابقة" value={L.groupHeader.height} onChange={(v) => up((n) => (n.groupHeader.height = v))} />
+        <Num label="ارتفاع البطاقة" value={L.rowBg.height} onChange={(v) => up((n) => (n.rowBg.height = v))} />
+      </div>
+
       <h4>عناوين المسابقات</h4>
       <div className="grid">
         <Toggle label="إظهار العناوين" value={L.groupHeader.show} onChange={(v) => up((n) => (n.groupHeader.show = v))} />
         <Num label="حجم العنوان" value={L.groupHeader.fontSize} onChange={(v) => up((n) => (n.groupHeader.fontSize = v))} />
         <Num label="شعار المسابقة" value={L.groupHeader.logoSize} onChange={(v) => up((n) => (n.groupHeader.logoSize = v))} />
         <Color label="لون العنوان" value={L.groupHeader.color} onChange={(v) => up((n) => (n.groupHeader.color = v))} />
-        <Num label="المسافة بين المجموعات" value={L.groupGap} onChange={(v) => up((n) => (n.groupGap = v))} />
         <Num label="موضع العناوين رأسياً" value={L.groupHeader.dy} onChange={(v) => up((n) => (n.groupHeader.dy = v))} />
-        <Num label="ارتفاع العنوان" value={L.groupHeader.height} onChange={(v) => up((n) => (n.groupHeader.height = v))} />
       </div>
 
       <h4>الصفوف</h4>
       <div className="grid">
         <Num label="موضع أول صف" value={L.firstRowCenterY} onChange={(v) => up((n) => (n.firstRowCenterY = v))} />
-        <Num label="ارتفاع الصف" value={L.rowHeight} step={0.5} onChange={(v) => up((n) => (n.rowHeight = v))} />
-        <Num label="حجم الشعار" value={L.badgeSize} onChange={(v) => up((n) => (n.badgeSize = v))} />
-        <Num label="حجم الاسم" value={L.nameFontSize} onChange={(v) => up((n) => (n.nameFontSize = v))} />
         <Num label="أقصى عرض للاسم" value={L.nameMaxWidth} onChange={(v) => up((n) => (n.nameMaxWidth = v))} />
-        <Num label="حجم الوسط" value={L.centerFontSize} onChange={(v) => up((n) => (n.centerFontSize = v))} />
         <Color label="لون الاسم" value={L.nameColor} onChange={(v) => up((n) => (n.nameColor = v))} />
         <Color label="لون الوسط" value={L.centerColor} onChange={(v) => up((n) => (n.centerColor = v))} />
         <Num label="شفافية البطاقة" value={L.rowBg.opacity} step={0.02} onChange={(v) => up((n) => (n.rowBg.opacity = v))} />
         <Color label="لون البطاقة" value={L.rowBg.color} onChange={(v) => up((n) => (n.rowBg.color = v))} />
-        <Num label="ارتفاع البطاقة" value={L.rowBg.height} onChange={(v) => up((n) => (n.rowBg.height = v))} />
         <Num label="الهامش الجانبي" value={L.rowBg.insetX} onChange={(v) => up((n) => (n.rowBg.insetX = v))} />
         <Num label="استدارة البطاقة" value={L.rowBg.radius} onChange={(v) => up((n) => (n.rowBg.radius = v))} />
       </div>

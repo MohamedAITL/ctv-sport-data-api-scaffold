@@ -82,3 +82,23 @@ describe("MatchdayPoster grouping", () => {
     expect(container.textContent).toContain("La Liga");
   });
 });
+
+describe("MatchdayPoster auto-fit", () => {
+  // 11 matches over 4 competitions overflow the default rows a little: the
+  // spacing can absorb it, so crests and names should keep their full size.
+  const crowded = Array.from({ length: 11 }, (_, i) => mk({ id: `m${i}`, leagueId: `L${i % 4}`, leagueName: `L${i % 4}` }));
+  const nameSize = (keepSizes: boolean) => {
+    const { getAllByText } = render(
+      <MatchdayPoster matches={crowded} layout={{ ...DEFAULT_MATCHDAY_LAYOUT, keepSizes }} templateSrc={null} nameOverrides={{}} logoOverrides={{}} />
+    );
+    return parseFloat(getAllByText("الأول")[0].style.fontSize);
+  };
+
+  it("keepSizes squeezes the spacing and leaves names full size", () => {
+    expect(nameSize(true)).toBe(DEFAULT_MATCHDAY_LAYOUT.nameFontSize);
+  });
+
+  it("without keepSizes everything shrinks together", () => {
+    expect(nameSize(false)).toBeLessThan(DEFAULT_MATCHDAY_LAYOUT.nameFontSize);
+  });
+});
