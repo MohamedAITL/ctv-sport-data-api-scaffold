@@ -74,19 +74,28 @@ const MatchdayPoster = forwardRef<HTMLDivElement, Props>(function MatchdayPoster
   { matches, layout, templateSrc, nameOverrides, logoOverrides, mode = "fixtures", groupBy = "league" },
   ref
 ) {
-  const L = layout;
+  const L0 = layout;
   const results = mode === "results";
-  const titleCfg = results ? L.resultsTitle : L.title;
+  const titleCfg = results ? L0.resultsTitle : L0.title;
   const arName = (id: string, fallback: string) => nameOverrides[id] || fallback;
   const badgeOf = (id: string, fallback: string | null) => logoOverrides[id] || fallback;
   const groups = groupBy === "date" ? groupByDate(matches) : groupByLeague(matches);
 
-  // Auto-fit: scale spacing so all groups + rows fit within the canvas height.
-  const headerCount = L.groupHeader.show ? groups.length : 0;
+  // Auto-fit: however many matches are picked, everything scales together —
+  // spacing, and the crests and text inside each row — so the day still fits
+  // one 1080x1350 poster instead of running off its bottom.
+  const headerCount = L0.groupHeader.show ? groups.length : 0;
   const bottomMargin = 46;
-  const avail = L.height - L.firstRowCenterY + L.rowHeight / 2 - bottomMargin;
-  const needed = headerCount * L.groupHeader.height + matches.length * L.rowHeight + groups.length * L.groupGap;
+  const avail = L0.height - L0.firstRowCenterY + L0.rowHeight / 2 - bottomMargin;
+  const needed = headerCount * L0.groupHeader.height + matches.length * L0.rowHeight + groups.length * L0.groupGap;
   const fit = needed > avail && needed > 0 ? avail / needed : 1;
+  const L: MatchdayLayout = fit === 1 ? L0 : {
+    ...L0,
+    badgeSize: L0.badgeSize * fit,
+    nameFontSize: L0.nameFontSize * fit,
+    centerFontSize: L0.centerFontSize * fit,
+    groupHeader: { ...L0.groupHeader, fontSize: L0.groupHeader.fontSize * fit, logoSize: L0.groupHeader.logoSize * fit },
+  };
   const rowH = L.rowHeight * fit;
   const headH = L.groupHeader.height * fit;
   const gap = L.groupGap * fit;

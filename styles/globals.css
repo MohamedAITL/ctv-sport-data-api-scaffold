@@ -1112,3 +1112,8 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
      width from the height instead. */
   .kp-pitch { width: calc(100% - 44px); margin-inline: auto; }
 }
+
+/* Matchday: which matches go on the poster, grouped by competition. */
+.pick-group { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); }
+.pick-match { margin-inline-start: 22px; }
+.pick-match span { font-size: 14px; }

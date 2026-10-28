@@ -12,6 +12,7 @@ import type { Match } from "@/types/fixtures";
 import { loadNameOverrides, saveNameOverrides, deepMerge } from "@/lib/persist";
 import { getLogoOverrides, setLogoOverride, clearLogoOverride, getTemplate, setTemplate, clearTemplate } from "@/lib/db";
 import { todayMA } from "@/lib/today";
+import { MOROCCAN_FAME } from "@/lib/scores365Games";
 import { useFitWidth } from "@/lib/useFitWidth";
 
 const PREVIEW_W = 480;
@@ -23,6 +24,10 @@ const saveLayout = (l: MatchdayLayout) => { try { localStorage.setItem(LKEY, JSO
 type Mode = "fixtures" | "results";
 const MODE_KEY = "botola.matchdayMode";
 const today = () => todayMA();
+// Picked by default: what the poster always showed — Moroccan football first,
+// then the biggest matches. Anything else is one tick away.
+const DEFAULT_PICK = 10;
+const picksKey = (d: string) => `botola.matchdayPicks.${d}`;
 
 interface FixturesState { date: string; matches: Match[]; moroccanCount?: number; fetchedAt?: string; stale: boolean; errors?: string[] }
 
@@ -31,6 +36,15 @@ export default function Matchday() {
   const posterRef = useRef<HTMLDivElement>(null);
   const [paneRef, previewW] = useFitWidth<HTMLElement>(PREVIEW_W);
   const [date, setDate] = useState(today());
+  // The matches ticked for the poster, per day; null means the default pick.
+  const [picks, setPicks] = useState<string[] | null>(null);
+  useEffect(() => {
+    try { const r = localStorage.getItem(picksKey(date)); setPicks(r ? JSON.parse(r) : null); } catch { setPicks(null); }
+  }, [date]);
+  const savePicks = (next: string[] | null) => {
+    setPicks(next);
+    try { if (next) localStorage.setItem(picksKey(date), JSON.stringify(next)); else localStorage.removeItem(picksKey(date)); } catch { /* private mode */ }
+  };
   const [layout, setLayout] = useState<MatchdayLayout>(DEFAULT_MATCHDAY_LAYOUT);
   const [nameOverrides, setNameOverrides] = useState<Record<string, string>>({});
   const [logoOverrides, setLogoOverrides] = useState<Record<string, string>>({});
@@ -69,9 +83,32 @@ export default function Matchday() {
   // is loading, the old matches must not sit under the new date label — that
   // would export a mislabelled poster.
   const dataForDate = data && data.date === date ? data : null;
-  const matches = dataForDate?.matches ?? [];
+  const candidates = useMemo(() => dataForDate?.matches ?? [], [dataForDate]);
+  const chosen = useMemo(
+    () => new Set(picks ?? candidates.slice(0, DEFAULT_PICK).map((m) => m.id)),
+    [picks, candidates]
+  );
+  const matches = candidates.filter((m) => chosen.has(m.id));
+  const byCompetition = useMemo(() => {
+    const g = new Map<string, Match[]>();
+    for (const m of candidates) g.set(m.leagueName, [...(g.get(m.leagueName) ?? []), m]);
+    return Array.from(g.entries());
+  }, [candidates]);
+  const pick = (ids: Set<string>) => savePicks(candidates.filter((m) => ids.has(m.id)).map((m) => m.id));
+  const toggle = (list: Match[], on: boolean) => {
+    const next = new Set(chosen);
+    for (const m of list) { if (on) next.add(m.id); else next.delete(m.id); }
+    pick(next);
+  };
+  const label = (side: Match["home"]) => nameOverrides[side.id] || side.nameAr || side.name;
   const loadingDate = loading || (data !== null && data.date !== date);
-  const effLayout = useMemo(() => ({ ...layout, dateLabel: { ...layout.dateLabel, text: layout.dateLabel.text || date } }), [layout, date]);
+  // The fixtures title is off by default for a template that prints its own;
+  // on the plain background nothing else names the poster, so it shows there.
+  const effLayout = useMemo(() => ({
+    ...layout,
+    title: templateSrc ? layout.title : { ...layout.title, show: true },
+    dateLabel: { ...layout.dateLabel, text: layout.dateLabel.text || date },
+  }), [layout, date, templateSrc]);
   const scale = previewW / layout.width;
   const finished = matches.filter((m) => m.isFinished).length;
   const live = matches.filter((m) => m.isLive).length;
@@ -106,7 +143,7 @@ export default function Matchday() {
                 <button role="tab" aria-selected={results} className={results ? "seg-btn on" : "seg-btn"} onClick={() => pickMode("results")}>النتائج</button>
               </div>
               <label className="field wide"><span>التاريخ</span><input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></label>
-              <div className="kv"><span>المباريات</span><b>{matches.length} / 10 (المغربية: {dataForDate?.moroccanCount ?? 0})</b></div>
+              <div className="kv"><span>على الملصق</span><b>{matches.length} من {candidates.length} (المغربية: {dataForDate?.moroccanCount ?? 0})</b></div>
               {results && matches.length > 0 && (
                 <div className="kv"><span>انتهت</span><b>{finished} من {matches.length}{live > 0 ? ` · ${live} مباشرة` : ""}</b></div>
               )}
@@ -119,6 +156,31 @@ export default function Matchday() {
               <button className="btn" disabled={loadingDate} onClick={() => fetchFixtures()}>{loadingDate ? "جاري التحديث…" : "تحديث"}</button>
             </div>
             <TemplateUploader isCustom={templateSrc !== null} onTemplate={onTemplate} defaultLabel="لا يوجد قالب بعد — تُستخدم خلفية بسيطة. ارفع قالب مباريات اليوم." resetLabel="حذف القالب" />
+            {candidates.length > 0 && (
+              <details className="card collapsible">
+                <summary><h3>اختيار المباريات ({matches.length})</h3><span className="chev" /></summary>
+                <p className="muted">الكرة المغربية أولاً ثم أهم المباريات. اختر ما يظهر على الملصق — يتسع الملصق لأي عدد ويصغّر الصفوف تلقائياً.</p>
+                <div className="row">
+                  <button type="button" className="btn ghost" onClick={() => savePicks(null)}>الافتراضي ({Math.min(DEFAULT_PICK, candidates.length)})</button>
+                  <button type="button" className="btn ghost" onClick={() => pick(new Set(candidates.filter((m) => m.fame > MOROCCAN_FAME).map((m) => m.id)))}>المغربية فقط</button>
+                  <button type="button" className="btn ghost" onClick={() => pick(new Set(candidates.map((m) => m.id)))}>الكل ({candidates.length})</button>
+                </div>
+                {byCompetition.map(([league, list]) => (
+                  <div key={league} className="pick-group">
+                    <label className="field check">
+                      <input type="checkbox" checked={list.every((m) => chosen.has(m.id))} onChange={(e) => toggle(list, e.target.checked)} />
+                      <span><b>{league}</b> ({list.filter((m) => chosen.has(m.id)).length}/{list.length})</span>
+                    </label>
+                    {list.map((m) => (
+                      <label key={m.id} className="field check pick-match">
+                        <input type="checkbox" checked={chosen.has(m.id)} onChange={(e) => toggle([m], e.target.checked)} />
+                        <span>{m.time} · {label(m.home)} - {label(m.away)}</span>
+                      </label>
+                    ))}
+                  </div>
+                ))}
+              </details>
+            )}
             <ExportControls posterRef={posterRef} canExport={matches.length > 0} blocked={exportBlock} onResetDesign={() => updateLayout(DEFAULT_MATCHDAY_LAYOUT)} fileBase={results ? "choufsport-results" : "choufsport-matchday"} fileDate={date} />
             <MatchdayTeams matches={matches} nameOverrides={nameOverrides} logoOverrides={logoOverrides} onName={onName} onLogo={onLogo} onClearLogo={onClearLogo} />
             <MatchdayDesign layout={layout} onChange={updateLayout} />
