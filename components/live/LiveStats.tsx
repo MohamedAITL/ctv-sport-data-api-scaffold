@@ -1,4 +1,5 @@
 import { useState } from "react";
+import MatchStatsExport from "./MatchStatsExport";
 import type { LiveDetail, Performer } from "@/types/live";
 
 // Before kickoff the source publishes no match statistics at all, only season
@@ -29,6 +30,7 @@ function PerformerCard({ p, side }: { p: Performer | null; side: "home" | "away"
 export default function LiveStats({ d }: { d: LiveDetail }) {
   const [group, setGroup] = useState(0);
   const [majorOnly, setMajorOnly] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   if (d.statGroups.length === 0) {
     if (d.topPerformers.length === 0) {
@@ -73,6 +75,8 @@ export default function LiveStats({ d }: { d: LiveDetail }) {
         <button type="button" className={majorOnly ? "ks-btn" : "ks-btn on"} onClick={() => setMajorOnly(false)}>كل الإحصائيات ({active.rows.length})</button>
         <button type="button" className={majorOnly ? "ks-btn on" : "ks-btn"} onClick={() => setMajorOnly(true)}>الأهم</button>
       </div>
+      <button type="button" className="kpv-export" onClick={() => setExporting(true)}>تصدير ملصق الإحصائيات</button>
+      {exporting && <MatchStatsExport match={d.match} onClose={() => setExporting(false)} />}
       {rows.map((s) => (
         <div key={s.id} className="ks-row">
           <div className="ks-head">

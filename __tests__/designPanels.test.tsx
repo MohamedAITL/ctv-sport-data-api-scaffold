@@ -4,12 +4,14 @@ import MatchdayDesign from "@/components/MatchdayDesign";
 import StatsDesign from "@/components/StatsDesign";
 import H2HDesign from "@/components/live/H2HDesign";
 import LineupDesign from "@/components/live/LineupDesign";
+import MatchStatsDesign from "@/components/live/MatchStatsDesign";
 import TotwDesign from "@/components/TotwDesign";
 import { DEFAULT_LAYOUT } from "@/config/defaultLayout";
 import { DEFAULT_MATCHDAY_LAYOUT } from "@/config/matchdayLayout";
 import { DEFAULT_STATS_LAYOUT, type StatsLayout } from "@/config/statsLayout";
 import { DEFAULT_H2H_LAYOUT } from "@/config/h2hLayout";
 import { DEFAULT_LINEUP_LAYOUT } from "@/config/lineupLayout";
+import { DEFAULT_MATCH_STATS_LAYOUT } from "@/config/matchStatsLayout";
 import { DEFAULT_TOTW_LAYOUT } from "@/config/totwLayout";
 
 // The canvas is fixed at 1080x1350; everything else on a poster is meant to be
@@ -46,6 +48,7 @@ const STATS = allShown(DEFAULT_STATS_LAYOUT);
 const H2H = allShown(DEFAULT_H2H_LAYOUT);
 const LINEUP = allShown(DEFAULT_LINEUP_LAYOUT);
 const TOTW = allShown(DEFAULT_TOTW_LAYOUT);
+const MSTATS = allShown(DEFAULT_MATCH_STATS_LAYOUT);
 
 const PANELS = [
   ["الترتيب", <DesignSettings key="s" layout={STANDINGS} onChange={() => {}} />, STANDINGS],
@@ -54,6 +57,7 @@ const PANELS = [
   ["المواجهات المباشرة", <H2HDesign key="h" layout={H2H} onChange={() => {}} />, H2H],
   ["التشكيلة", <LineupDesign key="l" layout={LINEUP} onChange={() => {}} />, LINEUP],
   ["تشكيلة الجولة", <TotwDesign key="w" layout={TOTW} onChange={() => {}} />, TOTW],
+  ["إحصائيات المباراة", <MatchStatsDesign key="x" layout={MSTATS} onChange={() => {}} />, MSTATS],
 ] as const;
 
 describe("poster design panels", () => {

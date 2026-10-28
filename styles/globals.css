@@ -1061,6 +1061,8 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
 .kxp-pick { margin-top: 0; }
 .kxp-pick .kxp-btn { min-width: 0; }
 .kxp-btn.on { border-color: var(--accent); background: var(--accent-soft, rgba(254,140,12,.14)); color: var(--accent); }
+.kxp-stats { display: grid; gap: 6px; margin-top: 12px; max-height: 320px; overflow-y: auto; overscroll-behavior: contain; }
+.kxp-stats .field { font-size: 15px; color: var(--text); }
 /* One row per starting slot; a slot holding a substitute is marked. */
 .kxs { display: grid; gap: 8px; margin-bottom: 12px; }
 .kxs select { min-height: 48px; font-size: 16px; }
