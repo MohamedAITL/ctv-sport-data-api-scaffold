@@ -74,8 +74,8 @@ export default function LiveStats({ d }: { d: LiveDetail }) {
       <div className="ks-toggle">
         <button type="button" className={majorOnly ? "ks-btn" : "ks-btn on"} onClick={() => setMajorOnly(false)}>كل الإحصائيات ({active.rows.length})</button>
         <button type="button" className={majorOnly ? "ks-btn on" : "ks-btn"} onClick={() => setMajorOnly(true)}>الأهم</button>
+        <button type="button" className="kpv-export ks-export" onClick={() => setExporting(true)}>تصدير ملصق الإحصائيات</button>
       </div>
-      <button type="button" className="kpv-export" onClick={() => setExporting(true)}>تصدير ملصق الإحصائيات</button>
       {exporting && <MatchStatsExport match={d.match} onClose={() => setExporting(false)} />}
       {rows.map((s) => (
         <div key={s.id} className="ks-row">

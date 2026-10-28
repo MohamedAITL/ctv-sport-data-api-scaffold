@@ -441,6 +441,9 @@ html, body {
 .ks-toggle { display: flex; gap: 8px; margin-bottom: 14px; }
 .ks-btn { min-height: 64px; padding: 0 22px; border-radius: 12px; border: 1.5px solid var(--border-2); background: var(--panel); color: var(--muted); font-size: 16px; font-weight: 800; cursor: pointer; }
 .ks-btn.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+/* An action, not a third filter: outlined, at the far end of the filter row. */
+.ks-toggle .ks-export { margin: 0; margin-inline-start: auto; background: transparent; color: var(--accent); }
+.ks-toggle { flex-wrap: wrap; }
 .ks-row { margin-bottom: 16px; }
 .ks-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 18px; margin-bottom: 7px; }
 .ks-head span { color: var(--muted); font-size: 16px; }
