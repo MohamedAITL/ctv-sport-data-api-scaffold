@@ -87,7 +87,10 @@ const MatchdayPoster = forwardRef<HTMLDivElement, Props>(function MatchdayPoster
   const headerCount = L0.groupHeader.show ? groups.length : 0;
   const bottomMargin = 46;
   const avail = L0.height - L0.firstRowCenterY + L0.rowHeight / 2 - bottomMargin;
-  const needed = headerCount * L0.groupHeader.height + matches.length * L0.rowHeight + groups.length * L0.groupGap;
+  // A header sits as close to the card above it as to its own first card, so
+  // each group after the first takes (rowHeight - header height) less.
+  const tighten = headerCount > 1 ? (headerCount - 1) * (L0.rowHeight - L0.groupHeader.height) : 0;
+  const needed = headerCount * L0.groupHeader.height + matches.length * L0.rowHeight + groups.length * L0.groupGap - tighten;
   const fit = needed > avail && needed > 0 ? avail / needed : 1;
   const L: MatchdayLayout = fit === 1 ? L0 : {
     ...L0,
@@ -132,8 +135,9 @@ const MatchdayPoster = forwardRef<HTMLDivElement, Props>(function MatchdayPoster
   const headerNodes: React.ReactNode[] = [];
   let y = L.firstRowCenterY;
 
-  for (const g of groups) {
+  groups.forEach((g, gi) => {
     if (L.groupHeader.show) {
+      if (gi > 0) y -= rowH - headH;
       headerNodes.push(
         <div key={"h-" + g.key} style={{ position: "absolute", left: L.rowBg.insetX, width: L.width - 2 * L.rowBg.insetX, top: y + L.groupHeader.dy, transform: "translateY(-50%)", display: "flex", alignItems: "center", justifyContent: "center", gap: 12, direction: "rtl" }}>
           {g.logo && (
@@ -181,7 +185,7 @@ const MatchdayPoster = forwardRef<HTMLDivElement, Props>(function MatchdayPoster
       y += rowH;
     }
     y += gap;
-  }
+  });
 
   return (
     <div

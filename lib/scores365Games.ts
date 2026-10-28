@@ -9,6 +9,7 @@
 // returns fewer games, which is a normal state, not an error.
 import type { Match, MatchSide } from "@/types/fixtures";
 import { BASE_WEIGHT, famousClub } from "@/config/famousClubs";
+import { STANDINGS_LEAGUES } from "@/config/standingsLeagues";
 
 const API = "https://webws.365scores.com/web/games";
 const Q = "appTypeId=5&langId=27&timezoneName=Africa%2FCasablanca&userCountryId=127";
@@ -42,7 +43,7 @@ interface S365Game {
 }
 interface S365GamesResp {
   games?: S365Game[];
-  competitions?: Array<{ id?: number; name?: string; imageVersion?: number; countryId?: number }>;
+  competitions?: Array<{ id?: number; name?: string; imageVersion?: number; countryId?: number; popularityRank?: number }>;
   paging?: { previousPage?: string; nextPage?: string };
 }
 
@@ -212,19 +213,28 @@ export function moroccanTier(g: S365Game, competitionCountry?: number): number {
 // The competitions the matchday poster has always drawn its big matches
 // from: Champions League, Europa League, and the five big leagues.
 const BIG_COMPETITIONS = new Set([572, 573, 7, 11, 17, 25, 35]);
-// Above any club-fame score (two clubs at most 10 each), so the poster — which
-// orders its competition groups by `fame` — always puts Moroccan football first.
+// Rank bands, each above anything below it can score (club fame is two clubs
+// at most 10 each), so the poster — which orders its competition groups by
+// `fame` — reads Moroccan football, the big competitions, the other
+// competitions the app follows, then the rest.
 export const MOROCCAN_FAME = 1000;
+export const BIG_FAME = 300;
+const FOLLOWED_FAME = 200;
+const FOLLOWED = new Set(STANDINGS_LEAGUES.map((l) => l.id));
 
 // How big a match is: the curated club weights, matched on the English slug
 // 365scores sends alongside the Arabic name.
 const clubFame = (c?: S365Competitor) => famousClub((c?.nameForURL ?? "").replace(/-/g, " "))?.w ?? BASE_WEIGHT;
 
 /**
- * The matchday: Moroccan football first — every match where the competition
- * or either side is Moroccan, ranked by `moroccanTier` — then the day's biggest
- * matches from the big competitions, by club fame, as the poster always had.
- * The rank is carried in `fame`, which the poster orders its groups by.
+ * Every football match of the day, ranked: Moroccan football first (by
+ * `moroccanTier`), then the big competitions, the other competitions the app
+ * follows, and everything else — by club fame inside each band, then by the
+ * competition's 365scores popularity. The rank is carried in `fame`, which the
+ * poster orders its groups by; the page picks which go on it.
+ *
+ * Crest and logo URLs are left as URLs: a day is ~400 games, and only the
+ * picked ones are inlined (see /api/fixtures `ids`).
  */
 export async function fetchMatchday(isoDate: string): Promise<Match[]> {
   const [y, m, d] = isoDate.split("-");
@@ -237,14 +247,14 @@ export async function fetchMatchday(isoDate: string): Promise<Match[]> {
   const comps = new Map((j.competitions ?? []).filter((c) => c.id).map((c) => [c.id as number, c]));
   return (j.games ?? [])
     .filter((g) => g.sportId === 1)
-    .flatMap((g) => {
+    .map((g) => {
       const c = comps.get(g.competitionId ?? 0);
       const tier = moroccanTier(g, c?.countryId);
-      const big = BIG_COMPETITIONS.has(g.competitionId ?? 0);
-      if (!tier && !big) return [];
+      const id = g.competitionId ?? 0;
+      const band = BIG_COMPETITIONS.has(id) ? BIG_FAME : FOLLOWED.has(id) ? FOLLOWED_FAME : 0;
       const logo = c?.id ? `${IMG}/v${c.imageVersion ?? 1}/Competitions/light/${c.id}` : null;
-      const fame = tier ? MOROCCAN_FAME + tier : clubFame(g.homeCompetitor) + clubFame(g.awayCompetitor);
-      return [{ ...toMatch(g, logo), fame }];
+      const fame = tier ? MOROCCAN_FAME + tier : band + clubFame(g.homeCompetitor) + clubFame(g.awayCompetitor);
+      return { ...toMatch(g, logo), fame, leaguePopularity: c?.popularityRank ?? 0 };
     })
-    .sort((a, b) => b.fame - a.fame || a.kickoffUtc.localeCompare(b.kickoffUtc));
+    .sort((a, b) => b.fame - a.fame || b.leaguePopularity - a.leaguePopularity || a.kickoffUtc.localeCompare(b.kickoffUtc));
 }

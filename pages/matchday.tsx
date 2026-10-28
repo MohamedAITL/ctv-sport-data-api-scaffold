@@ -12,7 +12,7 @@ import type { Match } from "@/types/fixtures";
 import { loadNameOverrides, saveNameOverrides, deepMerge } from "@/lib/persist";
 import { getLogoOverrides, setLogoOverride, clearLogoOverride, getTemplate, setTemplate, clearTemplate } from "@/lib/db";
 import { todayMA } from "@/lib/today";
-import { MOROCCAN_FAME } from "@/lib/scores365Games";
+import { BIG_FAME, MOROCCAN_FAME } from "@/lib/scores365Games";
 import { useFitWidth } from "@/lib/useFitWidth";
 
 const PREVIEW_W = 480;
@@ -88,12 +88,48 @@ export default function Matchday() {
     () => new Set(picks ?? candidates.slice(0, DEFAULT_PICK).map((m) => m.id)),
     [picks, candidates]
   );
-  const matches = candidates.filter((m) => chosen.has(m.id));
+  const picked = useMemo(() => candidates.filter((m) => chosen.has(m.id)), [candidates, chosen]);
+
+  // The day's list carries crests as URLs (~400 games); the picked matches are
+  // fetched again with them inlined. Until then a match is drawn without its
+  // crests — a remote image must never reach the export canvas.
+  const [inlined, setInlined] = useState<Map<string, Match>>(new Map());
+  useEffect(() => { setInlined(new Map()); }, [date]);
+  const missing = picked.filter((m) => !inlined.has(m.id)).map((m) => m.id);
+  const missingKey = missing.slice(0, 80).join(",");
+  // A failed request is tried again a few seconds later: otherwise the picked
+  // matches would wait for their crests, and the export stay blocked, forever.
+  const [retry, setRetry] = useState(0);
+  useEffect(() => {
+    if (!missingKey) return;
+    let live = true;
+    let again: ReturnType<typeof setTimeout> | undefined;
+    fetch(`/api/fixtures?date=${date}&ids=${missingKey}`)
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+      .then((j: { matches?: Match[] }) => {
+        if (!live || !j.matches) return;
+        setInlined((cur) => { const next = new Map(cur); for (const m of j.matches ?? []) next.set(m.id, m); return next; });
+      })
+      .catch(() => { if (live) again = setTimeout(() => setRetry((n) => n + 1), 4000); });
+    return () => { live = false; if (again) clearTimeout(again); };
+  }, [missingKey, date, retry]);
+  const bare = (m: Match): Match => ({ ...m, leagueLogo: null, home: { ...m.home, badge: null }, away: { ...m.away, badge: null } });
+  // Fresh score and status from the list, crests from the inlined copy.
+  const matches = picked.map((m) => {
+    const i = inlined.get(m.id);
+    return i ? { ...m, leagueLogo: i.leagueLogo, home: { ...m.home, badge: i.home.badge }, away: { ...m.away, badge: i.away.badge } } : bare(m);
+  });
+
+  const [query, setQuery] = useState("");
   const byCompetition = useMemo(() => {
+    const q = query.trim();
     const g = new Map<string, Match[]>();
-    for (const m of candidates) g.set(m.leagueName, [...(g.get(m.leagueName) ?? []), m]);
+    for (const m of candidates) {
+      if (q && ![m.leagueName, m.home.nameAr, m.away.nameAr, m.home.name, m.away.name].some((t) => t?.includes(q))) continue;
+      g.set(m.leagueName, [...(g.get(m.leagueName) ?? []), m]);
+    }
     return Array.from(g.entries());
-  }, [candidates]);
+  }, [candidates, query]);
   const pick = (ids: Set<string>) => savePicks(candidates.filter((m) => ids.has(m.id)).map((m) => m.id));
   const toggle = (list: Match[], on: boolean) => {
     const next = new Set(chosen);
@@ -114,7 +150,9 @@ export default function Matchday() {
   const live = matches.filter((m) => m.isLive).length;
   const results = mode === "results";
   // A results poster with nothing played yet would be all dimmed kickoff times.
-  const exportBlock = results && matches.length > 0 && finished + live === 0
+  const exportBlock = missing.length > 0
+    ? "جاري تجهيز شعارات المباريات المختارة…"
+    : results && matches.length > 0 && finished + live === 0
     ? "لم تنته أي مباراة بعد — تظهر النتائج بعد نهاية المباريات (اضغط تحديث)"
     : null;
 
@@ -159,26 +197,39 @@ export default function Matchday() {
             {candidates.length > 0 && (
               <details className="card collapsible">
                 <summary><h3>اختيار المباريات ({matches.length})</h3><span className="chev" /></summary>
-                <p className="muted">الكرة المغربية أولاً ثم أهم المباريات. اختر ما يظهر على الملصق — يتسع الملصق لأي عدد ويصغّر الصفوف تلقائياً.</p>
+                <p className="muted">كل مباريات اليوم من 365scores، الكرة المغربية أولاً. اختر ما يظهر على الملصق — يتسع الملصق لأي عدد ويصغّر الصفوف تلقائياً.</p>
                 <div className="row">
                   <button type="button" className="btn ghost" onClick={() => savePicks(null)}>الافتراضي ({Math.min(DEFAULT_PICK, candidates.length)})</button>
                   <button type="button" className="btn ghost" onClick={() => pick(new Set(candidates.filter((m) => m.fame > MOROCCAN_FAME).map((m) => m.id)))}>المغربية فقط</button>
-                  <button type="button" className="btn ghost" onClick={() => pick(new Set(candidates.map((m) => m.id)))}>الكل ({candidates.length})</button>
+                  <button type="button" className="btn ghost" onClick={() => pick(new Set(candidates.filter((m) => m.fame >= BIG_FAME).map((m) => m.id)))}>المغربية + الكبرى</button>
+                  <button type="button" className="btn ghost" onClick={() => pick(new Set())}>مسح</button>
                 </div>
-                {byCompetition.map(([league, list]) => (
-                  <div key={league} className="pick-group">
-                    <label className="field check">
-                      <input type="checkbox" checked={list.every((m) => chosen.has(m.id))} onChange={(e) => toggle(list, e.target.checked)} />
-                      <span><b>{league}</b> ({list.filter((m) => chosen.has(m.id)).length}/{list.length})</span>
-                    </label>
-                    {list.map((m) => (
-                      <label key={m.id} className="field check pick-match">
-                        <input type="checkbox" checked={chosen.has(m.id)} onChange={(e) => toggle([m], e.target.checked)} />
-                        <span>{m.time} · {label(m.home)} - {label(m.away)}</span>
-                      </label>
-                    ))}
-                  </div>
-                ))}
+                <label className="field wide">
+                  <span>بحث عن فريق أو مسابقة</span>
+                  <input type="search" dir="rtl" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="مثال: الوداد، ريال مدريد، دوري أبطال" />
+                </label>
+                <p className="muted">{candidates.length} مباراة في {byCompetition.length} مسابقة{query ? " (بعد البحث)" : ""}</p>
+                {byCompetition.map(([league, list]) => {
+                  const on = list.filter((m) => chosen.has(m.id)).length;
+                  return (
+                    // A long day folds away: open where something is picked, or while searching.
+                    <details key={league} className="pick-group" open={on > 0 || Boolean(query)}>
+                      <summary>
+                        <input
+                          type="checkbox" checked={on === list.length} aria-label={`اختيار كل مباريات ${league}`}
+                          onClick={(e) => e.stopPropagation()} onChange={(e) => toggle(list, e.target.checked)}
+                        />
+                        <b>{league}</b> <span className="muted">({on}/{list.length})</span>
+                      </summary>
+                      {list.map((m) => (
+                        <label key={m.id} className="field check pick-match">
+                          <input type="checkbox" checked={chosen.has(m.id)} onChange={(e) => toggle([m], e.target.checked)} />
+                          <span>{m.time} · {label(m.home)} - {label(m.away)}</span>
+                        </label>
+                      ))}
+                    </details>
+                  );
+                })}
               </details>
             )}
             <ExportControls posterRef={posterRef} canExport={matches.length > 0} blocked={exportBlock} onResetDesign={() => updateLayout(DEFAULT_MATCHDAY_LAYOUT)} fileBase={results ? "choufsport-results" : "choufsport-matchday"} fileDate={date} />
