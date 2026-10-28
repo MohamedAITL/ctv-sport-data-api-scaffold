@@ -1,96 +1,28 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { promises as fs } from "fs";
-import path from "path";
-import { goalFetch, hasApiKey } from "@/lib/goalApi";
-import { normalizeFixtures, selectMatchday } from "@/lib/fixtures";
-import { FEATURED_LEAGUES } from "@/config/featuredLeagues";
-import type { RawFixturesResponse, Match } from "@/types/fixtures";
-import seedNames from "@/data/botolaTeams.json";
+import { fetchMoroccanDay } from "@/lib/scores365Games";
+import { inlineMatchImages } from "@/lib/inlineImage";
 import { todayMA } from "@/lib/today";
 
-const CACHE = path.join(process.cwd(), "data", "matchday.json");
+// What fits on the matchday poster.
+const MAX_MATCHES = 10;
 
-function nameMap(): Record<string, string> {
-  const { _comment, ...rest } = seedNames as Record<string, string>;
-  void _comment;
-  return rest;
-}
-
-async function toDataUrl(url: string | null, cache: Map<string, string | null>): Promise<string | null> {
-  if (!url) return null;
-  if (cache.has(url)) return cache.get(url)!;
-  let out: string | null = null;
-  try {
-    const r = await fetch(url);
-    if (r.ok) {
-      const ct = r.headers.get("content-type") || "image/png";
-      out = `data:${ct};base64,${Buffer.from(await r.arrayBuffer()).toString("base64")}`;
-    }
-  } catch {
-    /* leave null -> fallback */
-  }
-  cache.set(url, out);
-  return out;
-}
-
-async function readCache(): Promise<{ date: string; matches: Match[]; fetchedAt: string } | null> {
-  try {
-    return JSON.parse(await fs.readFile(CACHE, "utf8"));
-  } catch {
-    return null;
-  }
-}
-
-// GET /api/fixtures?date=YYYY-MM-DD (defaults to today). Fetches each featured
-// league's fixtures for that date, selects <=10 (Botola first, then famous),
-// inlines logos as data URLs, caches. On total failure serves the cache (stale).
+// GET /api/fixtures?date=YYYY-MM-DD (defaults to today) — the matchday poster:
+// every match of the day involving Moroccan football (Moroccan competitions,
+// Moroccan clubs abroad, Morocco's national teams), from 365scores, ranked
+// national team → Botola → clubs abroad → Throne Cup → Botola 2 → the rest,
+// with crests and competition logos inlined for the export.
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (!hasApiKey())
-    return res.status(500).json({ error: "GOAL_API_KEY is not set in .env.local" });
-
-  // The date goes into the upstream URL next to the API key: only a real
-  // YYYY-MM-DD gets through, anything else means today.
   const raw = typeof req.query.date === "string" ? req.query.date : "";
   const date = /^\d{4}-\d{2}-\d{2}$/.test(raw) ? raw : todayMA();
-  const names = nameMap();
-
-  const results = await Promise.allSettled(
-    FEATURED_LEAGUES.map(async (lg) => {
-      const raw = await goalFetch<RawFixturesResponse>(`/leagues/${lg.id}/fixtures?from=${date}&to=${date}&limit=100`);
-      return normalizeFixtures(raw, lg.popularity, names).filter((m) => m.date === date);
-    })
-  );
-
-  const all: Match[] = [];
-  const errors: string[] = [];
-  results.forEach((r, i) => {
-    if (r.status === "fulfilled") all.push(...r.value);
-    else errors.push(`${FEATURED_LEAGUES[i].name}: ${(r.reason as Error).message}`);
-  });
-
-  // Every league failed (e.g. bad key / network) -> serve cache, flagged stale.
-  if (all.length === 0 && errors.length === FEATURED_LEAGUES.length) {
-    const cached = await readCache();
-    if (cached)
-      return res.status(200).json({ ...cached, stale: true, errors });
-    const status = errors.length ? 502 : 200;
-    return res.status(status).json({ date, matches: [], errors, stale: true });
-  }
-
-  const selected = selectMatchday(all);
-  const cache = new Map<string, string | null>();
-  for (const m of selected) {
-    m.leagueLogo = await toDataUrl(m.leagueLogo, cache);
-    m.home.badge = await toDataUrl(m.home.badge, cache);
-    m.away.badge = await toDataUrl(m.away.badge, cache);
-  }
-
-  const payload = { date, matches: selected, fetchedAt: new Date().toISOString() };
   try {
-    await fs.mkdir(path.dirname(CACHE), { recursive: true });
-    await fs.writeFile(CACHE, JSON.stringify(payload));
-  } catch {
-    /* non-fatal */
+    const all = await fetchMoroccanDay(date);
+    const matches = await inlineMatchImages(all.slice(0, MAX_MATCHES));
+    // A busy day can hold more Moroccan matches than the poster: say so.
+    const errors = all.length > MAX_MATCHES
+      ? [`${all.length - MAX_MATCHES} مباريات أخرى لم تتسع للملصق (الأقل أولوية)`]
+      : [];
+    return res.status(200).json({ date, matches, total: all.length, errors, fetchedAt: new Date().toISOString(), stale: false });
+  } catch (e) {
+    return res.status(502).json({ date, matches: [], error: (e as Error).message });
   }
-  return res.status(200).json({ ...payload, stale: false, errors, botolaCount: selected.filter((m) => m.leagueId === FEATURED_LEAGUES[0].id).length });
 }

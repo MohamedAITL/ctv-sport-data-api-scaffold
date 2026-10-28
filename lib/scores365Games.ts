@@ -21,9 +21,12 @@ interface S365Competitor {
   name?: string;
   score?: number;
   imageVersion?: number;
+  countryId?: number;
+  type?: number; // 1 club, 2 national team
 }
 interface S365Game {
   id?: number;
+  sportId?: number;
   competitionId?: number;
   competitionDisplayName?: string;
   seasonNum?: number;
@@ -37,7 +40,7 @@ interface S365Game {
 }
 interface S365GamesResp {
   games?: S365Game[];
-  competitions?: Array<{ id?: number; name?: string; imageVersion?: number }>;
+  competitions?: Array<{ id?: number; name?: string; imageVersion?: number; countryId?: number }>;
   paging?: { previousPage?: string; nextPage?: string };
 }
 
@@ -178,4 +181,55 @@ export function roundsOf(matches: Match[]): number[] {
 
 export function matchesInRound(matches: Match[], round: number): Match[] {
   return matches.filter((m) => roundOf(m) === round);
+}
+
+// ---- The Moroccan matchday ----------------------------------------------
+
+const MOROCCO = 127;
+const BOTOLA = 557;
+const BOTOLA_2 = 5651;
+const THRONE_CUP = 5420;
+
+/**
+ * How high a match ranks on the matchday poster, highest first: a Morocco
+ * national team (any age, men or women), Botola Pro, a Moroccan club abroad
+ * (CAF Champions League / Confederation Cup, …), the Throne Cup, Botola 2,
+ * then anything else Moroccan. 0 = not Moroccan at all.
+ */
+export function moroccanTier(g: S365Game, competitionCountry?: number): number {
+  const teams = [g.homeCompetitor, g.awayCompetitor];
+  if (teams.some((t) => t?.countryId === MOROCCO && t?.type === 2)) return 6;
+  if (g.competitionId === BOTOLA) return 5;
+  const moroccanClub = teams.some((t) => t?.countryId === MOROCCO);
+  if (moroccanClub && competitionCountry !== MOROCCO) return 4;
+  if (g.competitionId === THRONE_CUP) return 3;
+  if (g.competitionId === BOTOLA_2) return 2;
+  return moroccanClub || competitionCountry === MOROCCO ? 1 : 0;
+}
+
+/**
+ * Every football match of the day that involves Moroccan football — the
+ * competition or either side — ranked by `moroccanTier` (carried in `fame`, which the
+ * matchday poster orders its competition groups by), then kickoff.
+ */
+export async function fetchMoroccanDay(isoDate: string): Promise<Match[]> {
+  const [y, m, d] = isoDate.split("-");
+  const day = `${d}/${m}/${y}`;
+  const r = await fetch(`${API}/allScores/?${Q}&sports=1&startDate=${day}&endDate=${day}`, {
+    headers: { Accept: "application/json" },
+  });
+  if (!r.ok) throw new Error(`365scores allScores ${r.status}`);
+  const j = (await r.json()) as S365GamesResp;
+  const comps = new Map((j.competitions ?? []).filter((c) => c.id).map((c) => [c.id as number, c]));
+  return (j.games ?? [])
+    .filter((g) => g.sportId === 1)
+    .map((g) => {
+      const c = comps.get(g.competitionId ?? 0);
+      const tier = moroccanTier(g, c?.countryId);
+      const logo = c?.id ? `${IMG}/v${c.imageVersion ?? 1}/Competitions/light/${c.id}` : null;
+      return { tier, match: { ...toMatch(g, logo), fame: tier } };
+    })
+    .filter((x) => x.tier > 0)
+    .sort((a, b) => b.tier - a.tier || a.match.kickoffUtc.localeCompare(b.match.kickoffUtc))
+    .map((x) => x.match);
 }

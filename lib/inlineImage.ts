@@ -1,3 +1,5 @@
+import type { Match } from "@/types/fixtures";
+
 // Fetch a remote image server-side and inline it as a data URL, so html-to-image
 // can embed it in the client export without a tainted canvas / CORS error.
 //
@@ -57,4 +59,24 @@ export async function inlineImages<T>(
     const u = urlOf(it);
     return withUrl(it, u ? inlined.get(u) ?? null : null);
   });
+}
+
+// Badges and the competition logo are inlined as data URLs so html-to-image can
+// embed them in the export without tainting the canvas.
+export async function inlineMatchImages(matches: Match[]): Promise<Match[]> {
+  const logos = await inlineUrls(matches.flatMap((m) => [m.home.badge, m.away.badge, m.leagueLogo]));
+  // Some competitions have no "light" logo (the one drawn for dark posters) —
+  // Botola 2 among them — but do have the normal one: use that instead.
+  const missing = Array.from(logos.entries()).filter(([u, d]) => !d && u.includes("/Competitions/light/")).map(([u]) => u);
+  if (missing.length) {
+    const plain = await inlineUrls(missing.map((u) => u.replace("/Competitions/light/", "/Competitions/")));
+    for (const u of missing) logos.set(u, plain.get(u.replace("/Competitions/light/", "/Competitions/")) ?? null);
+  }
+  const pick = (u: string | null) => (u ? logos.get(u) ?? null : null);
+  return matches.map((m) => ({
+    ...m,
+    leagueLogo: pick(m.leagueLogo),
+    home: { ...m.home, badge: pick(m.home.badge) },
+    away: { ...m.away, badge: pick(m.away.badge) },
+  }));
 }

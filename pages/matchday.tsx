@@ -24,7 +24,7 @@ type Mode = "fixtures" | "results";
 const MODE_KEY = "botola.matchdayMode";
 const today = () => todayMA();
 
-interface FixturesState { date: string; matches: Match[]; fetchedAt?: string; stale: boolean; errors?: string[] }
+interface FixturesState { date: string; matches: Match[]; total?: number; fetchedAt?: string; stale: boolean; errors?: string[] }
 
 
 export default function Matchday() {
@@ -52,7 +52,7 @@ export default function Matchday() {
     // Thrown, not returned: an empty answer would replace the day on screen and
     // the cached copy. A partial answer (some leagues failed) is still data.
     if (!res.ok && !json.matches?.length) throw new Error(json.error || json.errors?.join(" · ") || "فشل الطلب");
-    return { date: json.date ?? date, matches: json.matches ?? [], fetchedAt: json.fetchedAt, stale: Boolean(json.stale), errors: json.errors };
+    return { date: json.date ?? date, matches: json.matches ?? [], total: json.total, fetchedAt: json.fetchedAt, stale: Boolean(json.stale), errors: json.errors };
   }, [date]);
 
   const { data, loading, busy, error: loadError, refresh: fetchFixtures } =
@@ -73,7 +73,6 @@ export default function Matchday() {
   const loadingDate = loading || (data !== null && data.date !== date);
   const effLayout = useMemo(() => ({ ...layout, dateLabel: { ...layout.dateLabel, text: layout.dateLabel.text || date } }), [layout, date]);
   const scale = previewW / layout.width;
-  const botolaCount = matches.filter((m) => m.leagueName === "Botola Pro").length;
   const finished = matches.filter((m) => m.isFinished).length;
   const live = matches.filter((m) => m.isLive).length;
   const results = mode === "results";
@@ -95,7 +94,7 @@ export default function Matchday() {
         </header>
         <div className="pagehead">
           <h1>{results ? "ملصق نتائج اليوم" : "ملصق مباريات اليوم"}</h1>
-          <span className="muted">البطولة الاحترافية أولاً ثم أهم المباريات · تصدير 1080×1350 PNG</span>
+          <span className="muted">الأندية المغربية في كل المسابقات والمنتخبات الوطنية · تصدير 1080×1350 PNG</span>
         </div>
 
         <div className="layout">
@@ -107,7 +106,8 @@ export default function Matchday() {
                 <button role="tab" aria-selected={results} className={results ? "seg-btn on" : "seg-btn"} onClick={() => pickMode("results")}>النتائج</button>
               </div>
               <label className="field wide"><span>التاريخ</span><input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></label>
-              <div className="kv"><span>المباريات</span><b>{matches.length} / 10 (البطولة: {botolaCount})</b></div>
+              <div className="kv"><span>المباريات المغربية</span><b>{matches.length}{(dataForDate?.total ?? 0) > matches.length ? ` من ${dataForDate?.total}` : ""}</b></div>
+              {dataForDate && !loadingDate && matches.length === 0 && <p className="muted">لا توجد مباريات لأندية مغربية أو للمنتخبات الوطنية في هذا اليوم.</p>}
               {results && matches.length > 0 && (
                 <div className="kv"><span>انتهت</span><b>{finished} من {matches.length}{live > 0 ? ` · ${live} مباشرة` : ""}</b></div>
               )}

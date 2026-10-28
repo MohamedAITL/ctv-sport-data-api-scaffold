@@ -58,8 +58,12 @@ export default function LivePage() {
     const cur = selectedRef.current;
     const next = cur ? list.find((m) => m.id === cur.id) ?? cur : list.find((m) => m.isLive) ?? list[0] ?? null;
     if (next) setSelected(next);
-    // An empty "مباشر" rail looks broken when the day's games have all finished.
-    if (!cur && list.length > 0 && !list.some((m) => m.isLive)) setFilter("done");
+    // An empty "مباشر" rail looks broken when nothing is live: show the results,
+    // or every game if none has finished yet. Only from "مباشر" — another day
+    // opens on "الكل", and overriding it hid tomorrow behind its 3 results.
+    if (!cur && list.length > 0 && !list.some((m) => m.isLive)) {
+      setFilter((f) => (f !== "live" ? f : list.some((m) => m.isFinished) ? "done" : "all"));
+    }
     return list;
   }, []);
 
