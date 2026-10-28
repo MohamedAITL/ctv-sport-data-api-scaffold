@@ -1,4 +1,5 @@
-import { moroccanTier } from "@/lib/scores365Games";
+import { MOROCCAN_FAME, moroccanTier } from "@/lib/scores365Games";
+import { FAMOUS_CLUBS } from "@/config/famousClubs";
 
 const club = (countryId: number) => ({ countryId, type: 1 });
 const national = (countryId: number) => ({ countryId, type: 2 });
@@ -19,4 +20,11 @@ it("ranks Moroccan football: national team, Botola, clubs abroad, Throne Cup, Bo
 it("leaves out matches with nothing Moroccan in them", () => {
   expect(moroccanTier(game(7, club(1), club(1)), 1)).toBe(0); // Premier League
   expect(moroccanTier(game(9999, national(150), national(30)), 0)).toBe(0); // another country's national team
+});
+
+// The poster orders its competition groups by `fame`: a Moroccan match must
+// outrank even Real Madrid v Barcelona, however the club weights are tuned.
+it("keeps every Moroccan match above the biggest European tie", () => {
+  const top = Math.max(...FAMOUS_CLUBS.map((c) => c.w));
+  expect(MOROCCAN_FAME + 1).toBeGreaterThan(top * 2);
 });

@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { fetchMoroccanDay } from "@/lib/scores365Games";
+import { fetchMatchday, MOROCCAN_FAME } from "@/lib/scores365Games";
 import { inlineMatchImages } from "@/lib/inlineImage";
 import { todayMA } from "@/lib/today";
 
@@ -7,21 +7,26 @@ import { todayMA } from "@/lib/today";
 const MAX_MATCHES = 10;
 
 // GET /api/fixtures?date=YYYY-MM-DD (defaults to today) — the matchday poster:
-// every match of the day involving Moroccan football (Moroccan competitions,
-// Moroccan clubs abroad, Morocco's national teams), from 365scores, ranked
-// national team → Botola → clubs abroad → Throne Cup → Botola 2 → the rest,
-// with crests and competition logos inlined for the export.
+// Moroccan football first (national teams → Botola → Moroccan clubs abroad →
+// Throne Cup → Botola 2 → the rest), then the day's biggest matches from the
+// big European competitions, from 365scores, with crests and competition
+// logos inlined for the export.
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const raw = typeof req.query.date === "string" ? req.query.date : "";
   const date = /^\d{4}-\d{2}-\d{2}$/.test(raw) ? raw : todayMA();
   try {
-    const all = await fetchMoroccanDay(date);
+    const all = await fetchMatchday(date);
     const matches = await inlineMatchImages(all.slice(0, MAX_MATCHES));
-    // A busy day can hold more Moroccan matches than the poster: say so.
-    const errors = all.length > MAX_MATCHES
-      ? [`${all.length - MAX_MATCHES} مباريات أخرى لم تتسع للملصق (الأقل أولوية)`]
+    const moroccan = all.filter((m) => m.fame > MOROCCAN_FAME).length;
+    // Big matches only fill what Moroccan football leaves; only Moroccan
+    // matches that did not fit are worth a warning.
+    const errors = moroccan > MAX_MATCHES
+      ? [`${moroccan - MAX_MATCHES} مباريات مغربية أخرى لم تتسع للملصق`]
       : [];
-    return res.status(200).json({ date, matches, total: all.length, errors, fetchedAt: new Date().toISOString(), stale: false });
+    return res.status(200).json({
+      date, matches, moroccanCount: Math.min(moroccan, MAX_MATCHES), errors,
+      fetchedAt: new Date().toISOString(), stale: false,
+    });
   } catch (e) {
     return res.status(502).json({ date, matches: [], error: (e as Error).message });
   }

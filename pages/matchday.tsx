@@ -24,7 +24,7 @@ type Mode = "fixtures" | "results";
 const MODE_KEY = "botola.matchdayMode";
 const today = () => todayMA();
 
-interface FixturesState { date: string; matches: Match[]; total?: number; fetchedAt?: string; stale: boolean; errors?: string[] }
+interface FixturesState { date: string; matches: Match[]; moroccanCount?: number; fetchedAt?: string; stale: boolean; errors?: string[] }
 
 
 export default function Matchday() {
@@ -52,7 +52,7 @@ export default function Matchday() {
     // Thrown, not returned: an empty answer would replace the day on screen and
     // the cached copy. A partial answer (some leagues failed) is still data.
     if (!res.ok && !json.matches?.length) throw new Error(json.error || json.errors?.join(" · ") || "فشل الطلب");
-    return { date: json.date ?? date, matches: json.matches ?? [], total: json.total, fetchedAt: json.fetchedAt, stale: Boolean(json.stale), errors: json.errors };
+    return { date: json.date ?? date, matches: json.matches ?? [], moroccanCount: json.moroccanCount, fetchedAt: json.fetchedAt, stale: Boolean(json.stale), errors: json.errors };
   }, [date]);
 
   const { data, loading, busy, error: loadError, refresh: fetchFixtures } =
@@ -94,7 +94,7 @@ export default function Matchday() {
         </header>
         <div className="pagehead">
           <h1>{results ? "ملصق نتائج اليوم" : "ملصق مباريات اليوم"}</h1>
-          <span className="muted">الأندية المغربية في كل المسابقات والمنتخبات الوطنية · تصدير 1080×1350 PNG</span>
+          <span className="muted">الكرة المغربية أولاً — الأندية في كل المسابقات والمنتخبات الوطنية — ثم أهم المباريات · تصدير 1080×1350 PNG</span>
         </div>
 
         <div className="layout">
@@ -106,8 +106,7 @@ export default function Matchday() {
                 <button role="tab" aria-selected={results} className={results ? "seg-btn on" : "seg-btn"} onClick={() => pickMode("results")}>النتائج</button>
               </div>
               <label className="field wide"><span>التاريخ</span><input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></label>
-              <div className="kv"><span>المباريات المغربية</span><b>{matches.length}{(dataForDate?.total ?? 0) > matches.length ? ` من ${dataForDate?.total}` : ""}</b></div>
-              {dataForDate && !loadingDate && matches.length === 0 && <p className="muted">لا توجد مباريات لأندية مغربية أو للمنتخبات الوطنية في هذا اليوم.</p>}
+              <div className="kv"><span>المباريات</span><b>{matches.length} / 10 (المغربية: {dataForDate?.moroccanCount ?? 0})</b></div>
               {results && matches.length > 0 && (
                 <div className="kv"><span>انتهت</span><b>{finished} من {matches.length}{live > 0 ? ` · ${live} مباشرة` : ""}</b></div>
               )}

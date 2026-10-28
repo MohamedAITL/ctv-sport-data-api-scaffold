@@ -8,6 +8,7 @@
 // outwards until the season runs out. A league with no published schedule still
 // returns fewer games, which is a normal state, not an error.
 import type { Match, MatchSide } from "@/types/fixtures";
+import { BASE_WEIGHT, famousClub } from "@/config/famousClubs";
 
 const API = "https://webws.365scores.com/web/games";
 const Q = "appTypeId=5&langId=27&timezoneName=Africa%2FCasablanca&userCountryId=127";
@@ -23,6 +24,7 @@ interface S365Competitor {
   imageVersion?: number;
   countryId?: number;
   type?: number; // 1 club, 2 national team
+  nameForURL?: string; // English slug, e.g. "manchester-city"
 }
 interface S365Game {
   id?: number;
@@ -207,12 +209,24 @@ export function moroccanTier(g: S365Game, competitionCountry?: number): number {
   return moroccanClub || competitionCountry === MOROCCO ? 1 : 0;
 }
 
+// The competitions the matchday poster has always drawn its big matches
+// from: Champions League, Europa League, and the five big leagues.
+const BIG_COMPETITIONS = new Set([572, 573, 7, 11, 17, 25, 35]);
+// Above any club-fame score (two clubs at most 10 each), so the poster — which
+// orders its competition groups by `fame` — always puts Moroccan football first.
+export const MOROCCAN_FAME = 1000;
+
+// How big a match is: the curated club weights, matched on the English slug
+// 365scores sends alongside the Arabic name.
+const clubFame = (c?: S365Competitor) => famousClub((c?.nameForURL ?? "").replace(/-/g, " "))?.w ?? BASE_WEIGHT;
+
 /**
- * Every football match of the day that involves Moroccan football — the
- * competition or either side — ranked by `moroccanTier` (carried in `fame`, which the
- * matchday poster orders its competition groups by), then kickoff.
+ * The matchday: Moroccan football first — every match where the competition
+ * or either side is Moroccan, ranked by `moroccanTier` — then the day's biggest
+ * matches from the big competitions, by club fame, as the poster always had.
+ * The rank is carried in `fame`, which the poster orders its groups by.
  */
-export async function fetchMoroccanDay(isoDate: string): Promise<Match[]> {
+export async function fetchMatchday(isoDate: string): Promise<Match[]> {
   const [y, m, d] = isoDate.split("-");
   const day = `${d}/${m}/${y}`;
   const r = await fetch(`${API}/allScores/?${Q}&sports=1&startDate=${day}&endDate=${day}`, {
@@ -223,13 +237,14 @@ export async function fetchMoroccanDay(isoDate: string): Promise<Match[]> {
   const comps = new Map((j.competitions ?? []).filter((c) => c.id).map((c) => [c.id as number, c]));
   return (j.games ?? [])
     .filter((g) => g.sportId === 1)
-    .map((g) => {
+    .flatMap((g) => {
       const c = comps.get(g.competitionId ?? 0);
       const tier = moroccanTier(g, c?.countryId);
+      const big = BIG_COMPETITIONS.has(g.competitionId ?? 0);
+      if (!tier && !big) return [];
       const logo = c?.id ? `${IMG}/v${c.imageVersion ?? 1}/Competitions/light/${c.id}` : null;
-      return { tier, match: { ...toMatch(g, logo), fame: tier } };
+      const fame = tier ? MOROCCAN_FAME + tier : clubFame(g.homeCompetitor) + clubFame(g.awayCompetitor);
+      return [{ ...toMatch(g, logo), fame }];
     })
-    .filter((x) => x.tier > 0)
-    .sort((a, b) => b.tier - a.tier || a.match.kickoffUtc.localeCompare(b.match.kickoffUtc))
-    .map((x) => x.match);
+    .sort((a, b) => b.fame - a.fame || a.kickoffUtc.localeCompare(b.kickoffUtc));
 }
