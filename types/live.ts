@@ -8,8 +8,13 @@ export interface LiveTeam {
   logo: string | null;
 }
 
+/** A Morocco international, shown on the games his club plays abroad. */
+export interface MoroccanPlayer { id: number; name: string; photo: string | null }
+
 export interface LiveMatch {
   id: number;
+  /** Morocco internationals in either squad, for a game outside Moroccan football. */
+  moroccans?: MoroccanPlayer[];
   /** `${homeId}-${awayId}-${competitionId}` — required to get lineups/events. */
   matchupId: string;
   competitionId: number;

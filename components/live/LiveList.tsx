@@ -1,8 +1,22 @@
 import { useEffect, useState } from "react";
-import type { LiveMatch, LiveTeam } from "@/types/live";
+import type { LiveMatch, LiveTeam, MoroccanPlayer } from "@/types/live";
 
 // Crests 404 when the payload carried no imageVersion; show nothing rather than
 // a broken-image icon on a wall display.
+// The Morocco internationals on a game abroad: up to three faces, and who.
+function Moroccans({ players }: { players: MoroccanPlayer[] }) {
+  const names = players.map((p) => p.name);
+  return (
+    <span className="kl-ma" title={names.join("، ")}>
+      {players.slice(0, 3).map((p) => (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img key={p.id} src={p.photo ?? ""} alt="" />
+      ))}
+      <em>{names.slice(0, 2).join(" · ")}{names.length > 2 ? ` +${names.length - 2}` : ""}</em>
+    </span>
+  );
+}
+
 function Crest({ team }: { team: LiveTeam }) {
   const [broken, setBroken] = useState(false);
   if (!team.logo || broken) return <span className="kl-crest" />;
@@ -94,7 +108,7 @@ export default function LiveList({ matches, selectedId, onSelect }: Props) {
             <button
               key={m.id}
               type="button"
-              className={m.id === selectedId ? "kl-row on" : "kl-row"}
+              className={`kl-row${m.id === selectedId ? " on" : ""}${m.moroccans ? " ma" : ""}`}
               onClick={() => onSelect(m)}
             >
               <div className="kl-row-top">
@@ -103,6 +117,7 @@ export default function LiveList({ matches, selectedId, onSelect }: Props) {
                 ) : (
                   <span className="kl-when">{m.isFinished ? "انتهت" : m.startTime.slice(11, 16)}</span>
                 )}
+                {m.moroccans && <Moroccans players={m.moroccans} />}
               </div>
               <div className="kl-team">
                 <Crest team={m.home} />

@@ -7,7 +7,7 @@
 //      Southern League and a Colombian second-division game). Every lineup field
 //      is therefore optional and the caller must cope with null.
 import type {
-  AthleteBio, AthleteSeason, FactBlock, FactRow, H2HRecord, LineupPlayer, PastMatch, PreviousMatches, Shot, LineupRole, LiveDetail, LiveEvent,
+  AthleteBio, AthleteSeason, FactBlock, FactRow, H2HRecord, LineupPlayer, MoroccanPlayer, PastMatch, PreviousMatches, Shot, LineupRole, LiveDetail, LiveEvent,
   LiveMatch, Performer, PerformerStat, StatGroup, StatRow, TeamLineup,
   TopPerformerRow,
 } from "@/types/live";
@@ -105,6 +105,30 @@ interface RawCompetitionMeta { id?: number; countryId?: number; popularityRank?:
  * Pass an ISO date for a past day — `date=`/`dates=` are silently ignored by
  * the source, only `startDate`/`endDate` work.
  */
+// Morocco's senior and U23 squads, the players worth following abroad. Called
+// up for the last window; refreshed every few hours, not on every poll.
+const MOROCCO_SQUADS = [5093, 56383];
+const SQUAD_TTL_MS = 6 * 60 * 60 * 1000;
+let squads: { at: number; byClub: Map<number, MoroccanPlayer[]> } | null = null;
+
+interface RawSquads { squads?: Array<{ athletes?: Array<{ id?: number; name?: string; shortName?: string; clubId?: number; imageVersion?: number }> }> }
+
+/** Club id → the Morocco internationals who play for it. */
+export async function moroccansByClub(): Promise<Map<number, MoroccanPlayer[]>> {
+  if (squads && Date.now() - squads.at < SQUAD_TTL_MS) return squads.byClub;
+  const d = await get<RawSquads>(`/squads/?${Q}&competitors=${MOROCCO_SQUADS.join(",")}`);
+  const byClub = new Map<number, MoroccanPlayer[]>();
+  const seen = new Set<number>(); // a player can be in both squads
+  for (const a of (d.squads ?? []).flatMap((s) => s.athletes ?? [])) {
+    if (!a.id || !a.clubId || seen.has(a.id)) continue;
+    seen.add(a.id);
+    const p = { id: a.id, name: a.shortName || a.name || "", photo: `${FACE_IMG}/v${a.imageVersion ?? 1}/Athletes/${a.id}` };
+    byClub.set(a.clubId, [...(byClub.get(a.clubId) ?? []), p]);
+  }
+  squads = { at: Date.now(), byClub };
+  return byClub;
+}
+
 export async function fetchLiveMatches(isoDate?: string): Promise<LiveMatch[]> {
   const day = isoDate ? `&startDate=${encodeURIComponent(toApiDate(isoDate))}&endDate=${encodeURIComponent(toApiDate(isoDate))}` : "";
   const d = await get<{ games?: RawGame[]; competitions?: RawCompetitionMeta[] }>(`/games/allScores/?${Q}&live=true${day}`);
@@ -136,11 +160,19 @@ export async function fetchLiveMatches(isoDate?: string): Promise<LiveMatch[]> {
   const rankOf = (id: number) => tiers.get(id) ?? [2, Number.MAX_SAFE_INTEGER];
   // …and inside a competition the Moroccan tie leads it.
   const moroccanGames = new Set((d.games ?? []).filter((g) => g.id && moroccan(g)).map((g) => g.id as number));
+  // A missing squad list must never cost the rail its games.
+  const internationals = await moroccansByClub().catch(() => new Map<number, MoroccanPlayer[]>());
+  const withMoroccans = (m: LiveMatch): LiveMatch => {
+    if (moroccanGames.has(m.id)) return m; // Moroccan football is highlighted as such
+    const here = [...(internationals.get(m.home.id) ?? []), ...(internationals.get(m.away.id) ?? [])];
+    return here.length ? { ...m, moroccans: here } : m;
+  };
 
   return (d.games ?? [])
     .filter((g) => g.sportId === FOOTBALL)
     .map(toMatch)
     .filter((m): m is LiveMatch => m !== null)
+    .map(withMoroccans)
     .sort((x, y) => {
       const [tx, fx] = rankOf(x.competitionId);
       const [ty, fy] = rankOf(y.competitionId);
@@ -148,6 +180,7 @@ export async function fetchLiveMatches(isoDate?: string): Promise<LiveMatch[]> {
         tx - ty || fx - fy ||
         x.competitionId - y.competitionId ||       // keep a competition contiguous
         Number(moroccanGames.has(y.id)) - Number(moroccanGames.has(x.id)) ||
+        Number(Boolean(y.moroccans)) - Number(Boolean(x.moroccans)) || // then a Moroccan abroad
         Number(y.isLive) - Number(x.isLive) ||     // then live, inside it
         x.startTime.localeCompare(y.startTime)
       );

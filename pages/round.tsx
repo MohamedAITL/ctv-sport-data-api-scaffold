@@ -77,7 +77,11 @@ export default function RoundPage() {
   );
 
   const finished = matches.filter((m) => m.isFinished).length;
-  const results = matches.length > 0 && finished === matches.length;
+  // Results by default once the whole round is played; either way by hand —
+  // a round half played can be posted as results so far.
+  const [chosenMode, setChosenMode] = useState<"fixtures" | "results" | null>(null);
+  useEffect(() => { setChosenMode(null); }, [league, round]);
+  const results = chosenMode ? chosenMode === "results" : matches.length > 0 && finished === matches.length;
 
   const pickLeague = (id: number) => {
     if (id === league) return;
@@ -118,9 +122,11 @@ export default function RoundPage() {
   // a normal state, so say so plainly instead of exporting an empty poster.
   const empty = !loading && forLeague !== null && rounds.length === 0;
   const exportBlock = empty
-    ? "جدول هذه البطولة غير منشور بعد — no schedule published for this league yet"
+    ? "جدول هذه البطولة غير منشور بعد"
     : matches.length === 0
     ? "لا توجد مباريات في هذه الجولة بعد"
+    : results && finished === 0
+    ? "لم تنته أي مباراة في هذه الجولة بعد"
     : null;
 
   return (
@@ -143,6 +149,10 @@ export default function RoundPage() {
           <section className="controls">
             <div className="card">
               <h3>الجولة</h3>
+              <div className="seg" role="tablist" aria-label="نوع الملصق">
+                <button role="tab" aria-selected={!results} className={!results ? "seg-btn on" : "seg-btn"} onClick={() => setChosenMode("fixtures")}>المباريات</button>
+                <button role="tab" aria-selected={results} className={results ? "seg-btn on" : "seg-btn"} onClick={() => setChosenMode("results")}>النتائج ({finished}/{matches.length})</button>
+              </div>
               <label className="field wide">
                 <span>البطولة</span>
                 <select value={league} onChange={(e) => pickLeague(Number(e.target.value))} disabled={loading}>

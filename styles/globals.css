@@ -1117,3 +1117,10 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
 .pick-group { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); }
 .pick-match { margin-inline-start: 22px; }
 .pick-match span { font-size: 14px; }
+
+/* A game with a Morocco international abroad: a red edge and his face. */
+.kl-row.ma { border-inline-start: 4px solid #c1272d; background: linear-gradient(90deg, transparent, rgba(193, 39, 45, .10)); }
+.kl-ma { display: inline-flex; align-items: center; gap: 6px; margin-inline-start: auto; min-width: 0; }
+.kl-ma img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; background: var(--panel-3); border: 2px solid #c1272d; flex: none; }
+.kl-ma img + img { margin-inline-start: -12px; }
+.kl-ma em { font-style: normal; font-size: 13px; font-weight: 800; color: #f3c6c7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
