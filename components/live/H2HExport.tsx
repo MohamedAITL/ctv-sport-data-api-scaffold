@@ -7,6 +7,19 @@ import { h2hRecord } from "@/lib/h2hRecord";
 import type { H2HRecord, LiveMatch, PastMatch } from "@/types/live";
 
 /**
+ * The meetings on the poster and the record above them — the same meetings:
+ * the last `rows` of them, newest first, never the whole history. The poster
+ * is about this tie in this competition (a Champions League night is not told
+ * by two friendlies); by id, not name — the same competition reads
+ * "… - ربع النهائي" once the knockout starts.
+ */
+export function posterMeetings(all: PastMatch[], match: LiveMatch, l: H2HLayout): { meetings: PastMatch[]; rec: H2HRecord } {
+  const pool = l.sameCompetitionOnly ? all.filter((m) => m.competitionId === match.competitionId) : all;
+  const meetings = pool.slice(0, l.rows);
+  return { meetings, rec: h2hRecord(meetings, match.home.id) };
+}
+
+/**
  * Exports the head-to-head as a 1080x1350 poster.
  *
  * The crests have to be data URLs — html-to-image cannot read cross-origin
@@ -15,7 +28,6 @@ import type { H2HRecord, LiveMatch, PastMatch } from "@/types/live";
  */
 export default function H2HExport({ match, onClose }: { match: LiveMatch; onClose: () => void }) {
   const [rows, setRows] = useState<PastMatch[] | null>(null);
-  const [record, setRecord] = useState<H2HRecord | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -28,21 +40,12 @@ export default function H2HExport({ match, onClose }: { match: LiveMatch; onClos
         if (!live) return;
         if (!j.previous?.h2h?.length) { setError("لا توجد مواجهات سابقة لتصديرها."); return; }
         setRows(j.previous.h2h);
-        setRecord(j.previous.record);
       })
       .catch(() => { if (live) setError("تعذر تجهيز الملصق."); });
     return () => { live = false; };
   }, [match.id, match.matchupId, match.home.id, match.away.id, match.competitionId]);
 
-  // The poster is about this tie in this competition: a Champions League night
-  // is not told by two friendlies. The id, not the name — the same competition
-  // reads "… - ربع النهائي" once the knockout starts.
-  const pick = (l: H2HLayout) => {
-    const all = rows ?? [];
-    if (!l.sameCompetitionOnly) return { meetings: all, rec: record };
-    const meetings = all.filter((m) => m.competitionId === match.competitionId);
-    return { meetings, rec: h2hRecord(meetings, match.home.id) };
-  };
+  const pick = (l: H2HLayout) => posterMeetings(rows ?? [], match, l);
 
   return (
     <PosterExport<H2HLayout>
@@ -51,12 +54,12 @@ export default function H2HExport({ match, onClose }: { match: LiveMatch; onClos
       templateKey="h2h"
       defaults={DEFAULT_H2H_LAYOUT}
       fileBase={`choufsport-h2h-${match.home.id}-${match.away.id}`}
-      ready={Boolean(rows && record)}
+      ready={Boolean(rows)}
       error={error}
       onClose={onClose}
       poster={(ref, l, tpl) => {
         const { meetings, rec } = pick(l);
-        return rec && <H2HPoster ref={ref} match={match} meetings={meetings} record={rec} layout={l} templateSrc={tpl} />;
+        return <H2HPoster ref={ref} match={match} meetings={meetings} record={rec} layout={l} templateSrc={tpl} />;
       }}
       design={(l, set) => <H2HDesign layout={l} onChange={set} />}
       note={(l) => pick(l).meetings.length === 0 && (
