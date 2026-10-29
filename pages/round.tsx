@@ -8,15 +8,17 @@ import MatchdayTeams from "@/components/MatchdayTeams";
 import TemplateUploader from "@/components/TemplateUploader";
 import ExportControls from "@/components/ExportControls";
 import { DEFAULT_MATCHDAY_LAYOUT, type MatchdayLayout } from "@/config/matchdayLayout";
-import { ROUND_LEAGUES, BOTOLA_LEAGUE, leagueById } from "@/config/standingsLeagues";
-import { UNSCHEDULED_ROUND } from "@/lib/scores365Games";
+import { BOTOLA_LEAGUE, isStandingsLeague, leagueById, leaguesByGroup } from "@/config/standingsLeagues";
+import { roundKey, UNSCHEDULED_ROUND, type RoundInfo } from "@/lib/scores365Games";
 import type { Match } from "@/types/fixtures";
 import { loadNameOverrides, saveNameOverrides, deepMerge } from "@/lib/persist";
 import { getLogoOverrides, setLogoOverride, clearLogoOverride, getTemplate, setTemplate, clearTemplate } from "@/lib/db";
 import { useFitWidth } from "@/lib/useFitWidth";
-import { useLang, type T } from "@/lib/prefs";
+import { useLang } from "@/lib/prefs";
 
 const PREVIEW_W = 480;
+// A cup round can hold dozens of games; a poster holds about this many readably.
+const DEFAULT_PICK = 20; // a full UCL league-phase round (18) fits
 const LKEY = "botola.roundLayout";
 const LEAGUE_KEY = "botola.roundLeague";
 const loadLayout = (): MatchdayLayout => {
@@ -24,9 +26,11 @@ const loadLayout = (): MatchdayLayout => {
 };
 const saveLayout = (l: MatchdayLayout) => { try { localStorage.setItem(LKEY, JSON.stringify(l)); } catch { /* ignore */ } };
 
-const roundLabel = (r: number, t: T) => (r === UNSCHEDULED_ROUND ? t("مباريات قادمة", "Upcoming matches") : t(`الجولة ${r}`, `Round ${r}`));
-
-interface RoundState { competition: number; matches: Match[]; rounds: number[]; fetchedAt?: string; error?: string }
+// Rounds come labelled from the server, in Arabic like all the data (and the poster).
+// A game whose crests are not inlined yet must not reach the export with remote
+// URLs: html-to-image cannot read cross-origin pixels.
+const bare = (m: Match): Match => ({ ...m, leagueLogo: null, home: { ...m.home, badge: null }, away: { ...m.away, badge: null } });
+interface RoundState { competition: number; matches: Match[]; rounds: RoundInfo[]; fetchedAt?: string; error?: string }
 
 
 export default function RoundPage() {
@@ -42,7 +46,7 @@ export default function RoundPage() {
 
   useEffect(() => {
     let initial = BOTOLA_LEAGUE;
-    try { const s = localStorage.getItem(LEAGUE_KEY); if (s && ROUND_LEAGUES.includes(Number(s))) initial = Number(s); } catch { /* ignore */ }
+    try { const s = localStorage.getItem(LEAGUE_KEY); if (s && isStandingsLeague(Number(s))) initial = Number(s); } catch { /* ignore */ }
     setLeague(initial);
     setLayout(loadLayout());
     setNameOverrides(loadNameOverrides());
@@ -61,22 +65,71 @@ export default function RoundPage() {
   }, [league]);
 
   const { data, loading, busy, error: loadError, refresh: fetchRound } =
-    useCachedData<RoundState>(`round:${league}`, readRound);
+    useCachedData<RoundState>(`round2:${league}`, readRound);
 
-  // Default to the newest round available for the league currently shown.
   const forLeague = data && data.competition === league ? data : null;
   // A failed refresh keeps the last data on screen and says why.
   const shownError = loadError ?? forLeague?.error ?? null;
   const rounds = useMemo(() => forLeague?.rounds ?? [], [forLeague]);
+  // Open on the round being played now: the one holding the match nearest to
+  // today. The feed reaches several rounds ahead, so "the last" is the future.
   useEffect(() => {
-    if (rounds.length === 0) { setRound(null); return; }
-    setRound((cur) => (cur !== null && rounds.includes(cur) ? cur : rounds[rounds.length - 1]));
-  }, [rounds]);
+    if (!forLeague || rounds.length === 0) { setRound(null); return; }
+    const now = Date.now();
+    const nearest = forLeague.matches.reduce<Match | null>((best, m) => {
+      const d = Math.abs(new Date(m.kickoffUtc).getTime() - now);
+      return !best || d < Math.abs(new Date(best.kickoffUtc).getTime() - now) ? m : best;
+    }, null);
+    const current = nearest ? roundKey(nearest) : rounds[rounds.length - 1].key;
+    setRound((cur) => (cur !== null && rounds.some((r) => r.key === cur) ? cur : current));
+  }, [forLeague, rounds]);
 
   const matches = useMemo(
-    () => (forLeague && round !== null ? forLeague.matches.filter((m) => (m.round === null ? UNSCHEDULED_ROUND : Number(m.round)) === round) : []),
+    () => (forLeague && round !== null ? forLeague.matches.filter((m) => roundKey(m) === round) : []),
     [forLeague, round]
   );
+
+  // Which of the round's games go on the poster: all of a normal round; of a
+  // cup round with dozens (spread over weeks), the ones nearest to today.
+  // Per round, for this visit only.
+  const pickKey = `${league}:${round}`;
+  const [picks, setPicks] = useState<Record<string, string[]>>({});
+  const chosen = useMemo(() => {
+    if (picks[pickKey]) return new Set(picks[pickKey]);
+    const now = Date.now();
+    const away = (m: Match) => Math.abs(new Date(m.kickoffUtc).getTime() - now);
+    return new Set([...matches].sort((x, y) => away(x) - away(y)).slice(0, DEFAULT_PICK).map((m) => m.id));
+  }, [picks, pickKey, matches]);
+  const shown = useMemo(() => matches.filter((m) => chosen.has(m.id)), [matches, chosen]);
+  const pick = (ids: string[]) => setPicks((p) => ({ ...p, [pickKey]: ids }));
+
+  // The list carries crest URLs; the poster needs data URLs, fetched for the
+  // round on screen only. Scores always come from the list — only the crests
+  // are taken from the inlined copy, so a refresh never shows stale results.
+  const [inlined, setInlined] = useState<Map<string, Match>>(new Map());
+  useEffect(() => { setInlined(new Map()); }, [league]);
+  const missingKey = shown.filter((m) => !inlined.has(m.id)).map((m) => m.id).join(",");
+  const [retry, setRetry] = useState(0);
+  useEffect(() => {
+    if (!missingKey || round === null) return;
+    let live = true;
+    let again: ReturnType<typeof setTimeout> | undefined;
+    fetch(`/api/round?competition=${league}&round=${round}`)
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+      .then((j: { matches?: Match[] }) => {
+        if (!live) return;
+        const got = new Map((j.matches ?? []).map((m) => [m.id, m]));
+        // A game the server no longer lists keeps its letters instead of a crest,
+        // rather than blocking the export forever.
+        setInlined((cur) => { const next = new Map(cur); for (const id of missingKey.split(",")) next.set(id, got.get(id) ?? bare(matches.find((m) => m.id === id) as Match)); return next; });
+      })
+      .catch(() => { if (live) again = setTimeout(() => setRetry((n) => n + 1), 4000); });
+    return () => { live = false; if (again) clearTimeout(again); };
+  }, [missingKey, league, round, retry, matches]);
+  const posterMatches = useMemo(() => shown.map((m) => {
+    const i = inlined.get(m.id);
+    return i ? { ...m, leagueLogo: i.leagueLogo, home: { ...m.home, badge: i.home.badge }, away: { ...m.away, badge: i.away.badge } } : bare(m);
+  }), [shown, inlined]);
 
   const finished = matches.filter((m) => m.isFinished).length;
   // Results by default once the whole round is played; either way by hand —
@@ -106,18 +159,19 @@ export default function RoundPage() {
   }, [matches]);
 
   const effLayout = useMemo((): MatchdayLayout => {
-    // roundLabel already reads "مباريات قادمة" for the unscheduled bucket, so
-    // only a numbered round gets the "مباريات"/"نتائج" prefix.
+    // The poster is Arabic in both languages. The unscheduled bucket already
+    // reads "مباريات قادمة", so only a real round gets the "مباريات"/"نتائج" prefix.
+    const label = rounds.find((r) => r.key === round)?.label ?? "";
     const unscheduled = round === UNSCHEDULED_ROUND;
-    const fixturesText = round === null ? "" : unscheduled ? roundLabel(round, t) : t(`مباريات ${roundLabel(round, t)}`, `${roundLabel(round, t)} fixtures`);
-    const resultsText = round === null ? "" : unscheduled ? roundLabel(round, t) : t(`نتائج ${roundLabel(round, t)}`, `${roundLabel(round, t)} results`);
+    const fixturesText = round === null ? "" : unscheduled ? label : `مباريات ${label}`;
+    const resultsText = round === null ? "" : unscheduled ? label : `نتائج ${label}`;
     return {
       ...layout,
       title: { ...layout.title, show: true, text: fixturesText },
       resultsTitle: { ...layout.resultsTitle, show: true, text: resultsText },
       dateLabel: { ...layout.dateLabel, text: dateRange },
     };
-  }, [layout, round, dateRange, t]);
+  }, [layout, round, rounds, dateRange]);
 
   const scale = previewW / layout.width;
   // No games for a league means 365scores hasn't published its schedule yet —
@@ -127,8 +181,12 @@ export default function RoundPage() {
     ? t("جدول هذه البطولة غير منشور بعد", "This competition's schedule is not published yet")
     : matches.length === 0
     ? t("لا توجد مباريات في هذه الجولة بعد", "No matches in this round yet")
+    : shown.length === 0
+    ? t("اختر مباراة واحدة على الأقل", "Pick at least one match")
     : results && finished === 0
     ? t("لم تنته أي مباراة في هذه الجولة بعد", "No match in this round has finished yet")
+    : missingKey
+    ? t("جاري تجهيز شعارات المباريات المختارة…", "Preparing the picked matches' crests…")
     : null;
 
   return (
@@ -158,8 +216,10 @@ export default function RoundPage() {
               <label className="field wide">
                 <span>{t("البطولة")}</span>
                 <select value={league} onChange={(e) => pickLeague(Number(e.target.value))} disabled={loading}>
-                  {ROUND_LEAGUES.map((id) => (
-                    <option key={id} value={id}>{(leagueById(id)?.ar ?? "")}</option>
+                  {leaguesByGroup().map((g) => (
+                    <optgroup key={g.group} label={t(g.group)}>
+                      {g.leagues.map((l) => <option key={l.id} value={l.id}>{l.ar}</option>)}
+                    </optgroup>
                   ))}
                 </select>
               </label>
@@ -167,7 +227,7 @@ export default function RoundPage() {
                 <span>{t("الجولة")}</span>
                 <select value={round ?? ""} onChange={(e) => setRound(Number(e.target.value))} disabled={loading || rounds.length === 0}>
                   {rounds.length === 0 && <option value="">—</option>}
-                  {rounds.map((r) => <option key={r} value={r}>{roundLabel(r, t)}</option>)}
+                  {rounds.map((r) => <option key={r.key} value={r.key}>{r.label}</option>)}
                 </select>
               </label>
               <div className="kv"><span>{t("المباريات")}</span><b>{matches.length}{matches.length > 0 ? t(` · ${finished} انتهت`, ` · ${finished} finished`) : ""}</b></div>
@@ -179,9 +239,26 @@ export default function RoundPage() {
               {shownError && <p className="err">{shownError}</p>}
               <button className="btn" disabled={loading} onClick={() => fetchRound()}>{loading ? t("جاري التحديث…", "Refreshing…") : t("تحديث", "Refresh")}</button>
             </div>
+            {matches.length > 0 && (
+              <details className="card collapsible" open={matches.length > DEFAULT_PICK}>
+                <summary><h3>{t("اختيار المباريات (")}{shown.length}/{matches.length})</h3><span className="chev" /></summary>
+                <div className="row">
+                  <button type="button" className="btn ghost" onClick={() => pick(matches.map((m) => m.id))}>{t("الكل")}</button>
+                  <button type="button" className="btn ghost" onClick={() => pick([])}>{t("مسح")}</button>
+                </div>
+                <div className="pick-list">
+                  {matches.map((m) => (
+                    <label key={m.id} className="field check pick-match">
+                      <input type="checkbox" checked={chosen.has(m.id)} onChange={(e) => pick(matches.filter((x) => (x.id === m.id ? e.target.checked : chosen.has(x.id))).map((x) => x.id))} />
+                      <span>{m.date.slice(5)} {m.time} · <bdi>{m.home.nameAr}</bdi> - <bdi>{m.away.nameAr}</bdi></span>
+                    </label>
+                  ))}
+                </div>
+              </details>
+            )}
             <TemplateUploader isCustom={templateSrc !== null} onTemplate={onTemplate} defaultLabel={t("لا يوجد قالب بعد — تُستخدم خلفية بسيطة. ارفع قالب الجولة.")} resetLabel={t("حذف القالب")} />
-            <ExportControls posterRef={posterRef} canExport={matches.length > 0} blocked={exportBlock} onResetDesign={() => updateLayout(DEFAULT_MATCHDAY_LAYOUT)} fileBase={`choufsport-${leagueById(league)?.id === BOTOLA_LEAGUE ? "botola1" : "botola2"}-round${round ?? ""}`} fileDate={matches[0]?.date} />
-            <MatchdayTeams matches={matches} nameOverrides={nameOverrides} logoOverrides={logoOverrides} onName={onName} onLogo={onLogo} onClearLogo={onClearLogo} />
+            <ExportControls posterRef={posterRef} canExport={matches.length > 0} blocked={exportBlock} onResetDesign={() => updateLayout(DEFAULT_MATCHDAY_LAYOUT)} fileBase={`choufsport-round-${league}-${round ?? "x"}`} fileDate={matches[0]?.date} />
+            <MatchdayTeams matches={shown} nameOverrides={nameOverrides} logoOverrides={logoOverrides} onName={onName} onLogo={onLogo} onClearLogo={onClearLogo} />
             <MatchdayDesign layout={layout} onChange={updateLayout} />
           </section>
 
@@ -190,7 +267,7 @@ export default function RoundPage() {
               <h3 className="muted">{t("معاينة مباشرة")}</h3>
               <div className={busy ? "previewbox busy" : "previewbox"} style={{ width: previewW, height: layout.height * scale }}>
                 <div style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}>
-                  <MatchdayPoster ref={posterRef} groupBy="date" mode={results ? "results" : "fixtures"} matches={matches} layout={effLayout} templateSrc={templateSrc} nameOverrides={nameOverrides} logoOverrides={logoOverrides} />
+                  <MatchdayPoster ref={posterRef} groupBy="date" mode={results ? "results" : "fixtures"} matches={posterMatches} layout={effLayout} templateSrc={templateSrc} nameOverrides={nameOverrides} logoOverrides={logoOverrides} />
                 </div>
               </div>
             </div>

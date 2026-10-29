@@ -35,6 +35,8 @@ interface S365Game {
   seasonNum?: number;
   roundNum?: number | null;
   roundName?: string | null;
+  stageNum?: number | null;
+  stageName?: string | null;
   startTime?: string;
   statusGroup?: number;
   statusText?: string;
@@ -105,6 +107,8 @@ function toMatch(g: S365Game, leagueLogo: string | null): Match {
     leagueLogo,
     leaguePopularity: 0,
     round: g.roundNum === null || g.roundNum === undefined ? null : String(g.roundNum),
+    stageNum: g.stageNum ?? null,
+    stageName: g.stageName ?? null,
     fame: 0,
     home: side(g.homeCompetitor),
     away: side(g.awayCompetitor),
@@ -184,6 +188,41 @@ export function roundsOf(matches: Match[]): number[] {
 
 export function matchesInRound(matches: Match[], round: number): Match[] {
   return matches.filter((m) => roundOf(m) === round);
+}
+
+/**
+ * The round poster's grouping, for any competition: a league or group stage
+ * numbers its rounds, a cup only names its stages (round of 32, final…). The
+ * key orders stage first, then round, so a season reads in order.
+ */
+export const roundKey = (m: Match): number =>
+  m.round !== null ? (m.stageNum ?? 0) * 1000 + Number(m.round)
+  : m.stageNum != null ? m.stageNum * 1000
+  : UNSCHEDULED_ROUND;
+
+export interface RoundInfo { key: number; label: string }
+
+/** Every round present, in order, labelled the way the feed names it. */
+export function roundsWithLabels(matches: Match[]): RoundInfo[] {
+  const stageName = new Map<number, string>();
+  for (const m of matches) if (m.stageNum != null && m.stageName && !stageName.has(m.stageNum)) stageName.set(m.stageNum, m.stageName);
+  // The stage is only worth naming beside a round when there is more than one.
+  const multiStage = new Set(matches.map((m) => m.stageNum ?? 0)).size > 1;
+  const byKey = new Map<number, string>();
+  for (const m of matches) {
+    const key = roundKey(m);
+    if (byKey.has(key)) continue;
+    const stage = m.stageNum != null ? stageName.get(m.stageNum) : undefined;
+    byKey.set(key,
+      key === UNSCHEDULED_ROUND ? "مباريات قادمة"
+      : m.round !== null ? (multiStage && stage ? `${stage} - الجولة ${m.round}` : `الجولة ${m.round}`)
+      : stage ?? `المرحلة ${m.stageNum}`);
+  }
+  const list = Array.from(byKey, ([key, label]) => ({ key, label })).sort((a, b) => a.key - b.key);
+  // The feed leaves the last stage of a knockout unnamed (the final, with the
+  // third-place game): name it when it follows the semi-finals.
+  return list.map((r, i) =>
+    /^المرحلة \d+$/.test(r.label) && list[i - 1]?.label.endsWith("نصف النهائي") ? { ...r, label: "النهائي" } : r);
 }
 
 // ---- The Moroccan matchday ----------------------------------------------

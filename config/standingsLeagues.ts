@@ -59,9 +59,6 @@ export const DEFAULT_LEAGUE = BOTOLA_LEAGUE;
 // The Moroccan leagues are the ones the bundled Chouf TV template is drawn for.
 export const MOROCCAN_LEAGUES = [BOTOLA_LEAGUE, BOTOLA2_LEAGUE];
 
-// Leagues offered on the round-fixtures poster.
-export const ROUND_LEAGUES = MOROCCAN_LEAGUES;
-
 export function isStandingsLeague(id: number): boolean {
   return STANDINGS_LEAGUES.some((l) => l.id === id);
 }

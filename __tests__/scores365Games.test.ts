@@ -1,4 +1,4 @@
-import { fetch365Games, roundsOf, matchesInRound, UNSCHEDULED_ROUND } from "@/lib/scores365Games";
+import { fetch365Games, roundsOf, matchesInRound, roundKey, roundsWithLabels, UNSCHEDULED_ROUND } from "@/lib/scores365Games";
 
 // Shapes verified live against 365scores on 2026-10-19.
 const game = (id: number, roundNum: number | null, statusGroup: number, hs: number, as: number) => ({
@@ -139,5 +139,35 @@ describe("fetch365Games paging", () => {
     }) as unknown as typeof fetch;
     await fetch365Games(557);
     expect(pages).toBe(2); // one probe each way, both of which add nothing
+  });
+});
+
+describe("rounds for any competition", () => {
+  const m = (id: string, round: string | null, stageNum: number | null, stageName: string | null) =>
+    ({ id, round, stageNum, stageName }) as unknown as import("@/types/fixtures").Match;
+
+  it("a league numbers its rounds and does not name its single stage", () => {
+    expect(roundsWithLabels([m("1", "8", 1, "الموسم"), m("2", "7", 1, "الموسم")])).toEqual([
+      { key: 1007, label: "الجولة 7" },
+      { key: 1008, label: "الجولة 8" },
+    ]);
+  });
+
+  it("a cup is grouped by its stages, in order, named by the feed", () => {
+    const list = [m("1", null, 2, "دور الـ 32"), m("2", null, 1, "الدور 1"), m("3", null, 2, "دور الـ 32")];
+    expect(roundsWithLabels(list)).toEqual([
+      { key: 1000, label: "الدور 1" },
+      { key: 2000, label: "دور الـ 32" },
+    ]);
+    expect(roundKey(list[0])).toBe(roundKey(list[2]));
+  });
+
+  it("names the stage beside the round when there are several stages", () => {
+    const list = [m("1", null, 1, "تصفيات"), m("2", "1", 2, "المجموعات")];
+    expect(roundsWithLabels(list).map((r) => r.label)).toEqual(["تصفيات", "المجموعات - الجولة 1"]);
+  });
+
+  it("games with neither a round nor a stage are the upcoming bucket", () => {
+    expect(roundsWithLabels([m("1", null, null, null)])).toEqual([{ key: UNSCHEDULED_ROUND, label: "مباريات قادمة" }]);
   });
 });

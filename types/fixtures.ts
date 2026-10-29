@@ -57,6 +57,9 @@ export interface Match {
   leagueLogo: string | null;
   leaguePopularity: number;
   round: string | null;
+  /** The competition stage (league phase, group stage, round of 16…); cups number no rounds. */
+  stageNum?: number | null;
+  stageName?: string | null;
   fame: number;
   home: MatchSide;
   away: MatchSide;
