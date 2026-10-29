@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Nav from "@/components/Nav";
 import { NEWS_SOURCES, sourceName, type NewsItem, type NewsSourceKey } from "@/types/news";
 import { useCachedData } from "@/lib/useCachedData";
+import { useLang, type T } from "@/lib/prefs";
 
 type Filter = NewsSourceKey | "all";
 
@@ -11,16 +12,17 @@ type Filter = NewsSourceKey | "all";
 // that would mostly re-read its own cache.
 const AUTO_REFRESH_MS = 5 * 60 * 1000;
 
-const timeAgo = (iso: string): string => {
+const timeAgo = (iso: string, t: T): string => {
   const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
   if (!Number.isFinite(mins) || mins < 0) return "";
-  if (mins < 60) return `منذ ${mins} دقيقة`;
+  if (mins < 60) return t(`منذ ${mins} دقيقة`, `${mins} min ago`);
   const h = Math.round(mins / 60);
-  if (h < 24) return `منذ ${h} ساعة`;
-  return `منذ ${Math.round(h / 24)} يوم`;
+  if (h < 24) return t(`منذ ${h} ساعة`, `${h} h ago`);
+  return t(`منذ ${Math.round(h / 24)} يوم`, `${Math.round(h / 24)} d ago`);
 };
 
 export default function NewsPage() {
+  const { t, lang, locale } = useLang();
   const [failed, setFailed] = useState<NewsSourceKey[]>([]);
   const [filter, setFilter] = useState<Filter>("all");
   const [page, setPage] = useState(1);
@@ -79,7 +81,7 @@ export default function NewsPage() {
 
   return (
     <>
-      <Head><title>أخبار الرياضة — Chouf TV</title></Head>
+      <Head><title>{t("أخبار الرياضة — Chouf TV")}</title></Head>
       <main className="app">
         <header className="topbar">
           <div className="brand">
@@ -90,39 +92,39 @@ export default function NewsPage() {
         </header>
         <div className="pagehead newshead">
           <div>
-            <h1>الأخبار</h1>
-            <span className="muted" dir="rtl">آخر الأخبار الرياضية</span>
+            <h1>{t("الأخبار")}</h1>
+            <span className="muted">{t("آخر الأخبار الرياضية")}</span>
           </div>
           <div className="newshead-actions">
             {fresh !== null && (
-              <span className={fresh > 0 ? "pill ok" : "pill"} dir="rtl">
-                {fresh > 0 ? `${fresh} خبر جديد` : "لا جديد"}
+              <span className={fresh > 0 ? "pill ok" : "pill"}>
+                {fresh > 0 ? t(`${fresh} خبر جديد`, `${fresh} new`) : t("لا جديد", "Nothing new")}
               </span>
             )}
-            {at && <span className="muted">آخر تحديث: {new Date(at).toLocaleTimeString("ar-MA", { hour: "2-digit", minute: "2-digit" })}</span>}
+            {at && <span className="muted">{t("آخر تحديث: ")}{new Date(at).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}</span>}
             <button className="btn" disabled={busy} onClick={refresh}>
               {busy && <i className="spinner" aria-hidden="true" />}
-              {busy ? "جاري التحديث…" : "تحديث الأخبار"}
+              {busy ? t("جاري التحديث…", "Refreshing…") : t("تحديث الأخبار", "Refresh news")}
             </button>
           </div>
         </div>
 
-        <div className="seg" role="tablist" aria-label="المصدر">
+        <div className="seg" role="tablist" aria-label={t("المصدر")}>
           <button role="tab" aria-selected={filter === "all"} className={filter === "all" ? "seg-btn on" : "seg-btn"} onClick={() => setFilter("all")}>
-            الكل ({items.length})
+            {t("الكل", "All")} ({items.length})
           </button>
           {NEWS_SOURCES.map((key) => {
             const n = items.filter((i: NewsItem) => i.source === key).length;
             return (
               <button key={key} role="tab" aria-selected={filter === key} className={filter === key ? "seg-btn on" : "seg-btn"} onClick={() => setFilter(key)}>
-                {sourceName(key)} ({n})
+                {sourceName(key, lang)} ({n})
               </button>
             );
           })}
         </div>
 
         {failed.length > 0 && (
-          <p className="err">تعذر تحميل: {failed.map(sourceName).join("، ")} — الباقي معروض.</p>
+          <p className="err">{t("تعذر تحميل: ")}{failed.map((k) => sourceName(k, lang)).join(lang === "en" ? ", " : "، ")}{t(" — الباقي معروض.")}</p>
         )}
         {error && <p className="err">{error}</p>}
 
@@ -155,18 +157,18 @@ export default function NewsPage() {
               </div>
               <div className="newsbody">
                 <h3 dir="rtl">{n.title}</h3>
-                <span className="muted" dir="rtl">{timeAgo(n.publishedAt)}</span>
+                <span className="muted">{timeAgo(n.publishedAt, t)}</span>
               </div>
             </Link>
           ))}
         </div>
 
-        {shown.length === 0 && !loading && <p className="muted">لا توجد أخبار حاليا.</p>}
+        {shown.length === 0 && !loading && <p className="muted">{t("لا توجد أخبار حاليا.")}</p>}
 
         <div className="newsmore">
           <button className="btn" disabled={more} onClick={loadMore}>
             {more && <i className="spinner" aria-hidden="true" />}
-            {more ? "جاري التحميل…" : "المزيد من الأخبار"}
+            {more ? t("جاري التحميل…", "Loading…") : t("المزيد من الأخبار", "More news")}
           </button>
         </div>
       </main>

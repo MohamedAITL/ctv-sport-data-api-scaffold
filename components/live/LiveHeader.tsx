@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import type { LiveDetail } from "@/types/live";
+import { useLang } from "@/lib/prefs";
 
-const kickoff = (iso: string) => {
-  const t = new Date(iso);
-  return Number.isNaN(t.getTime()) ? "" : t.toLocaleTimeString("ar-MA", { hour: "2-digit", minute: "2-digit" });
+const kickoff = (iso: string, locale: string) => {
+  const at = new Date(iso);
+  return Number.isNaN(at.getTime()) ? "" : at.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
 };
 
 // The scoreline, sized to be read from across a room.
 export default function LiveHeader({ d }: { d: LiveDetail }) {
+  const { t, locale } = useLang();
   const m = d.match;
   // No score yet: the centre of the scoreline carries the kickoff time and the
   // status instead of a meaningless dash pair.
@@ -33,11 +35,11 @@ export default function LiveHeader({ d }: { d: LiveDetail }) {
   }, [m.id, m.home.score, m.away.score]);
 
   return (
-    <header className="kh" dir="rtl">
+    <header className="kh">
       <div className="kh-meta">
         <span>{m.competition}</span>
         {d.venue && <span>· {d.venue}</span>}
-        {d.referee && <span>· الحكم: {d.referee}</span>}
+        {d.referee && <span>{t("· الحكم: ")}{d.referee}</span>}
         {d.tv.length > 0 && <span>· {d.tv.slice(0, 2).join("، ")}</span>}
       </div>
       <div className="kh-score">
@@ -54,7 +56,7 @@ export default function LiveHeader({ d }: { d: LiveDetail }) {
           </div>
         ) : (
           <div className="kh-soon">
-            <b>{kickoff(m.startTime) || "—"}</b>
+            <b>{kickoff(m.startTime, locale) || "—"}</b>
             <span>{m.statusText}</span>
           </div>
         )}

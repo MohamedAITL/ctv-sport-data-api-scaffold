@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import type { AthleteBio, LineupPlayer, PerformerStat } from "@/types/live";
+import { useLang } from "@/lib/prefs";
 
 function Tiles({ rows }: { rows: PerformerStat[] }) {
   if (rows.length === 0) return null;
@@ -34,6 +35,7 @@ export default function PlayerCard({
 }: {
   player: LineupPlayer; team: string; onClose: () => void;
 }) {
+  const { t } = useLang();
   const [bio, setBio] = useState<AthleteBio | null>(null);
   // In native fullscreen the browser paints only the fullscreen element's own
   // subtree, so a card portaled to <body> would exist and measure but never be
@@ -68,8 +70,8 @@ export default function PlayerCard({
   // containing block (a transform left by an animation did exactly that).
   return createPortal(
     <div className="kpc-back" role="dialog" aria-modal="true" onClick={onClose}>
-      <div className="kpc" dir="rtl" onClick={(e) => e.stopPropagation()}>
-        <button type="button" className="kpc-x" onClick={onClose} aria-label="إغلاق">×</button>
+      <div className="kpc" onClick={(e) => e.stopPropagation()}>
+        <button type="button" className="kpc-x" onClick={onClose} aria-label={t("إغلاق")}>×</button>
 
         <header className="kpc-head">
           {player.photo ? (
@@ -88,11 +90,11 @@ export default function PlayerCard({
             {(bio?.nationality || bio?.age !== null) && (
               <p className="kpc-bio">
                 {bio?.nationality && <span>{bio.nationality}</span>}
-                {bio?.age != null && <span>{bio.age} سنة</span>}
+                {bio?.age != null && <span>{bio.age}{t(" سنة")}</span>}
                 {/* the birth row is titled with the date and valued with the
                     age, which is already shown — so it reads as a birth date */}
                 {bio?.details.filter((d) => d.name !== "الرقم مع النادي").map((d) => (
-                  <span key={d.name}>{/^\d/.test(d.name) ? `مواليد ${d.name}` : `${d.name}: ${d.value}`}</span>
+                  <span key={d.name}>{/^\d/.test(d.name) ? t(`مواليد ${d.name}`, `Born ${d.name}`) : `${d.name}: ${d.value}`}</span>
                 ))}
               </p>
             )}
@@ -106,8 +108,8 @@ export default function PlayerCard({
 
         {player.stats.length > 0 && seasons.length > 0 && (
           <div className="kpc-tabs">
-            <button type="button" className={tab === "match" ? "on" : ""} onClick={() => setTab("match")}>هذه المباراة</button>
-            <button type="button" className={tab === "season" ? "on" : ""} onClick={() => setTab("season")}>إحصائيات الموسم</button>
+            <button type="button" className={tab === "match" ? "on" : ""} onClick={() => setTab("match")}>{t("هذه المباراة")}</button>
+            <button type="button" className={tab === "season" ? "on" : ""} onClick={() => setTab("season")}>{t("إحصائيات الموسم")}</button>
           </div>
         )}
 
@@ -129,7 +131,7 @@ export default function PlayerCard({
             ))
           ) : (
             <p className="kpc-none">
-              {bio === null && player.athleteId ? "جاري تحميل إحصائيات اللاعب…" : "لا ينشر المصدر إحصائيات لهذا اللاعب."}
+              {bio === null && player.athleteId ? t("جاري تحميل إحصائيات اللاعب…", "Loading player stats…") : t("لا تتوفر إحصائيات لهذا اللاعب.", "No stats are available for this player.")}
             </p>
           )
         )}

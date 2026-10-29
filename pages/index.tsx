@@ -21,6 +21,7 @@ import {
   clearTemplate,
 } from "@/lib/db";
 import { useFitWidth } from "@/lib/useFitWidth";
+import { useLang } from "@/lib/prefs";
 
 const BOTOLA_TEMPLATE = "/templates/botola.jpg";
 // The big competitions ship with a bundled template; the others start on a
@@ -51,6 +52,7 @@ interface StandingsState {
 
 
 export default function Home() {
+  const { t } = useLang();
   const posterRef = useRef<HTMLDivElement>(null);
   const [paneRef, previewW] = useFitWidth<HTMLElement>(PREVIEW_W);
   const [league, setLeague] = useState<number>(DEFAULT_LEAGUE);
@@ -79,7 +81,7 @@ export default function Home() {
     const json = await res.json();
     // A failed request must not replace the table on screen (or the cached one)
     // with an empty one: throwing keeps what we have and reports the error.
-    if (!res.ok && !json.rows) throw new Error(json.error || "فشل الطلب");
+    if (!res.ok && !json.rows) throw new Error(json.error || "Request failed");
     return json as StandingsState;
   }, [league]);
 
@@ -150,7 +152,7 @@ export default function Home() {
       ? { ...layout, mask: { ...layout.mask, show: true } }
       : layout;
     if (masked.heading.text) return masked;
-    return { ...masked, heading: { ...masked.heading, text: leagueById(league)?.ar ?? "" } };
+    return { ...masked, heading: { ...masked.heading, text: (leagueById(league)?.ar ?? "") } };
   }, [layout, league, templateSrc]);
 
   // A knockout cup, or a competition between seasons, simply has no table yet.
@@ -158,7 +160,7 @@ export default function Home() {
   // "الجدول فارغ" validation error.
   const noTable = Boolean(data) && !loading && rows.length === 0;
   const blocked = noTable
-    ? "لا يوجد جدول ترتيب منشور لهذه المسابقة حالياً"
+    ? t("لا يوجد جدول ترتيب منشور لهذه المسابقة حالياً", "No standings are published for this competition yet")
     : data && !data.validation.ok
     ? data.validation.errors.join("; ")
     : null;
@@ -167,7 +169,7 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>ملصق الترتيب — شوف تي في</title>
+        <title>{t("ملصق الترتيب — شوف تي في")}</title>
       </Head>
       <main className="app">
         <header className="topbar">
@@ -178,8 +180,8 @@ export default function Home() {
           <Nav />
         </header>
         <div className="pagehead">
-          <h1>ملصق الترتيب</h1>
-          <span className="muted">{leagueById(league)?.ar ?? "البطولة"} · جدول مباشر · تصدير 1080×1350 PNG</span>
+          <h1>{t("ملصق الترتيب")}</h1>
+          <span className="muted">{(leagueById(league)?.ar ?? "")}{t(" · جدول مباشر · تصدير 1080×1350 PNG")}</span>
         </div>
 
         <div className="layout">
@@ -197,14 +199,14 @@ export default function Home() {
             />
             {noTable && (
               <div className="card">
-                <h3>لا يوجد جدول</h3>
-                <p className="err" style={{ direction: "rtl" }}>لا يوجد جدول ترتيب لهذه المسابقة حاليا</p>
-                <p className="muted">يُنشر الجدول فقط بعد انطلاق الدوري أو دور المجموعات. اختر مسابقة أخرى أو عد عند انطلاقها.</p>
+                <h3>{t("لا يوجد جدول")}</h3>
+                <p className="err">{t("لا يوجد جدول ترتيب لهذه المسابقة حاليا")}</p>
+                <p className="muted">{t("يُنشر الجدول فقط بعد انطلاق الدوري أو دور المجموعات. اختر مسابقة أخرى أو عد عند انطلاقها.")}</p>
               </div>
             )}
             {data && data.validation.warnings.length > 0 && (
               <div className="card">
-                <h3>ملاحظات على البيانات</h3>
+                <h3>{t("ملاحظات على البيانات")}</h3>
                 <ul className="warnlist">
                   {data.validation.warnings.map((w, i) => (
                     <li key={i}>{w}</li>
@@ -227,7 +229,7 @@ export default function Home() {
 
           <section className="previewpane" ref={paneRef}>
             <div className="previewsticky">
-              <h3 className="muted">معاينة مباشرة</h3>
+              <h3 className="muted">{t("معاينة مباشرة")}</h3>
               <div className={busy ? "previewbox busy" : "previewbox"} style={{ width: previewW, height: layout.height * scale }}>
                 <div style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}>
                   <Poster ref={posterRef} rows={rows} layout={effLayout} templateSrc={templateSrc} logoOverrides={logoOverrides} />

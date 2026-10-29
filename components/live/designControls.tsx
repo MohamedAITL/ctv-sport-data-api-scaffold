@@ -29,7 +29,7 @@ export function Text({ label, value, onChange }: { label: string; value: string;
   return (
     <label className="field wide">
       <span>{label}</span>
-      <input type="text" dir="rtl" value={value} onChange={(e) => onChange(e.target.value)} />
+      <input type="text" dir="auto" value={value} onChange={(e) => onChange(e.target.value)} />
     </label>
   );
 }

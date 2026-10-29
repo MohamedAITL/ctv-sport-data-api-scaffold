@@ -4,6 +4,7 @@ import TemplateUploader from "../TemplateUploader";
 import { clearTemplate, getTemplate, setTemplate } from "@/lib/db";
 import { downloadPoster, posterFilename } from "@/lib/exportPoster";
 import { deepMerge } from "@/lib/persist";
+import { useLang } from "@/lib/prefs";
 
 const PREVIEW_W = 420;
 
@@ -35,6 +36,7 @@ interface Props<L> {
 export default function PosterExport<L>({
   title, layoutKey, templateKey, defaults, fileBase, ready, error, onClose, poster, design, note, aside,
 }: Props<L>) {
+  const { t } = useLang();
   const posterRef = useRef<HTMLDivElement>(null);
   const [layout, setLayout] = useState<L>(defaults);
   const [templateSrc, setTemplateSrc] = useState<string | null>(null);
@@ -74,7 +76,7 @@ export default function PosterExport<L>({
     try {
       await downloadPoster(posterRef.current, format, posterFilename(format, fileBase));
     } catch (e) {
-      setFailed("تعذر التصدير: " + (e as Error).message);
+      setFailed(t("تعذر التصدير: ", "Export failed: ") + (e as Error).message);
     } finally {
       setBusy(false);
     }
@@ -86,12 +88,12 @@ export default function PosterExport<L>({
 
   return createPortal(
     <div className="kpc-back" role="dialog" aria-modal="true" onClick={onClose}>
-      <div className="kxp" dir="rtl" onClick={(e) => e.stopPropagation()}>
-        <button type="button" className="kpc-x" onClick={onClose} aria-label="إغلاق">×</button>
+      <div className="kxp" onClick={(e) => e.stopPropagation()}>
+        <button type="button" className="kpc-x" onClick={onClose} aria-label={t("إغلاق")}>×</button>
         <h3>{title}</h3>
 
         {shown && <p className="kxp-err">{shown}</p>}
-        {!ready && !error && <p className="kxp-wait"><i className="spinner" />جاري تجهيز الملصق…</p>}
+        {!ready && !error && <p className="kxp-wait"><i className="spinner" />{t("جاري تجهيز الملصق…")}</p>}
 
         {ready && !error && (
           <div className="kxp-body">
@@ -105,15 +107,15 @@ export default function PosterExport<L>({
               {note?.(layout)}
               <div className="kxp-actions">
                 <button type="button" className="kxp-btn primary" disabled={busy} onClick={() => save("png")}>
-                  {busy && <i className="spinner" />}تحميل PNG (1080×1350)
+                  {busy && <i className="spinner" />}{t("تحميل PNG (1080×1350)", "Download PNG (1080×1350)")}
                 </button>
-                <button type="button" className="kxp-btn" disabled={busy} onClick={() => save("jpeg")}>تحميل JPEG</button>
-                <button type="button" className="kxp-btn" onClick={() => updateLayout(defaults)}>إعادة ضبط التصميم</button>
+                <button type="button" className="kxp-btn" disabled={busy} onClick={() => save("jpeg")}>{t("تحميل JPEG")}</button>
+                <button type="button" className="kxp-btn" onClick={() => updateLayout(defaults)}>{t("إعادة ضبط التصميم")}</button>
               </div>
             </div>
             <div className="kxp-right">
               {aside}
-              <TemplateUploader isCustom={Boolean(templateSrc)} onTemplate={onTemplate} defaultLabel="لا يوجد قالب — تُستخدم خلفية الملصق الافتراضية." />
+              <TemplateUploader isCustom={Boolean(templateSrc)} onTemplate={onTemplate} defaultLabel={t("لا يوجد قالب — تُستخدم خلفية الملصق الافتراضية.")} />
               {design(layout, updateLayout)}
             </div>
           </div>

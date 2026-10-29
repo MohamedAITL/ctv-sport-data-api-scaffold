@@ -2,6 +2,7 @@ import Head from "next/head";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import LiveList from "@/components/live/LiveList";
+import PrefsToggle from "@/components/PrefsToggle";
 import LiveHeader from "@/components/live/LiveHeader";
 import LinePitch from "@/components/live/LinePitch";
 import LiveStats from "@/components/live/LiveStats";
@@ -9,6 +10,7 @@ import LiveEvents from "@/components/live/LiveEvents";
 import LivePrevious from "@/components/live/LivePrevious";
 import type { LiveDetail, LiveMatch } from "@/types/live";
 import { todayMA } from "@/lib/today";
+import { useLang, type T } from "@/lib/prefs";
 
 const POLL_MS = 15_000; // the source itself caches for 5s
 type Tab = "lineup" | "stats" | "events" | "previous";
@@ -20,10 +22,11 @@ const shiftDay = (iso: string, days: number) => {
   d.setUTCDate(d.getUTCDate() + days);
   return d.toISOString().slice(0, 10);
 };
-const arDay = (iso: string) =>
-  iso === isoToday() ? "اليوم" : new Date(iso + "T12:00:00Z").toLocaleDateString("ar-MA", { weekday: "long", day: "numeric", month: "long" });
+const arDay = (iso: string, t: T, locale: string) =>
+  iso === isoToday() ? t("اليوم", "Today") : new Date(iso + "T12:00:00Z").toLocaleDateString(locale, { weekday: "long", day: "numeric", month: "long" });
 
 export default function LivePage() {
+  const { t, locale } = useLang();
   const [matches, setMatches] = useState<LiveMatch[]>([]);
   const [selected, setSelected] = useState<LiveMatch | null>(null);
   const [detail, setDetail] = useState<LiveDetail | null>(null);
@@ -124,33 +127,34 @@ export default function LivePage() {
     : matches;
   const liveCount = matches.filter((m) => m.isLive).length;
   const doneCount = matches.filter((m) => m.isFinished).length;
-  const clock = updatedAt ? new Date(updatedAt).toLocaleTimeString("ar-MA", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "—";
+  const clock = updatedAt ? new Date(updatedAt).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "—";
 
   return (
     <>
       <Head>
-        <title>المباريات المباشرة — Chouf TV</title>
+        <title>{t("المباريات المباشرة — Chouf TV")}</title>
         {/* Kiosk: a stray pinch must not leave a wall screen zoomed. */}
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
       </Head>
 
-      <div className="kiosk" dir="rtl">
+      <div className="kiosk">
         <aside className="kiosk-rail">
           <div className="kiosk-railhead">
             <div className="kiosk-brand">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img className="brandlogo kiosk-logo" src="/chouftv-logo.png" alt="Chouf TV" />
-              <Link href="/" className="kiosk-back">رجوع للتطبيق</Link>
+              <Link href="/" className="kiosk-back">{t("رجوع للتطبيق")}</Link>
+              <PrefsToggle />
             </div>
             <div className="kiosk-day">
-              <button type="button" aria-label="اليوم السابق" onClick={() => goDay(shiftDay(date, -1))}>‹</button>
-              <button type="button" className="kiosk-daylabel" onClick={() => goDay(isoToday())}>{arDay(date)}</button>
-              <button type="button" aria-label="اليوم التالي" onClick={() => goDay(shiftDay(date, 1))}>›</button>
+              <button type="button" aria-label={t("اليوم السابق")} onClick={() => goDay(shiftDay(date, -1))}>‹</button>
+              <button type="button" className="kiosk-daylabel" onClick={() => goDay(isoToday())}>{arDay(date, t, locale)}</button>
+              <button type="button" aria-label={t("اليوم التالي")} onClick={() => goDay(shiftDay(date, 1))}>›</button>
             </div>
             <div className="kiosk-seg three">
-              <button type="button" className={filter === "live" ? "on" : ""} onClick={() => pickFilter("live")}>مباشر ({liveCount})</button>
-              <button type="button" className={filter === "done" ? "on" : ""} onClick={() => pickFilter("done")}>النتائج ({doneCount})</button>
-              <button type="button" className={filter === "all" ? "on" : ""} onClick={() => pickFilter("all")}>الكل ({matches.length})</button>
+              <button type="button" className={filter === "live" ? "on" : ""} onClick={() => pickFilter("live")}>{t("مباشر (")}{liveCount})</button>
+              <button type="button" className={filter === "done" ? "on" : ""} onClick={() => pickFilter("done")}>{t("النتائج (")}{doneCount})</button>
+              <button type="button" className={filter === "all" ? "on" : ""} onClick={() => pickFilter("all")}>{t("الكل (")}{matches.length})</button>
             </div>
           </div>
           <div className="kl-scroll" ref={railRef}>
@@ -164,10 +168,10 @@ export default function LivePage() {
             <>
               <LiveHeader d={detail} />
               <nav className="kiosk-tabs">
-                <button type="button" className={tab === "lineup" ? "on" : ""} onClick={() => setTab("lineup")}>التشكيلة</button>
-                <button type="button" className={tab === "stats" ? "on" : ""} onClick={() => setTab("stats")}>الإحصائيات</button>
-                <button type="button" className={tab === "events" ? "on" : ""} onClick={() => setTab("events")}>الأحداث</button>
-                <button type="button" className={tab === "previous" ? "on" : ""} onClick={() => setTab("previous")}>مواجهات سابقة</button>
+                <button type="button" className={tab === "lineup" ? "on" : ""} onClick={() => setTab("lineup")}>{t("التشكيلة")}</button>
+                <button type="button" className={tab === "stats" ? "on" : ""} onClick={() => setTab("stats")}>{t("الإحصائيات")}</button>
+                <button type="button" className={tab === "events" ? "on" : ""} onClick={() => setTab("events")}>{t("الأحداث")}</button>
+                <button type="button" className={tab === "previous" ? "on" : ""} onClick={() => setTab("previous")}>{t("مواجهات سابقة")}</button>
               </nav>
               <section className="kiosk-pane">
                 {tab === "lineup" && <LinePitch d={detail} />}
@@ -177,13 +181,13 @@ export default function LivePage() {
               </section>
             </>
           ) : (
-            <div className="kiosk-loading">{selected ? "جاري تحميل المباراة…" : "اختر مباراة"}</div>
+            <div className="kiosk-loading">{selected ? t("جاري تحميل المباراة…", "Loading the match…") : t("اختر مباراة", "Pick a match")}</div>
           )}
 
           <footer className="kiosk-foot">
-            <span>آخر تحديث: {clock}</span>
+            <span>{t("آخر تحديث: ")}{clock}</span>
             <button type="button" className="kiosk-refresh" disabled={busy} onClick={() => refreshAll(true)}>
-              {busy ? "جاري التحديث…" : "تحديث"}
+              {busy ? t("جاري التحديث…", "Refreshing…") : t("تحديث", "Refresh")}
             </button>
           </footer>
         </main>

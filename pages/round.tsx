@@ -14,6 +14,7 @@ import type { Match } from "@/types/fixtures";
 import { loadNameOverrides, saveNameOverrides, deepMerge } from "@/lib/persist";
 import { getLogoOverrides, setLogoOverride, clearLogoOverride, getTemplate, setTemplate, clearTemplate } from "@/lib/db";
 import { useFitWidth } from "@/lib/useFitWidth";
+import { useLang, type T } from "@/lib/prefs";
 
 const PREVIEW_W = 480;
 const LKEY = "botola.roundLayout";
@@ -23,12 +24,13 @@ const loadLayout = (): MatchdayLayout => {
 };
 const saveLayout = (l: MatchdayLayout) => { try { localStorage.setItem(LKEY, JSON.stringify(l)); } catch { /* ignore */ } };
 
-const roundLabel = (r: number) => (r === UNSCHEDULED_ROUND ? "مباريات قادمة" : `الجولة ${r}`);
+const roundLabel = (r: number, t: T) => (r === UNSCHEDULED_ROUND ? t("مباريات قادمة", "Upcoming matches") : t(`الجولة ${r}`, `Round ${r}`));
 
 interface RoundState { competition: number; matches: Match[]; rounds: number[]; fetchedAt?: string; error?: string }
 
 
 export default function RoundPage() {
+  const { t } = useLang();
   const posterRef = useRef<HTMLDivElement>(null);
   const [paneRef, previewW] = useFitWidth<HTMLElement>(PREVIEW_W);
   const [league, setLeague] = useState<number>(BOTOLA_LEAGUE);
@@ -54,7 +56,7 @@ export default function RoundPage() {
     const json = await res.json();
     // Thrown, not returned: an empty answer would replace the round on screen
     // and the cached copy. An unpublished schedule still arrives as a 200.
-    if (!res.ok) throw new Error(json.error || "فشل الطلب");
+    if (!res.ok) throw new Error(json.error || "Request failed");
     return { competition: league, matches: json.matches ?? [], rounds: json.rounds ?? [], fetchedAt: json.fetchedAt, error: json.error };
   }, [league]);
 
@@ -107,31 +109,31 @@ export default function RoundPage() {
     // roundLabel already reads "مباريات قادمة" for the unscheduled bucket, so
     // only a numbered round gets the "مباريات"/"نتائج" prefix.
     const unscheduled = round === UNSCHEDULED_ROUND;
-    const fixturesText = round === null ? "" : unscheduled ? roundLabel(round) : `مباريات ${roundLabel(round)}`;
-    const resultsText = round === null ? "" : unscheduled ? roundLabel(round) : `نتائج ${roundLabel(round)}`;
+    const fixturesText = round === null ? "" : unscheduled ? roundLabel(round, t) : t(`مباريات ${roundLabel(round, t)}`, `${roundLabel(round, t)} fixtures`);
+    const resultsText = round === null ? "" : unscheduled ? roundLabel(round, t) : t(`نتائج ${roundLabel(round, t)}`, `${roundLabel(round, t)} results`);
     return {
       ...layout,
       title: { ...layout.title, show: true, text: fixturesText },
       resultsTitle: { ...layout.resultsTitle, show: true, text: resultsText },
       dateLabel: { ...layout.dateLabel, text: dateRange },
     };
-  }, [layout, round, dateRange]);
+  }, [layout, round, dateRange, t]);
 
   const scale = previewW / layout.width;
   // No games for a league means 365scores hasn't published its schedule yet —
   // a normal state, so say so plainly instead of exporting an empty poster.
   const empty = !loading && forLeague !== null && rounds.length === 0;
   const exportBlock = empty
-    ? "جدول هذه البطولة غير منشور بعد"
+    ? t("جدول هذه البطولة غير منشور بعد", "This competition's schedule is not published yet")
     : matches.length === 0
-    ? "لا توجد مباريات في هذه الجولة بعد"
+    ? t("لا توجد مباريات في هذه الجولة بعد", "No matches in this round yet")
     : results && finished === 0
-    ? "لم تنته أي مباراة في هذه الجولة بعد"
+    ? t("لم تنته أي مباراة في هذه الجولة بعد", "No match in this round has finished yet")
     : null;
 
   return (
     <>
-      <Head><title>ملصق الجولة — شوف تي في</title></Head>
+      <Head><title>{t("ملصق الجولة — شوف تي في")}</title></Head>
       <main className="app">
         <header className="topbar">
           <div className="brand">
@@ -141,43 +143,43 @@ export default function RoundPage() {
           <Nav />
         </header>
         <div className="pagehead">
-          <h1>ملصق الجولة</h1>
-          <span className="muted">{leagueById(league)?.ar} · مباريات حسب الجولة · مباشر · تصدير 1080×1350 PNG</span>
+          <h1>{t("ملصق الجولة")}</h1>
+          <span className="muted">{(leagueById(league)?.ar ?? "")}{t(" · مباريات حسب الجولة · مباشر · تصدير 1080×1350 PNG")}</span>
         </div>
 
         <div className="layout">
           <section className="controls">
             <div className="card">
-              <h3>الجولة</h3>
-              <div className="seg" role="tablist" aria-label="نوع الملصق">
-                <button role="tab" aria-selected={!results} className={!results ? "seg-btn on" : "seg-btn"} onClick={() => setChosenMode("fixtures")}>المباريات</button>
-                <button role="tab" aria-selected={results} className={results ? "seg-btn on" : "seg-btn"} onClick={() => setChosenMode("results")}>النتائج ({finished}/{matches.length})</button>
+              <h3>{t("الجولة")}</h3>
+              <div className="seg" role="tablist" aria-label={t("نوع الملصق")}>
+                <button role="tab" aria-selected={!results} className={!results ? "seg-btn on" : "seg-btn"} onClick={() => setChosenMode("fixtures")}>{t("المباريات")}</button>
+                <button role="tab" aria-selected={results} className={results ? "seg-btn on" : "seg-btn"} onClick={() => setChosenMode("results")}>{t("النتائج (")}{finished}/{matches.length})</button>
               </div>
               <label className="field wide">
-                <span>البطولة</span>
+                <span>{t("البطولة")}</span>
                 <select value={league} onChange={(e) => pickLeague(Number(e.target.value))} disabled={loading}>
                   {ROUND_LEAGUES.map((id) => (
-                    <option key={id} value={id}>{leagueById(id)?.ar}</option>
+                    <option key={id} value={id}>{(leagueById(id)?.ar ?? "")}</option>
                   ))}
                 </select>
               </label>
               <label className="field wide">
-                <span>الجولة</span>
+                <span>{t("الجولة")}</span>
                 <select value={round ?? ""} onChange={(e) => setRound(Number(e.target.value))} disabled={loading || rounds.length === 0}>
                   {rounds.length === 0 && <option value="">—</option>}
-                  {rounds.map((r) => <option key={r} value={r}>{roundLabel(r)}</option>)}
+                  {rounds.map((r) => <option key={r} value={r}>{roundLabel(r, t)}</option>)}
                 </select>
               </label>
-              <div className="kv"><span>المباريات</span><b>{matches.length}{matches.length > 0 ? ` · ${finished} انتهت` : ""}</b></div>
-              <div className="kv"><span>آخر تحديث</span><b>{forLeague?.fetchedAt ? new Date(forLeague.fetchedAt).toLocaleString() : "—"}</b></div>
-              <div className="kv"><span>الحالة</span><span className={loading ? "pill" : shownError ? "pill warn" : "pill ok"}>{loading ? "جاري التحميل…" : shownError ? "خطأ" : "متصل"}</span></div>
+              <div className="kv"><span>{t("المباريات")}</span><b>{matches.length}{matches.length > 0 ? t(` · ${finished} انتهت`, ` · ${finished} finished`) : ""}</b></div>
+              <div className="kv"><span>{t("آخر تحديث")}</span><b>{forLeague?.fetchedAt ? new Date(forLeague.fetchedAt).toLocaleString() : "—"}</b></div>
+              <div className="kv"><span>{t("الحالة")}</span><span className={loading ? "pill" : shownError ? "pill warn" : "pill ok"}>{loading ? t("جاري التحميل…", "Loading…") : shownError ? t("خطأ", "Error") : t("متصل", "Connected")}</span></div>
               {empty && (
-                <p className="err">لم يُنشر برنامج هذه المسابقة بعد. سيظهر هنا عند الإعلان عن الجولة المقبلة.</p>
+                <p className="err">{t("لم يُنشر برنامج هذه المسابقة بعد. سيظهر هنا عند الإعلان عن الجولة المقبلة.")}</p>
               )}
               {shownError && <p className="err">{shownError}</p>}
-              <button className="btn" disabled={loading} onClick={() => fetchRound()}>{loading ? "جاري التحديث…" : "تحديث"}</button>
+              <button className="btn" disabled={loading} onClick={() => fetchRound()}>{loading ? t("جاري التحديث…", "Refreshing…") : t("تحديث", "Refresh")}</button>
             </div>
-            <TemplateUploader isCustom={templateSrc !== null} onTemplate={onTemplate} defaultLabel="لا يوجد قالب بعد — تُستخدم خلفية بسيطة. ارفع قالب الجولة." resetLabel="حذف القالب" />
+            <TemplateUploader isCustom={templateSrc !== null} onTemplate={onTemplate} defaultLabel={t("لا يوجد قالب بعد — تُستخدم خلفية بسيطة. ارفع قالب الجولة.")} resetLabel={t("حذف القالب")} />
             <ExportControls posterRef={posterRef} canExport={matches.length > 0} blocked={exportBlock} onResetDesign={() => updateLayout(DEFAULT_MATCHDAY_LAYOUT)} fileBase={`choufsport-${leagueById(league)?.id === BOTOLA_LEAGUE ? "botola1" : "botola2"}-round${round ?? ""}`} fileDate={matches[0]?.date} />
             <MatchdayTeams matches={matches} nameOverrides={nameOverrides} logoOverrides={logoOverrides} onName={onName} onLogo={onLogo} onClearLogo={onClearLogo} />
             <MatchdayDesign layout={layout} onChange={updateLayout} />
@@ -185,7 +187,7 @@ export default function RoundPage() {
 
           <section className="previewpane" ref={paneRef}>
             <div className="previewsticky">
-              <h3 className="muted">معاينة مباشرة</h3>
+              <h3 className="muted">{t("معاينة مباشرة")}</h3>
               <div className={busy ? "previewbox busy" : "previewbox"} style={{ width: previewW, height: layout.height * scale }}>
                 <div style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}>
                   <MatchdayPoster ref={posterRef} groupBy="date" mode={results ? "results" : "fixtures"} matches={matches} layout={effLayout} templateSrc={templateSrc} nameOverrides={nameOverrides} logoOverrides={logoOverrides} />

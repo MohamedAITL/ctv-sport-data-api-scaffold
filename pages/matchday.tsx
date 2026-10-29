@@ -14,6 +14,7 @@ import { getLogoOverrides, setLogoOverride, clearLogoOverride, getTemplate, setT
 import { todayMA } from "@/lib/today";
 import { BIG_FAME, MOROCCAN_FAME } from "@/lib/scores365Games";
 import { useFitWidth } from "@/lib/useFitWidth";
+import { useLang } from "@/lib/prefs";
 
 const PREVIEW_W = 480;
 const LKEY = "botola.matchdayLayout";
@@ -33,6 +34,7 @@ interface FixturesState { date: string; matches: Match[]; moroccanCount?: number
 
 
 export default function Matchday() {
+  const { t } = useLang();
   const posterRef = useRef<HTMLDivElement>(null);
   const [paneRef, previewW] = useFitWidth<HTMLElement>(PREVIEW_W);
   const [date, setDate] = useState(today());
@@ -65,7 +67,7 @@ export default function Matchday() {
     const json = await res.json();
     // Thrown, not returned: an empty answer would replace the day on screen and
     // the cached copy. A partial answer (some leagues failed) is still data.
-    if (!res.ok && !json.matches?.length) throw new Error(json.error || json.errors?.join(" · ") || "فشل الطلب");
+    if (!res.ok && !json.matches?.length) throw new Error(json.error || json.errors?.join(" · ") || "Request failed");
     return { date: json.date ?? date, matches: json.matches ?? [], moroccanCount: json.moroccanCount, fetchedAt: json.fetchedAt, stale: Boolean(json.stale), errors: json.errors };
   }, [date]);
 
@@ -151,14 +153,14 @@ export default function Matchday() {
   const results = mode === "results";
   // A results poster with nothing played yet would be all dimmed kickoff times.
   const exportBlock = missing.length > 0
-    ? "جاري تجهيز شعارات المباريات المختارة…"
+    ? t("جاري تجهيز شعارات المباريات المختارة…", "Preparing the picked matches' crests…")
     : results && matches.length > 0 && finished + live === 0
-    ? "لم تنته أي مباراة بعد — تظهر النتائج بعد نهاية المباريات (اضغط تحديث)"
+    ? t("لم تنته أي مباراة بعد — تظهر النتائج بعد نهاية المباريات (اضغط تحديث)", "No match has finished yet — results appear once matches end (press Refresh)")
     : null;
 
   return (
     <>
-      <Head><title>ملصق مباريات اليوم — شوف تي في</title></Head>
+      <Head><title>{t("ملصق مباريات اليوم — شوف تي في")}</title></Head>
       <main className="app">
         <header className="topbar">
           <div className="brand">
@@ -168,47 +170,47 @@ export default function Matchday() {
           <Nav />
         </header>
         <div className="pagehead">
-          <h1>{results ? "ملصق نتائج اليوم" : "ملصق مباريات اليوم"}</h1>
-          <span className="muted">الكرة المغربية أولاً — الأندية في كل المسابقات والمنتخبات الوطنية — ثم أهم المباريات · تصدير 1080×1350 PNG</span>
+          <h1>{results ? t("ملصق نتائج اليوم", "Today's results poster") : t("ملصق مباريات اليوم", "Matchday poster")}</h1>
+          <span className="muted">{t("الكرة المغربية أولاً — الأندية في كل المسابقات والمنتخبات الوطنية — ثم أهم المباريات · تصدير 1080×1350 PNG")}</span>
         </div>
 
         <div className="layout">
           <section className="controls">
             <div className="card">
-              <h3>مباريات اليوم</h3>
-              <div className="seg" role="tablist" aria-label="نوع الملصق">
-                <button role="tab" aria-selected={!results} className={!results ? "seg-btn on" : "seg-btn"} onClick={() => pickMode("fixtures")}>المباريات</button>
-                <button role="tab" aria-selected={results} className={results ? "seg-btn on" : "seg-btn"} onClick={() => pickMode("results")}>النتائج</button>
+              <h3>{t("مباريات اليوم")}</h3>
+              <div className="seg" role="tablist" aria-label={t("نوع الملصق")}>
+                <button role="tab" aria-selected={!results} className={!results ? "seg-btn on" : "seg-btn"} onClick={() => pickMode("fixtures")}>{t("المباريات")}</button>
+                <button role="tab" aria-selected={results} className={results ? "seg-btn on" : "seg-btn"} onClick={() => pickMode("results")}>{t("النتائج")}</button>
               </div>
-              <label className="field wide"><span>التاريخ</span><input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></label>
-              <div className="kv"><span>على الملصق</span><b>{matches.length} من {candidates.length} (المغربية: {dataForDate?.moroccanCount ?? 0})</b></div>
+              <label className="field wide"><span>{t("التاريخ")}</span><input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></label>
+              <div className="kv"><span>{t("على الملصق")}</span><b>{matches.length}{t(" من ")}{candidates.length}{t(" (المغربية: ")}{dataForDate?.moroccanCount ?? 0})</b></div>
               {results && matches.length > 0 && (
-                <div className="kv"><span>انتهت</span><b>{finished} من {matches.length}{live > 0 ? ` · ${live} مباشرة` : ""}</b></div>
+                <div className="kv"><span>{t("انتهت")}</span><b>{finished}{t(" من ")}{matches.length}{live > 0 ? t(` · ${live} مباشرة`, ` · ${live} live`) : ""}</b></div>
               )}
-              <div className="kv"><span>آخر تحديث</span><b>{dataForDate?.fetchedAt ? new Date(dataForDate.fetchedAt).toLocaleString() : "—"}</b></div>
-              <div className="kv"><span>الحالة</span><span className={loadingDate ? "pill" : loadError || dataForDate?.stale ? "pill warn" : "pill ok"}>{loadingDate ? "جاري التحميل…" : loadError ? "خطأ" : dataForDate?.stale ? "نسخة مخزَّنة" : "متصل"}</span></div>
+              <div className="kv"><span>{t("آخر تحديث")}</span><b>{dataForDate?.fetchedAt ? new Date(dataForDate.fetchedAt).toLocaleString() : "—"}</b></div>
+              <div className="kv"><span>{t("الحالة")}</span><span className={loadingDate ? "pill" : loadError || dataForDate?.stale ? "pill warn" : "pill ok"}>{loadingDate ? t("جاري التحميل…", "Loading…") : loadError ? t("خطأ", "Error") : dataForDate?.stale ? t("نسخة مخزَّنة", "Saved copy") : t("متصل", "Connected")}</span></div>
               {loadError && <p className="err">{loadError}</p>}
               {dataForDate?.errors && dataForDate.errors.length > 0 && (
                 <ul className="warnlist">{dataForDate.errors.map((e, i) => <li key={i}>{e}</li>)}</ul>
               )}
-              <button className="btn" disabled={loadingDate} onClick={() => fetchFixtures()}>{loadingDate ? "جاري التحديث…" : "تحديث"}</button>
+              <button className="btn" disabled={loadingDate} onClick={() => fetchFixtures()}>{loadingDate ? t("جاري التحديث…", "Refreshing…") : t("تحديث", "Refresh")}</button>
             </div>
-            <TemplateUploader isCustom={templateSrc !== null} onTemplate={onTemplate} defaultLabel="لا يوجد قالب بعد — تُستخدم خلفية بسيطة. ارفع قالب مباريات اليوم." resetLabel="حذف القالب" />
+            <TemplateUploader isCustom={templateSrc !== null} onTemplate={onTemplate} defaultLabel={t("لا يوجد قالب بعد — تُستخدم خلفية بسيطة. ارفع قالب مباريات اليوم.")} resetLabel={t("حذف القالب")} />
             {candidates.length > 0 && (
               <details className="card collapsible">
-                <summary><h3>اختيار المباريات ({matches.length})</h3><span className="chev" /></summary>
-                <p className="muted">كل مباريات اليوم، الكرة المغربية أولاً. اختر ما يظهر على الملصق — يتسع الملصق لأي عدد ويصغّر الصفوف تلقائياً.</p>
+                <summary><h3>{t("اختيار المباريات (")}{matches.length})</h3><span className="chev" /></summary>
+                <p className="muted">{t("كل مباريات اليوم، الكرة المغربية أولاً. اختر ما يظهر على الملصق — يتسع الملصق لأي عدد ويصغّر الصفوف تلقائياً.")}</p>
                 <div className="row">
-                  <button type="button" className="btn ghost" onClick={() => savePicks(null)}>الافتراضي ({Math.min(DEFAULT_PICK, candidates.length)})</button>
-                  <button type="button" className="btn ghost" onClick={() => pick(new Set(candidates.filter((m) => m.fame > MOROCCAN_FAME).map((m) => m.id)))}>المغربية فقط</button>
-                  <button type="button" className="btn ghost" onClick={() => pick(new Set(candidates.filter((m) => m.fame >= BIG_FAME).map((m) => m.id)))}>المغربية + الكبرى</button>
-                  <button type="button" className="btn ghost" onClick={() => pick(new Set())}>مسح</button>
+                  <button type="button" className="btn ghost" onClick={() => savePicks(null)}>{t("الافتراضي (")}{Math.min(DEFAULT_PICK, candidates.length)})</button>
+                  <button type="button" className="btn ghost" onClick={() => pick(new Set(candidates.filter((m) => m.fame > MOROCCAN_FAME).map((m) => m.id)))}>{t("المغربية فقط")}</button>
+                  <button type="button" className="btn ghost" onClick={() => pick(new Set(candidates.filter((m) => m.fame >= BIG_FAME).map((m) => m.id)))}>{t("المغربية + الكبرى")}</button>
+                  <button type="button" className="btn ghost" onClick={() => pick(new Set())}>{t("مسح")}</button>
                 </div>
                 <label className="field wide">
-                  <span>بحث عن فريق أو مسابقة</span>
-                  <input type="search" dir="rtl" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="مثال: الوداد، ريال مدريد، دوري أبطال" />
+                  <span>{t("بحث عن فريق أو مسابقة")}</span>
+                  <input type="search" dir="auto" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("مثال: الوداد، ريال مدريد، دوري أبطال")} />
                 </label>
-                <p className="muted">{candidates.length} مباراة في {byCompetition.length} مسابقة{query ? " (بعد البحث)" : ""}</p>
+                <p className="muted">{candidates.length}{t(" مباراة في ")}{byCompetition.length}{t(" مسابقة")}{query ? t(" (بعد البحث)", " (filtered)") : ""}</p>
                 <div className="pick-list">
                 {byCompetition.map(([league, list]) => {
                   const on = list.filter((m) => chosen.has(m.id)).length;
@@ -217,7 +219,7 @@ export default function Matchday() {
                     <details key={league} className="pick-group" open={on > 0 || Boolean(query)}>
                       <summary>
                         <input
-                          type="checkbox" checked={on === list.length} aria-label={`اختيار كل مباريات ${league}`}
+                          type="checkbox" checked={on === list.length} aria-label={t(`اختيار كل مباريات ${league}`, `Pick every ${league} match`)}
                           onClick={(e) => e.stopPropagation()} onChange={(e) => toggle(list, e.target.checked)}
                         />
                         <b>{league}</b> <span className="muted">({on}/{list.length})</span>
@@ -225,7 +227,7 @@ export default function Matchday() {
                       {list.map((m) => (
                         <label key={m.id} className="field check pick-match">
                           <input type="checkbox" checked={chosen.has(m.id)} onChange={(e) => toggle([m], e.target.checked)} />
-                          <span>{m.time} · {label(m.home)} - {label(m.away)}</span>
+                          <span>{m.time} · <bdi>{label(m.home)}</bdi> - <bdi>{label(m.away)}</bdi></span>
                         </label>
                       ))}
                     </details>
@@ -241,7 +243,7 @@ export default function Matchday() {
 
           <section className="previewpane" ref={paneRef}>
             <div className="previewsticky">
-              <h3 className="muted">معاينة مباشرة</h3>
+              <h3 className="muted">{t("معاينة مباشرة")}</h3>
               <div className={busy ? "previewbox busy" : "previewbox"} style={{ width: previewW, height: layout.height * scale }}>
                 <div style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}>
                   <MatchdayPoster ref={posterRef} mode={mode} matches={matches} layout={effLayout} templateSrc={templateSrc} nameOverrides={nameOverrides} logoOverrides={logoOverrides} />

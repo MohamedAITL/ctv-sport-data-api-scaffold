@@ -1,4 +1,5 @@
 import type { LineupPlayer, TeamLineup } from "@/types/live";
+import { useLang } from "@/lib/prefs";
 
 /** Starter slot (`h123` / `a456`) → the substitute who takes it. */
 export type Swaps = Record<string, number>;
@@ -24,6 +25,7 @@ export function withSwaps(lu: TeamLineup, tag: "h" | "a", swaps: Swaps): TeamLin
 export default function LineupSwaps({ title, tag, lineup, swaps, onChange }: {
   title: string; tag: "h" | "a"; lineup: TeamLineup; swaps: Swaps; onChange: (next: Swaps) => void;
 }) {
+  const { t } = useLang();
   // A substitute already sent on in another slot is not offered twice.
   const taken = new Set(Object.entries(swaps).filter(([k]) => k.startsWith(tag)).map(([, id]) => id));
   return (
@@ -48,7 +50,7 @@ export default function LineupSwaps({ title, tag, lineup, swaps, onChange }: {
                 <option value={s.id}>{label(s)}</option>
                 {lineup.bench
                   .filter((b) => b.id === current || !taken.has(b.id))
-                  .map((b) => <option key={b.id} value={b.id}>{label(b)} — احتياط</option>)}
+                  .map((b) => <option key={b.id} value={b.id}>{label(b)}{t(" — احتياط")}</option>)}
               </select>
             </label>
           );

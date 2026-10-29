@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import PlayerCard from "./PlayerCard";
 import LineupExport from "./LineupExport";
 import type { LineupPlayer, LiveDetail, TeamLineup } from "@/types/live";
+import { useLang } from "@/lib/prefs";
 
 // `line` is depth from a team's own goal (0-100) and `side` runs from the
 // team's own left (0) to its right (100). Home sits on the right, matching the
@@ -96,6 +97,7 @@ function Bench({
   onOpen: (p: LineupPlayer, home: boolean) => void;
   off: Map<number, number>;
 }) {
+  const { t } = useLang();
   const replaced = [...lineup.starting, ...lineup.bench].filter((p) => off.has(p.id));
   return (
     <div className="kp-bench">
@@ -109,7 +111,7 @@ function Bench({
               <li key={p.id} className="on-pitch kp-came-on" onClick={() => onOpen(p, home)}>
                 <PlayerFace p={p} size={34} />
                 <span>{p.shortName || p.name}</span>
-                <em className="kp-onpitch">دخل {p.subbedIn.minute}&apos;</em>
+                <em className="kp-onpitch">{t("دخل ")}{p.subbedIn.minute}&apos;</em>
               </li>
             ) : (
               <li
@@ -119,7 +121,7 @@ function Bench({
               >
                 <PlayerFace p={p} size={34} />
                 <span>{p.shortName || p.name}</span>
-                {placed(p, home) && <em className="kp-onpitch">في الملعب</em>}
+                {placed(p, home) && <em className="kp-onpitch">{t("في الملعب")}</em>}
               </li>
             )
           )}
@@ -127,12 +129,12 @@ function Bench({
       )}
       {replaced.length > 0 && (
         <>
-          <h5>خرجوا</h5>
+          <h5>{t("خرجوا")}</h5>
           <ul className="kp-out">
             {replaced.map((p) => (
               <li key={p.id} onClick={() => onOpen(p, home)}>
                 <span>{p.shortName || p.name}</span>
-                <em className="kp-onpitch">خرج {off.get(p.id)}&apos;</em>
+                <em className="kp-onpitch">{t("خرج ")}{off.get(p.id)}&apos;</em>
               </li>
             ))}
           </ul>
@@ -140,7 +142,7 @@ function Bench({
       )}
       {!compact && lineup.missing.length > 0 && (
         <>
-          <h5>غيابات</h5>
+          <h5>{t("غيابات")}</h5>
           <ul className="kp-out">
             {lineup.missing.map((p) => (
             <li key={p.id} onClick={() => onOpen(p, home)}><span>{p.shortName || p.name}</span></li>
@@ -148,12 +150,13 @@ function Bench({
           </ul>
         </>
       )}
-      {!compact && lineup.coach && <p className="kp-coach">المدرب: {lineup.coach.name}</p>}
+      {!compact && lineup.coach && <p className="kp-coach">{t("المدرب: ")}{lineup.coach.name}</p>}
     </div>
   );
 }
 
 export default function LinePitch({ d }: { d: LiveDetail }) {
+  const { t } = useLang();
   const { homeLineup: h, awayLineup: a } = d;
   const gameId = d.match.id;
   const pitchRef = useRef<HTMLDivElement>(null);
@@ -304,9 +307,9 @@ export default function LinePitch({ d }: { d: LiveDetail }) {
 
   if (!h && !a) {
     return (
-      <div className="kp-none" dir="rtl">
-        <p>التشكيلة غير متوفرة لهذه المباراة</p>
-        <span>لا ينشر المصدر تشكيلات هذه المسابقة</span>
+      <div className="kp-none">
+        <p>{t("التشكيلة غير متوفرة لهذه المباراة")}</p>
+        <span>{t("لا ينشر المصدر تشكيلات هذه المسابقة")}</span>
       </div>
     );
   }
@@ -337,21 +340,21 @@ export default function LinePitch({ d }: { d: LiveDetail }) {
   };
 
   return (
-    <div className={`kp${cssFull ? " cssfull" : ""}`} dir="rtl" ref={wrapRef}>
+    <div className={`kp${cssFull ? " cssfull" : ""}`} ref={wrapRef}>
       <div className="kp-tools">
         <button type="button" className="kp-tool" onClick={toggleFull}>
-          {big ? "خروج من ملء الشاشة" : "ملء الشاشة"}
+          {big ? t("خروج من ملء الشاشة", "Exit full screen") : t("ملء الشاشة", "Full screen")}
         </button>
         {positioned && (
-          <button type="button" className="kp-tool" onClick={() => setExporting(true)}>تصدير ملصق التشكيلة</button>
+          <button type="button" className="kp-tool" onClick={() => setExporting(true)}>{t("تصدير ملصق التشكيلة")}</button>
         )}
         {Object.keys(moved).length > 0 && (
-          <button type="button" className="kp-tool" onClick={reset}>إعادة الترتيب</button>
+          <button type="button" className="kp-tool" onClick={reset}>{t("إعادة الترتيب")}</button>
         )}
-        <span className="kp-hint">اضغط على لاعب لعرض إحصائياته — اسحبه لتغيير مكانه، أو خارج الملعب لإرجاعه</span>
+        <span className="kp-hint">{t("اضغط على لاعب لعرض إحصائياته — اسحبه لتغيير مكانه، أو خارج الملعب لإرجاعه")}</span>
       </div>
       {(h?.estimated || a?.estimated) && (
-        <p className="kp-est">المواقع تقريبية حسب مركز كل لاعب — ينشر المصدر المواقع الدقيقة عند انطلاق المباراة.</p>
+        <p className="kp-est">{t("المواقع تقريبية حسب مركز كل لاعب — ينشر المصدر المواقع الدقيقة عند انطلاق المباراة.")}</p>
       )}
 
       {positioned ? (

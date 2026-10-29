@@ -1,5 +1,6 @@
 import type { MoroccanLayout } from "@/config/moroccanLayout";
 import { Color, Num, Text, Toggle } from "./live/designControls";
+import { useLang } from "@/lib/prefs";
 
 interface Props {
   layout: MoroccanLayout;
@@ -11,6 +12,7 @@ type SKey = keyof MoroccanLayout["spotlight"];
 
 /** Every value the Moroccan players poster reads, roundup and spotlight. */
 export default function MoroccanDesign({ layout, onChange }: Props) {
+  const { t } = useLang();
   const up = (fn: (n: MoroccanLayout) => void) => {
     const n: MoroccanLayout = structuredClone(layout);
     fn(n);
@@ -19,23 +21,23 @@ export default function MoroccanDesign({ layout, onChange }: Props) {
   const R = layout.roundup;
   const S = layout.spotlight;
   const C = R.card;
-  const rNum = (k: RKey, label: string) => <Num key={k} label={label} value={R[k] as number} onChange={(v) => up((n) => { (n.roundup[k] as number) = v; })} />;
-  const rColor = (k: RKey, label: string) => <Color key={k} label={label} value={R[k] as string} onChange={(v) => up((n) => { (n.roundup[k] as string) = v; })} />;
-  const sNum = (k: SKey, label: string) => <Num key={k} label={label} value={S[k] as number} onChange={(v) => up((n) => { (n.spotlight[k] as number) = v; })} />;
-  const sColor = (k: SKey, label: string) => <Color key={k} label={label} value={S[k] as string} onChange={(v) => up((n) => { (n.spotlight[k] as string) = v; })} />;
+  const rNum = (k: RKey, label: string) => <Num key={k} label={t(label)} value={R[k] as number} onChange={(v) => up((n) => { (n.roundup[k] as number) = v; })} />;
+  const rColor = (k: RKey, label: string) => <Color key={k} label={t(label)} value={R[k] as string} onChange={(v) => up((n) => { (n.roundup[k] as string) = v; })} />;
+  const sNum = (k: SKey, label: string) => <Num key={k} label={t(label)} value={S[k] as number} onChange={(v) => up((n) => { (n.spotlight[k] as number) = v; })} />;
+  const sColor = (k: SKey, label: string) => <Color key={k} label={t(label)} value={S[k] as string} onChange={(v) => up((n) => { (n.spotlight[k] as string) = v; })} />;
 
   const textBlock = (key: "title" | "subtitle" | "footer", name: string, textLabel: string) => {
-    const t = layout[key];
+    const tx = layout[key];
     return (
       <>
-        <h4>{name}</h4>
-        <Text label={textLabel} value={t.text ?? ""} onChange={(v) => up((n) => (n[key].text = v))} />
+        <h4>{t(name)}</h4>
+        <Text label={t(textLabel)} value={tx.text ?? ""} onChange={(v) => up((n) => (n[key].text = v))} />
         <div className="grid">
-          <Toggle label="إظهار" value={t.show} onChange={(v) => up((n) => (n[key].show = v))} />
-          <Num label="الحجم" value={t.fontSize} onChange={(v) => up((n) => (n[key].fontSize = v))} />
-          <Num label="موضعه أفقياً" value={t.x} onChange={(v) => up((n) => (n[key].x = v))} />
-          <Num label="موضعه رأسياً" value={t.y} onChange={(v) => up((n) => (n[key].y = v))} />
-          <Color label="اللون" value={t.color} onChange={(v) => up((n) => (n[key].color = v))} />
+          <Toggle label={t("إظهار")} value={tx.show} onChange={(v) => up((n) => (n[key].show = v))} />
+          <Num label={t("الحجم")} value={tx.fontSize} onChange={(v) => up((n) => (n[key].fontSize = v))} />
+          <Num label={t("موضعه أفقياً")} value={tx.x} onChange={(v) => up((n) => (n[key].x = v))} />
+          <Num label={t("موضعه رأسياً")} value={tx.y} onChange={(v) => up((n) => (n[key].y = v))} />
+          <Color label={t("اللون")} value={tx.color} onChange={(v) => up((n) => (n[key].color = v))} />
         </div>
       </>
     );
@@ -43,12 +45,12 @@ export default function MoroccanDesign({ layout, onChange }: Props) {
 
   return (
     <details className="card collapsible">
-      <summary><h3>التصميم</h3><span className="chev" /></summary>
+      <summary><h3>{t("التصميم")}</h3><span className="chev" /></summary>
 
       {textBlock("title", "العنوان", "نص العنوان")}
       {textBlock("subtitle", "العنوان الفرعي", "نص الفرعي (فارغ = إحصائيات الموسم)")}
 
-      <h4>القائمة (أكثر من لاعب)</h4>
+      <h4>{t("القائمة (أكثر من لاعب)")}</h4>
       <div className="grid">
         {rNum("firstRowY", "موضع أول صف")}
         {rNum("rowHeight", "ارتفاع الصف")}
@@ -74,17 +76,17 @@ export default function MoroccanDesign({ layout, onChange }: Props) {
         {rColor("rankBg", "لون دائرة الترتيب")}
         {rColor("rankColor", "لون رقم الترتيب")}
       </div>
-      <h4>بطاقة الصف</h4>
+      <h4>{t("بطاقة الصف")}</h4>
       <div className="grid">
-        <Toggle label="إظهار البطاقة" value={C.show} onChange={(v) => up((n) => (n.roundup.card.show = v))} />
-        <Num label="ارتفاع البطاقة" value={C.height} onChange={(v) => up((n) => (n.roundup.card.height = v))} />
-        <Num label="الهامش الجانبي" value={C.insetX} onChange={(v) => up((n) => (n.roundup.card.insetX = v))} />
-        <Num label="الاستدارة" value={C.radius} onChange={(v) => up((n) => (n.roundup.card.radius = v))} />
-        <Num label="الشفافية" value={C.opacity} step={0.05} onChange={(v) => up((n) => (n.roundup.card.opacity = v))} />
-        <Color label="لون البطاقة" value={C.color} onChange={(v) => up((n) => (n.roundup.card.color = v))} />
+        <Toggle label={t("إظهار البطاقة")} value={C.show} onChange={(v) => up((n) => (n.roundup.card.show = v))} />
+        <Num label={t("ارتفاع البطاقة")} value={C.height} onChange={(v) => up((n) => (n.roundup.card.height = v))} />
+        <Num label={t("الهامش الجانبي")} value={C.insetX} onChange={(v) => up((n) => (n.roundup.card.insetX = v))} />
+        <Num label={t("الاستدارة")} value={C.radius} onChange={(v) => up((n) => (n.roundup.card.radius = v))} />
+        <Num label={t("الشفافية")} value={C.opacity} step={0.05} onChange={(v) => up((n) => (n.roundup.card.opacity = v))} />
+        <Color label={t("لون البطاقة")} value={C.color} onChange={(v) => up((n) => (n.roundup.card.color = v))} />
       </div>
 
-      <h4>البطاقة الفردية (لاعب واحد)</h4>
+      <h4>{t("البطاقة الفردية (لاعب واحد)")}</h4>
       <div className="grid">
         {sNum("faceY", "موضع الصورة")}
         {sNum("faceSize", "حجم الصورة")}

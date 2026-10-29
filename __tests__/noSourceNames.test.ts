@@ -38,7 +38,7 @@ describe("no data-source names on screen", () => {
   });
 
   it("news sources are numbered, never named", () => {
-    expect(NEWS_SOURCES.map(sourceName)).toEqual(NEWS_SOURCES.map((_, i) => `مصدر ${i + 1}`));
+    expect(NEWS_SOURCES.map((k) => sourceName(k))).toEqual(NEWS_SOURCES.map((_, i) => `مصدر ${i + 1}`));
   });
 
   it("API errors are masked before they reach the browser", () => {

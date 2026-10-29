@@ -30,4 +30,5 @@ export const NEWS_SOURCES: NewsSourceKey[] = [
   "hesport", "hespress", "elbotola", "kooora", "bein", "skynews", "goal", "elsport", "scores365",
 ];
 
-export const sourceName = (k: NewsSourceKey): string => `مصدر ${NEWS_SOURCES.indexOf(k) + 1}`;
+export const sourceName = (k: NewsSourceKey, lang: "ar" | "en" = "ar"): string =>
+  `${lang === "en" ? "Source" : "مصدر"} ${NEWS_SOURCES.indexOf(k) + 1}`;

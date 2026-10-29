@@ -1,6 +1,7 @@
 import { useState } from "react";
 import MatchStatsExport from "./MatchStatsExport";
 import type { LiveDetail, Performer } from "@/types/live";
+import { useLang } from "@/lib/prefs";
 
 // Before kickoff the source publishes no match statistics at all, only season
 // leaders per line — so the tab shows those rather than dead-ending.
@@ -28,6 +29,7 @@ function PerformerCard({ p, side }: { p: Performer | null; side: "home" | "away"
 // Paired comparison bars. `valuePercentage` already encodes each side's share,
 // so the bars are drawn straight from it.
 export default function LiveStats({ d }: { d: LiveDetail }) {
+  const { t } = useLang();
   const [group, setGroup] = useState(0);
   const [majorOnly, setMajorOnly] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -35,15 +37,15 @@ export default function LiveStats({ d }: { d: LiveDetail }) {
   if (d.statGroups.length === 0) {
     if (d.topPerformers.length === 0) {
       return (
-        <div className="kp-none" dir="rtl">
-          <p>الإحصائيات غير متوفرة</p>
-          <span>{d.match.isLive || d.match.isFinished ? "لا ينشر المصدر إحصائيات هذه المباراة" : "تظهر الإحصائيات عند انطلاق المباراة"}</span>
+        <div className="kp-none">
+          <p>{t("الإحصائيات غير متوفرة")}</p>
+          <span>{d.match.isLive || d.match.isFinished ? t("لا تتوفر إحصائيات هذه المباراة", "No stats are available for this match") : t("تظهر الإحصائيات عند انطلاق المباراة", "Stats appear once the match starts")}</span>
         </div>
       );
     }
     return (
-      <div className="kt" dir="rtl">
-        <h3>أفضل اللاعبين هذا الموسم</h3>
+      <div className="kt">
+        <h3>{t("أفضل اللاعبين هذا الموسم")}</h3>
         {d.topPerformers.map((r) => (
           <div key={r.name} className="kt-row">
             <h4>{r.name}</h4>
@@ -53,7 +55,7 @@ export default function LiveStats({ d }: { d: LiveDetail }) {
             </div>
           </div>
         ))}
-        <p className="kt-note">لم تبدأ المباراة بعد — إحصائيات اللقاء تظهر عند انطلاقه.</p>
+        <p className="kt-note">{t("لم تبدأ المباراة بعد — إحصائيات اللقاء تظهر عند انطلاقه.")}</p>
       </div>
     );
   }
@@ -61,7 +63,7 @@ export default function LiveStats({ d }: { d: LiveDetail }) {
   const active = d.statGroups[Math.min(group, d.statGroups.length - 1)];
   const rows = majorOnly ? active.rows.filter((s) => s.isMajor) : active.rows;
   return (
-    <div className="ks" dir="rtl">
+    <div className="ks">
       {d.statGroups.length > 1 && (
         <div className="ks-periods">
           {d.statGroups.map((g, i) => (
@@ -72,9 +74,9 @@ export default function LiveStats({ d }: { d: LiveDetail }) {
         </div>
       )}
       <div className="ks-toggle">
-        <button type="button" className={majorOnly ? "ks-btn" : "ks-btn on"} onClick={() => setMajorOnly(false)}>كل الإحصائيات ({active.rows.length})</button>
-        <button type="button" className={majorOnly ? "ks-btn on" : "ks-btn"} onClick={() => setMajorOnly(true)}>الأهم</button>
-        <button type="button" className="kpv-export ks-export" onClick={() => setExporting(true)}>تصدير ملصق الإحصائيات</button>
+        <button type="button" className={majorOnly ? "ks-btn" : "ks-btn on"} onClick={() => setMajorOnly(false)}>{t("كل الإحصائيات (")}{active.rows.length})</button>
+        <button type="button" className={majorOnly ? "ks-btn on" : "ks-btn"} onClick={() => setMajorOnly(true)}>{t("الأهم")}</button>
+        <button type="button" className="kpv-export ks-export" onClick={() => setExporting(true)}>{t("تصدير ملصق الإحصائيات")}</button>
       </div>
       {exporting && <MatchStatsExport match={d.match} onClose={() => setExporting(false)} />}
       {rows.map((s) => (
@@ -96,16 +98,16 @@ export default function LiveStats({ d }: { d: LiveDetail }) {
           d.shots.filter((x) => x.home === home).reduce((t, x) => t + Number(x.xg || 0), 0).toFixed(2);
         return (
           <div className="kx">
-            <h3>التسديدات والأهداف المتوقعة</h3>
+            <h3>{t("التسديدات والأهداف المتوقعة")}</h3>
             <div className="ks-row">
-              <div className="ks-head"><b>{sum(true)}</b><span>مجموع الأهداف المتوقعة (xG)</span><b>{sum(false)}</b></div>
+              <div className="ks-head"><b>{sum(true)}</b><span>{t("مجموع الأهداف المتوقعة (xG)")}</span><b>{sum(false)}</b></div>
             </div>
             <ul className="kx-list">
               {d.shots.map((x, i) => (
                 <li key={`${x.minute}-${i}`} className={`${x.home ? "home" : "away"}${x.isGoal ? " goal" : ""}`}>
                   <b className="kx-min">{x.minute}</b>
                   <span className="kx-who">{x.player ?? "—"}</span>
-                  <span className="kx-out">{x.isGoal ? "⚽ هدف" : x.outcome ?? ""}{x.bodyPart ? ` · ${x.bodyPart}` : ""}</span>
+                  <span className="kx-out">{x.isGoal ? t("⚽ هدف", "⚽ Goal") : x.outcome ?? ""}{x.bodyPart ? ` · ${x.bodyPart}` : ""}</span>
                   <b className="kx-xg">{x.xg ?? "-"}</b>
                 </li>
               ))}
@@ -116,7 +118,7 @@ export default function LiveStats({ d }: { d: LiveDetail }) {
 
       {d.facts.length > 0 && (
         <div className="kf">
-          <h3>كيف مرّت المباراة</h3>
+          <h3>{t("كيف مرّت المباراة")}</h3>
           {d.facts.map((b) => (
             <div key={b.title} className="kf-block">
               <h4>{b.title}</h4>

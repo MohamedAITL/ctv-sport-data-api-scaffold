@@ -37,6 +37,35 @@
   --med: 220ms;
 }
 
+:root { color-scheme: dark; }
+/* Light mode: the same roles, light surfaces. The header band stays the brand
+   purple and the pitch stays green in both, so what sits on them is unchanged. */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f5f3f8;
+  --bg-2: #eeeaf3;
+  --panel: #ffffff;
+  --panel-2: #f4f1f8;
+  --panel-3: #e8e3ef;
+  --border: #e2dce9;
+  --border-2: #d2c9dc;
+  --text: #1c1525;
+  --muted: #5c536a;          /* 7.1:1 on --panel */
+  --accent-soft: rgba(254, 140, 12, 0.16);
+  --accent-2: #9a5b00;
+  --live-text: #c2242a;      /* 5.6:1 on --panel */
+  --ok: #17864b;
+  --warn: #8f5a00;
+  --danger: #c2242a;
+  --shadow: 0 1px 2px rgba(40, 20, 60, 0.10);
+  --shadow-2: 0 6px 18px rgba(40, 20, 60, 0.14);
+}
+:root[data-theme="light"] .field select option { background: #ffffff; color: #1c1525; }
+:root[data-theme="light"] .teamrow .logo.fallback { color: var(--text); }
+:root[data-theme="light"] .kl-ma em { color: #9b1c22; }
+:root[data-theme="light"] .btn:hover:not(:disabled) { box-shadow: 0 6px 16px rgba(40, 20, 60, 0.14); }
+:root[data-theme="light"] .pill.warn { background: rgba(143, 90, 0, .10); border-color: rgba(143, 90, 0, .4); }
+
 * { box-sizing: border-box; }
 html, body {
   margin: 0;
@@ -332,7 +361,8 @@ html, body {
 
 .kh { padding: 20px 28px 12px; border-bottom: 1px solid var(--border); }
 .kh-meta { display: flex; flex-wrap: wrap; gap: 8px; color: var(--muted); font-size: 15px; margin-bottom: 10px; }
-.kh-score { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 20px; }
+/* Home on the right in both languages, as on the pitch and every poster. */
+.kh-score { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 20px; direction: rtl; }
 .kh-side { display: flex; align-items: center; gap: 14px; min-width: 0; }
 .kh-score .kh-side:last-child { flex-direction: row-reverse; }
 .kh-side img { width: 64px; height: 64px; object-fit: contain; }
@@ -1088,6 +1118,9 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
   .nav { display: flex; max-width: 100%; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
   .nav::-webkit-scrollbar { display: none; }
   .navlink { white-space: nowrap; flex: none; padding: 7px 12px; }
+  /* Switches share the logo's row; the tabs take the full row below. */
+  .topbar > .prefs { order: 1; margin-inline-start: auto; }
+  .topbar > .nav { order: 2; flex-basis: 100%; margin-inline-start: 0; }
 }
 /* The live kiosk is laid out for a wall screen; on a phone the match list
    stacks above the match instead of squeezing it to a sliver. */
@@ -1136,3 +1169,20 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
 .kl-ma img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; background: var(--panel-3); border: 2px solid #c1272d; flex: none; }
 .kl-ma img + img { margin-inline-start: -12px; }
 .kl-ma em { font-style: normal; font-size: 13px; font-weight: 800; color: #f3c6c7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
+
+/* Theme and language switches, at the end of the nav. */
+.prefs { display: inline-flex; gap: 6px; flex: none; }
+.topbar > .nav { margin-inline-start: auto; }
+.prefs-btn {
+  min-width: 40px; height: 36px; padding: 0 10px; border-radius: 8px; cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, .28); background: rgba(255, 255, 255, .08); color: #fff;
+  font-family: inherit; font-size: 15px; font-weight: 800; line-height: 1;
+}
+.prefs-btn:hover { background: rgba(255, 255, 255, .16); }
+.kiosk-brand .prefs { margin-inline-start: 8px; padding: 0; }
+.kiosk-brand .prefs-btn { border-color: var(--border-2); background: var(--panel-2); color: var(--text); }
+
+/* Home-versus-away on the match screen keeps one arrangement in both languages
+   — home on the right, as on the pitch and every poster — so English does not
+   mirror the scoreline against the pitch beneath it. */
+.ks-head, .ks-bars, .kx-list, .kf-block li.paired, .ke, .kh2h, .kpv-row, .kt-pair { direction: rtl; }

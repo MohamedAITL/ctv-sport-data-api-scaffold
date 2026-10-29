@@ -10,6 +10,7 @@ import { useCachedData } from "@/lib/useCachedData";
 import { useFitWidth } from "@/lib/useFitWidth";
 import { deepMerge } from "@/lib/persist";
 import { clearTemplate, getTemplate, setTemplate } from "@/lib/db";
+import { useLang } from "@/lib/prefs";
 
 const PREVIEW_W = 480;
 const LKEY = "botola.totwLayout";
@@ -31,6 +32,7 @@ const faceless = (p: TotwPlayer): TotwPlayer => ({ ...p, photo: null, club: p.cl
  * can be changed, and the poster is designed like every other one.
  */
 export default function TotwStudio({ league, leagueField }: { league: number; leagueField: ReactNode }) {
+  const { t } = useLang();
   const posterRef = useRef<HTMLDivElement>(null);
   const [paneRef, previewW] = useFitWidth<HTMLElement>(PREVIEW_W);
   const [layout, setLayout] = useState<TotwLayout>(DEFAULT_TOTW_LAYOUT);
@@ -53,7 +55,7 @@ export default function TotwStudio({ league, leagueField }: { league: number; le
   const readTotw = useCallback(async (): Promise<TotwState> => {
     const res = await fetch(`/api/totw?competition=${league}${weekKey ? `&key=${encodeURIComponent(weekKey)}` : ""}`);
     const json = await res.json();
-    if (!res.ok) throw new Error(json.error || "فشل الطلب");
+    if (!res.ok) throw new Error(json.error || "Request failed");
     return { competition: league, totw: json.totw ?? null, playedRounds: json.playedRounds ?? [] };
   }, [league, weekKey]);
   const { data, loading, busy, error, refresh } = useCachedData<TotwState>(`totw:${league}:${weekKey}`, readTotw);
@@ -72,7 +74,7 @@ export default function TotwStudio({ league, leagueField }: { league: number; le
 
   const round = totw ? roundOfKey(totw.key) : manualRound;
   const roundId = totw ? totw.key : manualRound !== null ? `r${manualRound}` : "";
-  const roundName = totw ? totw.rounds.find((r) => r.key === totw.key)?.name ?? `الجولة ${round}` : round !== null ? `الجولة ${round}` : "";
+  const roundName = totw ? totw.rounds.find((r) => r.key === totw.key)?.name ?? t(`الجولة ${round}`, `Round ${round}`) : round !== null ? t(`الجولة ${round}`, `Round ${round}`) : "";
 
   useEffect(() => {
     if (!roundId) return;
@@ -89,7 +91,7 @@ export default function TotwStudio({ league, leagueField }: { league: number; le
   const readPool = useCallback(async (): Promise<RoundPool> => {
     const res = await fetch(`/api/totw?competition=${league}&round=${round}&pool=1`);
     const json = await res.json();
-    if (!res.ok) throw new Error(json.error || "فشل الطلب");
+    if (!res.ok) throw new Error(json.error || "Request failed");
     return json as RoundPool;
   }, [league, round]);
   const needPool = round !== null && (!official || editing);
@@ -161,21 +163,21 @@ export default function TotwStudio({ league, leagueField }: { league: number; le
   const blocked = !forLeague
     ? null
     : filled < slots.length
-      ? `اختر ${slots.length} لاعباً (${filled}/${slots.length})`
+      ? t(`اختر ${slots.length} لاعباً (${filled}/${slots.length})`, `Pick ${slots.length} players (${filled}/${slots.length})`)
       : missing.length > 0
-        ? "جاري تجهيز صور اللاعبين…"
+        ? t("جاري تجهيز صور اللاعبين…", "Preparing player photos…")
         : null;
-  const subtitle = [leagueById(league)?.ar, roundName].filter(Boolean).join(" · ");
+  const subtitle = [(leagueById(league)?.ar ?? ""), roundName].filter(Boolean).join(" · ");
   const scale = previewW / layout.width;
 
   return (
     <div className="layout">
       <section className="controls">
         <div className="card">
-          <h3>تشكيلة الجولة</h3>
+          <h3>{t("تشكيلة الجولة")}</h3>
           {leagueField}
           <label className="field wide">
-            <span>الجولة</span>
+            <span>{t("الجولة")}</span>
             {totw ? (
               <select value={totw.key} onChange={(e) => setWeekKey(e.target.value)} disabled={loading}>
                 {totw.rounds.map((r) => <option key={r.key} value={r.key}>{r.name}</option>)}
@@ -183,45 +185,45 @@ export default function TotwStudio({ league, leagueField }: { league: number; le
             ) : (
               <select value={manualRound ?? ""} onChange={(e) => setManualRound(Number(e.target.value))} disabled={loading || played.length === 0}>
                 {played.length === 0 && <option value="">—</option>}
-                {played.map((r) => <option key={r} value={r}>الجولة {r}</option>)}
+                {played.map((r) => <option key={r} value={r}>{t("الجولة ")}{r}</option>)}
               </select>
             )}
           </label>
-          <div className="kv"><span>المصدر</span><b>{!forLeague ? "—" : official ? "التشكيلة الرسمية" : "اختيار يدوي"}</b></div>
+          <div className="kv"><span>{t("المصدر")}</span><b>{!forLeague ? "—" : official ? t("التشكيلة الرسمية", "Official team") : t("اختيار يدوي", "Picked by hand")}</b></div>
           {forLeague && !official && (
-            <p className="muted">لا تتوفر تشكيلة رسمية للجولة ولا تقييمات للاعبين في هذه المسابقة — اختر اللاعبين من أساسيي الجولة.</p>
+            <p className="muted">{t("لا تتوفر تشكيلة رسمية للجولة ولا تقييمات للاعبين في هذه المسابقة — اختر اللاعبين من أساسيي الجولة.")}</p>
           )}
-          <div className="kv"><span>الحالة</span><span className={loading ? "pill" : error ? "pill warn" : "pill ok"}>{loading ? "جاري التحميل…" : error ? "خطأ" : "متصل"}</span></div>
+          <div className="kv"><span>{t("الحالة")}</span><span className={loading ? "pill" : error ? "pill warn" : "pill ok"}>{loading ? t("جاري التحميل…", "Loading…") : error ? t("خطأ", "Error") : t("متصل", "Connected")}</span></div>
           {error && <p className="err">{error}</p>}
-          {forLeague && !official && played.length === 0 && <p className="err">لم تُلعب أي جولة بعد في هذه المسابقة.</p>}
-          <button className="btn" disabled={loading} onClick={() => refresh()}>{loading || busy ? "جاري التحديث…" : "تحديث"}</button>
+          {forLeague && !official && played.length === 0 && <p className="err">{t("لم تُلعب أي جولة بعد في هذه المسابقة.")}</p>}
+          <button className="btn" disabled={loading} onClick={() => refresh()}>{loading || busy ? t("جاري التحديث…", "Refreshing…") : t("تحديث", "Refresh")}</button>
         </div>
 
         {round !== null && (
           <details className="card collapsible" open={editing} onToggle={(e) => setEditing((e.target as HTMLDetailsElement).open)}>
-            <summary><h3>{official ? "تعديل التشكيلة" : "اختيار التشكيلة"}</h3><span className="chev" /></summary>
+            <summary><h3>{official ? t("تعديل التشكيلة", "Edit the team") : t("اختيار التشكيلة", "Pick the team")}</h3><span className="chev" /></summary>
             <label className="field wide">
-              <span>الخطة</span>
+              <span>{t("الخطة")}</span>
               <select value={formation} onChange={(e) => savePicks({ ...picks, formation: e.target.value })}>
                 {Array.from(new Set([...(totw?.formation ? [totw.formation] : []), ...FORMATIONS])).map((f) => <option key={f} value={f}>{f}</option>)}
               </select>
             </label>
-            {poolLoading && !pool && <p className="kxp-wait"><i className="spinner" />جاري تحميل أساسيي الجولة…</p>}
+            {poolLoading && !pool && <p className="kxp-wait"><i className="spinner" />{t("جاري تحميل أساسيي الجولة…")}</p>}
             {pool && (
               <>
                 <label className="field wide">
-                  <span>المدرب</span>
+                  <span>{t("المدرب")}</span>
                   <select value={coach?.id ?? ""} onChange={(e) => savePicks({ ...picks, coach: Number(e.target.value) || undefined })}>
-                    <option value="">{totw?.coach ? totw.coach.name : "— بدون —"}</option>
+                    <option value="">{totw?.coach ? totw.coach.name : t("— بدون —", "— none —")}</option>
                     {pool.coaches.map((c) => <option key={c.id} value={c.id}>{c.name} — {c.club?.name}</option>)}
                   </select>
                 </label>
                 <div className="kxs">
                   {slots.map((s, i) => (
                     <label key={i} className={`field wide${picks.slots?.[i] ? " kxs-on" : ""}`}>
-                      <span>{i === 0 ? "حارس المرمى" : s.player?.position ?? `اللاعب ${i + 1}`}</span>
+                      <span>{i === 0 ? t("حارس المرمى", "Goalkeeper") : s.player?.position ?? t(`اللاعب ${i + 1}`, `Player ${i + 1}`)}</span>
                       <select value={s.player?.id ?? ""} onChange={(e) => pickSlot(i, Number(e.target.value))}>
-                        <option value="">— اختر لاعباً —</option>
+                        <option value="">{t("— اختر لاعباً —")}</option>
                         {s.player && !poolById.has(s.player.id) && <option value={s.player.id}>{label(s.player)} — {s.player.club?.name}</option>}
                         {byClub.map(([club, players]) => (
                           <optgroup key={club} label={club}>
@@ -237,19 +239,19 @@ export default function TotwStudio({ league, leagueField }: { league: number; le
               </>
             )}
             {(picks.formation || picks.coach || Object.keys(picks.slots ?? {}).length > 0) && (
-              <button type="button" className="btn ghost" onClick={() => savePicks({})}>إلغاء كل التعديلات</button>
+              <button type="button" className="btn ghost" onClick={() => savePicks({})}>{t("إلغاء كل التعديلات")}</button>
             )}
           </details>
         )}
 
-        <TemplateUploader isCustom={templateSrc !== null} onTemplate={onTemplate} defaultLabel="لا يوجد قالب بعد — تُستخدم خلفية بسيطة. ارفع قالب تشكيلة الجولة." resetLabel="حذف القالب" />
+        <TemplateUploader isCustom={templateSrc !== null} onTemplate={onTemplate} defaultLabel={t("لا يوجد قالب بعد — تُستخدم خلفية بسيطة. ارفع قالب تشكيلة الجولة.")} resetLabel={t("حذف القالب")} />
         <ExportControls posterRef={posterRef} canExport={Boolean(forLeague) && round !== null} blocked={blocked} onResetDesign={() => updateLayout(DEFAULT_TOTW_LAYOUT)} fileBase={`choufsport-totw-${league}-${round ?? "x"}`} />
         <TotwDesign layout={layout} onChange={updateLayout} />
       </section>
 
       <section className="previewpane" ref={paneRef}>
         <div className="previewsticky">
-          <h3 className="muted">معاينة مباشرة</h3>
+          <h3 className="muted">{t("معاينة مباشرة")}</h3>
           <div className={busy ? "previewbox busy" : "previewbox"} style={{ width: previewW, height: layout.height * scale }}>
             <div style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}>
               <TotwPoster ref={posterRef} subtitle={subtitle} slots={slots} coach={coach} formation={formation} layout={layout} templateSrc={templateSrc} />

@@ -9,6 +9,7 @@ import { useCachedData } from "@/lib/useCachedData";
 import { useFitWidth } from "@/lib/useFitWidth";
 import { deepMerge } from "@/lib/persist";
 import { clearTemplate, getTemplate, setTemplate } from "@/lib/db";
+import { useLang } from "@/lib/prefs";
 
 const PREVIEW_W = 480;
 const LKEY = "botola.moroccanLayout";
@@ -23,7 +24,7 @@ const bare = (h: MoroccanHighlight): MoroccanHighlight => ({ ...h, photo: null, 
 async function readHighlights(): Promise<MoroccanHighlight[]> {
   const res = await fetch("/api/moroccans");
   const json = await res.json();
-  if (!res.ok) throw new Error(json.error || "فشل الطلب");
+  if (!res.ok) throw new Error(json.error || "Request failed");
   return json.highlights ?? [];
 }
 
@@ -33,6 +34,7 @@ async function readHighlights(): Promise<MoroccanHighlight[]> {
  * several a roundup.
  */
 export default function MoroccanStudio() {
+  const { t, lang } = useLang();
   const posterRef = useRef<HTMLDivElement>(null);
   const [paneRef, previewW] = useFitWidth<HTMLElement>(PREVIEW_W);
   const [layout, setLayout] = useState<MoroccanLayout>(DEFAULT_MOROCCAN_LAYOUT);
@@ -103,9 +105,9 @@ export default function MoroccanStudio() {
   const blocked = !data
     ? null
     : picked.length === 0
-      ? "اختر إحصائية واحدة على الأقل"
+      ? t("اختر إحصائية واحدة على الأقل", "Pick at least one stat")
       : missing.length > 0
-        ? "جاري تجهيز صور اللاعبين…"
+        ? t("جاري تجهيز صور اللاعبين…", "Preparing player photos…")
         : null;
   const scale = previewW / layout.width;
 
@@ -113,30 +115,30 @@ export default function MoroccanStudio() {
     <div className="layout">
       <section className="controls">
         <div className="card">
-          <h3>المغاربة في الصدارة</h3>
-          <p className="muted">الدوليون المغاربة ضمن أفضل 20 في إحصائيات كل مسابقة. اختر إحصائية واحدة لبطاقة فردية، أو عدة إحصائيات لقائمة.</p>
-          <div className="kv"><span>على الملصق</span><b>{picked.length} من {all.length}{picked.length === 1 ? " · بطاقة فردية" : ""}</b></div>
-          <div className="kv"><span>الحالة</span><span className={loading ? "pill" : error ? "pill warn" : "pill ok"}>{loading ? "جاري التحميل…" : error ? "خطأ" : "متصل"}</span></div>
+          <h3>{t("المغاربة في الصدارة")}</h3>
+          <p className="muted">{t("الدوليون المغاربة ضمن أفضل 20 في إحصائيات كل مسابقة. اختر إحصائية واحدة لبطاقة فردية، أو عدة إحصائيات لقائمة.")}</p>
+          <div className="kv"><span>{t("على الملصق")}</span><b>{picked.length}{t(" من ")}{all.length}{picked.length === 1 ? t(" · بطاقة فردية", " · spotlight") : ""}</b></div>
+          <div className="kv"><span>{t("الحالة")}</span><span className={loading ? "pill" : error ? "pill warn" : "pill ok"}>{loading ? t("جاري التحميل…", "Loading…") : error ? t("خطأ", "Error") : t("متصل", "Connected")}</span></div>
           {error && <p className="err">{error}</p>}
-          {data && all.length === 0 && <p className="muted">لا يوجد لاعب مغربي ضمن أفضل 20 في أي مسابقة حالياً.</p>}
-          <button className="btn" disabled={loading} onClick={() => refresh()}>{loading || busy ? "جاري التحديث…" : "تحديث"}</button>
+          {data && all.length === 0 && <p className="muted">{t("لا يوجد لاعب مغربي ضمن أفضل 20 في أي مسابقة حالياً.")}</p>}
+          <button className="btn" disabled={loading} onClick={() => refresh()}>{loading || busy ? t("جاري التحديث…", "Refreshing…") : t("تحديث", "Refresh")}</button>
         </div>
 
         {all.length > 0 && (
           <details className="card collapsible" open>
-            <summary><h3>اختيار الإحصائيات ({picked.length})</h3><span className="chev" /></summary>
+            <summary><h3>{t("اختيار الإحصائيات (")}{picked.length})</h3><span className="chev" /></summary>
             <div className="row">
-              <button type="button" className="btn ghost" onClick={() => savePicks(null)}>الأفضل ({best.length})</button>
-              <button type="button" className="btn ghost" onClick={() => savePicks(all.filter((h) => showNegative || !h.negative).map((h) => h.key))}>الكل</button>
-              <button type="button" className="btn ghost" onClick={() => savePicks([])}>مسح</button>
+              <button type="button" className="btn ghost" onClick={() => savePicks(null)}>{t("الأفضل (")}{best.length})</button>
+              <button type="button" className="btn ghost" onClick={() => savePicks(all.filter((h) => showNegative || !h.negative).map((h) => h.key))}>{t("الكل")}</button>
+              <button type="button" className="btn ghost" onClick={() => savePicks([])}>{t("مسح")}</button>
             </div>
             <label className="field wide">
-              <span>بحث عن لاعب أو مسابقة</span>
-              <input type="search" dir="rtl" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="مثال: حكيمي، الدوري الإسباني" />
+              <span>{t("بحث عن لاعب أو مسابقة")}</span>
+              <input type="search" dir="auto" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("مثال: حكيمي، الدوري الإسباني")} />
             </label>
             <label className="field check">
               <input type="checkbox" checked={showNegative} onChange={(e) => setShowNegative(e.target.checked)} />
-              <span>إظهار الإحصائيات السلبية (البطاقات)</span>
+              <span>{t("إظهار الإحصائيات السلبية (البطاقات)")}</span>
             </label>
             <div className="pick-list">
               {byPlayer.map((list) => {
@@ -145,7 +147,7 @@ export default function MoroccanStudio() {
                   <details key={list[0].playerId} className="pick-group" open={on > 0 || Boolean(q)}>
                     <summary>
                       <input
-                        type="checkbox" checked={on === list.length} aria-label={`كل إحصائيات ${list[0].name}`}
+                        type="checkbox" checked={on === list.length} aria-label={t(`كل إحصائيات ${list[0].name}`, `All stats for ${list[0].name}`)}
                         onClick={(e) => e.stopPropagation()} onChange={(e) => toggle(list, e.target.checked)}
                       />
                       <b>{list[0].name}</b> <span className="muted">({on}/{list.length})</span>
@@ -153,7 +155,7 @@ export default function MoroccanStudio() {
                     {list.map((h) => (
                       <label key={h.key} className="field check pick-match">
                         <input type="checkbox" checked={chosen.has(h.key)} onChange={(e) => toggle([h], e.target.checked)} />
-                        <span>{ordinal(h.rank)} · {h.category} <bdi dir="ltr">({h.value})</bdi> — {h.competition}</span>
+                        <span>{lang === "en" ? `#${h.rank}` : ordinal(h.rank)} · <bdi>{h.category}</bdi> <bdi dir="ltr">({h.value})</bdi> — <bdi>{h.competition}</bdi></span>
                       </label>
                     ))}
                   </details>
@@ -163,14 +165,14 @@ export default function MoroccanStudio() {
           </details>
         )}
 
-        <TemplateUploader isCustom={templateSrc !== null} onTemplate={onTemplate} defaultLabel="لا يوجد قالب بعد — تُستخدم خلفية بسيطة. ارفع قالب المغاربة." resetLabel="حذف القالب" />
+        <TemplateUploader isCustom={templateSrc !== null} onTemplate={onTemplate} defaultLabel={t("لا يوجد قالب بعد — تُستخدم خلفية بسيطة. ارفع قالب المغاربة.")} resetLabel={t("حذف القالب")} />
         <ExportControls posterRef={posterRef} canExport={picked.length > 0} blocked={blocked} onResetDesign={() => updateLayout(DEFAULT_MOROCCAN_LAYOUT)} fileBase={picked.length === 1 ? `choufsport-moroccan-${picked[0].playerId}` : "choufsport-moroccans"} />
         <MoroccanDesign layout={layout} onChange={updateLayout} />
       </section>
 
       <section className="previewpane" ref={paneRef}>
         <div className="previewsticky">
-          <h3 className="muted">معاينة مباشرة</h3>
+          <h3 className="muted">{t("معاينة مباشرة")}</h3>
           <div className={busy ? "previewbox busy" : "previewbox"} style={{ width: previewW, height: layout.height * scale }}>
             <div style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}>
               <MoroccanPoster ref={posterRef} highlights={onPoster} layout={layout} templateSrc={templateSrc} />

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { LiveMatch, LiveTeam, MoroccanPlayer } from "@/types/live";
+import { useLang } from "@/lib/prefs";
 
 // Crests 404 when the payload carried no imageVersion; show nothing rather than
 // a broken-image icon on a wall display.
@@ -75,6 +76,7 @@ export function groupByCompetition(matches: LiveMatch[]) {
 // Left rail. Rows are full-width tap targets — on a wall screen a finger is the
 // only pointer, so there is no hover state to lean on.
 export default function LiveList({ matches, selectedId, onSelect }: Props) {
+  const { t } = useLang();
   const groups = groupByCompetition(matches);
   const [closed, setClosed] = useState<number[]>([]);
   // localStorage is read after mount so the server and the first client render
@@ -90,7 +92,7 @@ export default function LiveList({ matches, selectedId, onSelect }: Props) {
   };
 
   return (
-    <div className="kl-list" dir="rtl">
+    <div className="kl-list">
       {groups.map((g) => (
         <section key={g.id} className={closed.includes(g.id) ? "kl-group closed" : "kl-group"}>
           <button
@@ -113,9 +115,9 @@ export default function LiveList({ matches, selectedId, onSelect }: Props) {
             >
               <div className="kl-row-top">
                 {m.isLive ? (
-                  <span className="kl-live"><i className="kl-dot" />{m.clock || "مباشر"}</span>
+                  <span className="kl-live"><i className="kl-dot" />{m.clock || t("مباشر", "Live")}</span>
                 ) : (
-                  <span className="kl-when">{m.isFinished ? "انتهت" : m.startTime.slice(11, 16)}</span>
+                  <span className="kl-when">{m.isFinished ? t("انتهت", "FT") : m.startTime.slice(11, 16)}</span>
                 )}
                 {m.moroccans && <Moroccans players={m.moroccans} />}
               </div>
@@ -133,7 +135,7 @@ export default function LiveList({ matches, selectedId, onSelect }: Props) {
           ))}
         </section>
       ))}
-      {matches.length === 0 && <p className="kl-empty">لا توجد مباريات</p>}
+      {matches.length === 0 && <p className="kl-empty">{t("لا توجد مباريات")}</p>}
     </div>
   );
 }

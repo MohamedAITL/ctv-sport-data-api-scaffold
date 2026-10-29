@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import H2HPoster from "./H2HPoster";
 import H2HDesign from "./H2HDesign";
 import PosterExport from "./PosterExport";
 import { DEFAULT_H2H_LAYOUT, type H2HLayout } from "@/config/h2hLayout";
 import { h2hRecord } from "@/lib/h2hRecord";
 import type { H2HRecord, LiveMatch, PastMatch } from "@/types/live";
+import { useLang } from "@/lib/prefs";
 
 /**
  * The meetings on the poster and the record above them — the same meetings:
@@ -27,6 +28,11 @@ export function posterMeetings(all: PastMatch[], match: LiveMatch, l: H2HLayout)
  * rather than slowing the tab for everyone who never exports.
  */
 export default function H2HExport({ match, onClose }: { match: LiveMatch; onClose: () => void }) {
+  const { t } = useLang();
+  // Read through a ref: the language settles just after mount, and a fetch
+  // must not run twice for it.
+  const tRef = useRef(t);
+  tRef.current = t;
   const [rows, setRows] = useState<PastMatch[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,10 +44,10 @@ export default function H2HExport({ match, onClose }: { match: LiveMatch; onClos
       .then((r) => r.json())
       .then((j) => {
         if (!live) return;
-        if (!j.previous?.h2h?.length) { setError("لا توجد مواجهات سابقة لتصديرها."); return; }
+        if (!j.previous?.h2h?.length) { setError(tRef.current("لا توجد مواجهات سابقة لتصديرها.", "No previous meetings to export.")); return; }
         setRows(j.previous.h2h);
       })
-      .catch(() => { if (live) setError("تعذر تجهيز الملصق."); });
+      .catch(() => { if (live) setError(tRef.current("تعذر تجهيز الملصق.", "Could not prepare the poster.")); });
     return () => { live = false; };
   }, [match.id, match.matchupId, match.home.id, match.away.id, match.competitionId]);
 
@@ -49,7 +55,7 @@ export default function H2HExport({ match, onClose }: { match: LiveMatch; onClos
 
   return (
     <PosterExport<H2HLayout>
-      title="ملصق المواجهات المباشرة"
+      title={t("ملصق المواجهات المباشرة")}
       layoutKey="botola.h2hLayout"
       templateKey="h2h"
       defaults={DEFAULT_H2H_LAYOUT}
@@ -63,7 +69,7 @@ export default function H2HExport({ match, onClose }: { match: LiveMatch; onClos
       }}
       design={(l, set) => <H2HDesign layout={l} onChange={set} />}
       note={(l) => pick(l).meetings.length === 0 && (
-        <p className="kxp-note">لم يلتق الفريقان من قبل في {match.competition} — أطفئ «هذه المسابقة فقط» لعرض كل المواجهات.</p>
+        <p className="kxp-note">{t("لم يلتق الفريقان من قبل في ")}{match.competition}{t(" — أطفئ «هذه المسابقة فقط» لعرض كل المواجهات.")}</p>
       )}
     />
   );

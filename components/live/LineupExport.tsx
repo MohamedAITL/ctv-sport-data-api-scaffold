@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import LineupPoster, { type LineupTeams } from "./LineupPoster";
 import LineupDesign from "./LineupDesign";
 import LineupSwaps, { withSwaps, type Swaps } from "./LineupSwaps";
 import PosterExport from "./PosterExport";
 import { DEFAULT_LINEUP_LAYOUT, type LineupLayout } from "@/config/lineupLayout";
 import type { LiveDetail, LiveMatch } from "@/types/live";
+import { useLang } from "@/lib/prefs";
 
 /**
  * Exports the lineups as a 1080x1350 poster — both XIs, or one team alone —
@@ -14,6 +15,11 @@ import type { LiveDetail, LiveMatch } from "@/types/live";
  * kiosk's 15s poll should not carry the photos for an export nobody may run.
  */
 export default function LineupExport({ match, onClose }: { match: LiveMatch; onClose: () => void }) {
+  const { t } = useLang();
+  // Read through a ref: the language settles just after mount, and a fetch
+  // must not run twice for it.
+  const tRef = useRef(t);
+  tRef.current = t;
   const [d, setD] = useState<LiveDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [team, setTeam] = useState<LineupTeams>("both");
@@ -38,12 +44,12 @@ export default function LineupExport({ match, onClose }: { match: LiveMatch; onC
         if (!live) return;
         const det: LiveDetail | undefined = j.detail;
         if (!det?.homeLineup?.hasFieldPositions || !det.awayLineup?.hasFieldPositions) {
-          setError("لم تُنشر التشكيلتان بعد لهذه المباراة.");
+          setError(tRef.current("لم تُنشر التشكيلتان بعد لهذه المباراة.", "The lineups for this match are not out yet."));
           return;
         }
         setD(det);
       })
-      .catch(() => { if (live) setError("تعذر تجهيز الملصق."); });
+      .catch(() => { if (live) setError(tRef.current("تعذر تجهيز الملصق.", "Could not prepare the poster.")); });
     return () => { live = false; };
   }, [match.id, match.matchupId]);
 
@@ -53,11 +59,11 @@ export default function LineupExport({ match, onClose }: { match: LiveMatch; onC
     ? `choufsport-lineups-${match.home.id}-${match.away.id}`
     : `choufsport-lineup-${team === "home" ? match.home.id : match.away.id}`;
 
-  const picker: Array<[LineupTeams, string]> = [["both", "الفريقان"], ["home", match.home.name], ["away", match.away.name]];
+  const picker: Array<[LineupTeams, string]> = [["both", t("الفريقان", "Both teams")], ["home", match.home.name], ["away", match.away.name]];
 
   return (
     <PosterExport<LineupLayout>
-      title="ملصق التشكيلة"
+      title={t("ملصق التشكيلة")}
       // v2: the players grew; a layout saved before that would keep them small.
       layoutKey="botola.lineupLayout.v2"
       templateKey="lineup"
@@ -73,7 +79,7 @@ export default function LineupExport({ match, onClose }: { match: LiveMatch; onC
       aside={d?.homeLineup && d.awayLineup && (
         <>
           <div className="card">
-            <h3>الفريق</h3>
+            <h3>{t("الفريق")}</h3>
             <div className="kxp-actions kxp-pick">
               {picker.map(([k, name]) => (
                 <button key={k} type="button" className={`kxp-btn${team === k ? " on" : ""}`} aria-pressed={team === k} onClick={() => setTeam(k)}>
@@ -83,12 +89,12 @@ export default function LineupExport({ match, onClose }: { match: LiveMatch; onC
             </div>
           </div>
           <details className="card collapsible">
-            <summary><h3>تعديل التشكيلة</h3><span className="chev" /></summary>
-            <p className="muted">اختر لاعباً من الاحتياط ليأخذ مكان أي لاعب أساسي.</p>
+            <summary><h3>{t("تعديل التشكيلة")}</h3><span className="chev" /></summary>
+            <p className="muted">{t("اختر لاعباً من الاحتياط ليأخذ مكان أي لاعب أساسي.")}</p>
             {team !== "away" && <LineupSwaps title={match.home.name} tag="h" lineup={d.homeLineup} swaps={swaps} onChange={saveSwaps} />}
             {team !== "home" && <LineupSwaps title={match.away.name} tag="a" lineup={d.awayLineup} swaps={swaps} onChange={saveSwaps} />}
             {Object.keys(swaps).length > 0 && (
-              <button type="button" className="btn ghost" onClick={() => saveSwaps({})}>إلغاء كل التبديلات</button>
+              <button type="button" className="btn ghost" onClick={() => saveSwaps({})}>{t("إلغاء كل التبديلات")}</button>
             )}
           </details>
         </>

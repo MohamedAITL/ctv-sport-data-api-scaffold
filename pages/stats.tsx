@@ -14,6 +14,7 @@ import type { StatCategory } from "@/lib/scores365Stats";
 import { deepMerge } from "@/lib/persist";
 import { getTemplate, setTemplate, clearTemplate } from "@/lib/db";
 import { useFitWidth } from "@/lib/useFitWidth";
+import { useLang } from "@/lib/prefs";
 
 const PREVIEW_W = 480;
 const LKEY = "botola.statsLayout";
@@ -30,6 +31,7 @@ const saveLayout = (l: StatsLayout) => { try { localStorage.setItem(LKEY, JSON.s
 interface StatsState { competition: number; categories: StatCategory[]; fetchedAt?: string; error?: string }
 
 export default function StatsPage() {
+  const { t } = useLang();
   const posterRef = useRef<HTMLDivElement>(null);
   const [paneRef, previewW] = useFitWidth<HTMLElement>(PREVIEW_W);
   const [league, setLeague] = useState<number>(BOTOLA_LEAGUE);
@@ -57,7 +59,7 @@ export default function StatsPage() {
     const json = await res.json();
     // Thrown, not returned: an empty answer would replace the leaderboards on
     // screen and the cached copy.
-    if (!res.ok) throw new Error(json.error || "فشل الطلب");
+    if (!res.ok) throw new Error(json.error || "Request failed");
     return { competition: league, categories: json.categories ?? [], fetchedAt: json.fetchedAt, error: json.error };
   }, [league]);
 
@@ -87,7 +89,7 @@ export default function StatsPage() {
   const onTemplate = (d: string | null) => { if (d) { setTemplateSrc(d); setTemplate(d, "stats"); } else { setTemplateSrc(null); clearTemplate("stats"); } };
 
   const subtitle = useMemo(() => {
-    const parts = [leagueById(league)?.ar ?? ""];
+    const parts = [(leagueById(league)?.ar ?? "")];
     if (category?.average) parts.push(`${category.average.text}: ${category.average.value}`);
     return parts.filter(Boolean).join(" · ");
   }, [league, category]);
@@ -95,11 +97,11 @@ export default function StatsPage() {
   const scale = previewW / layout.width;
   const leagueField = (
     <label className="field wide">
-      <span>البطولة</span>
+      <span>{t("البطولة")}</span>
       <select value={league} onChange={(e) => pickLeague(Number(e.target.value))} disabled={loading}>
         {leaguesByGroup().map((g) => (
-          <optgroup key={g.group} label={g.group}>
-            {g.leagues.map((l) => <option key={l.id} value={l.id}>{l.ar}</option>)}
+          <optgroup key={g.group} label={t(g.group)}>
+            {g.leagues.map((l) => <option key={l.id} value={l.id}>{(leagueById(l.id)?.ar ?? "")}</option>)}
           </optgroup>
         ))}
       </select>
@@ -110,7 +112,7 @@ export default function StatsPage() {
 
   return (
     <>
-      <Head><title>ملصق الإحصائيات — شوف تي في</title></Head>
+      <Head><title>{t("ملصق الإحصائيات — شوف تي في")}</title></Head>
       <main className="app">
         <header className="topbar">
           <div className="brand">
@@ -120,12 +122,12 @@ export default function StatsPage() {
           <Nav />
         </header>
         <div className="pagehead">
-          <h1>ملصق الإحصائيات</h1>
-          <span className="muted">{leagueById(league)?.ar} · تصنيف اللاعبين والفرق وتشكيلة الجولة والمغاربة · مباشر · تصدير 1080×1350 PNG</span>
-          <div className="seg" role="tablist" aria-label="نوع الملصق" style={{ marginTop: 14, maxWidth: 560 }}>
-            <button role="tab" aria-selected={mode === "stats"} className={mode === "stats" ? "seg-btn on" : "seg-btn"} onClick={() => pickMode("stats")}>الإحصائيات</button>
-            <button role="tab" aria-selected={mode === "totw"} className={mode === "totw" ? "seg-btn on" : "seg-btn"} onClick={() => pickMode("totw")}>تشكيلة الجولة</button>
-            <button role="tab" aria-selected={mode === "moroccans"} className={mode === "moroccans" ? "seg-btn on" : "seg-btn"} onClick={() => pickMode("moroccans")}>المغاربة</button>
+          <h1>{t("ملصق الإحصائيات")}</h1>
+          <span className="muted">{(leagueById(league)?.ar ?? "")}{t(" · تصنيف اللاعبين والفرق وتشكيلة الجولة والمغاربة · مباشر · تصدير 1080×1350 PNG")}</span>
+          <div className="seg" role="tablist" aria-label={t("نوع الملصق")} style={{ marginTop: 14, maxWidth: 560 }}>
+            <button role="tab" aria-selected={mode === "stats"} className={mode === "stats" ? "seg-btn on" : "seg-btn"} onClick={() => pickMode("stats")}>{t("الإحصائيات")}</button>
+            <button role="tab" aria-selected={mode === "totw"} className={mode === "totw" ? "seg-btn on" : "seg-btn"} onClick={() => pickMode("totw")}>{t("تشكيلة الجولة")}</button>
+            <button role="tab" aria-selected={mode === "moroccans"} className={mode === "moroccans" ? "seg-btn on" : "seg-btn"} onClick={() => pickMode("moroccans")}>{t("المغاربة")}</button>
           </div>
         </div>
 
@@ -133,41 +135,41 @@ export default function StatsPage() {
         <div className="layout">
           <section className="controls">
             <div className="card">
-              <h3>التصنيف</h3>
+              <h3>{t("التصنيف")}</h3>
               {leagueField}
               <label className="field wide">
-                <span>الإحصائية</span>
+                <span>{t("الإحصائية")}</span>
                 <select value={catKey} onChange={(e) => pickCat(e.target.value)} disabled={loading || categories.length === 0}>
                   {categories.length === 0 && <option value="">—</option>}
                   {categories.filter((c) => c.kind === "player").length > 0 && (
-                    <optgroup label="اللاعبون · Players">
+                    <optgroup label={t("اللاعبون · Players")}>
                       {categories.filter((c) => c.kind === "player").map((c) => <option key={c.key} value={c.key}>{c.name}</option>)}
                     </optgroup>
                   )}
                   {categories.filter((c) => c.kind === "team").length > 0 && (
-                    <optgroup label="الفرق · Teams">
+                    <optgroup label={t("الفرق · Teams")}>
                       {categories.filter((c) => c.kind === "team").map((c) => <option key={c.key} value={c.key}>{c.name}</option>)}
                     </optgroup>
                   )}
                 </select>
               </label>
-              <div className="kv"><span>عدد السطور</span><b>{rows.length} سطر متاح</b></div>
-              <div className="kv"><span>آخر تحديث</span><b>{forLeague?.fetchedAt ? new Date(forLeague.fetchedAt).toLocaleString() : "—"}</b></div>
-              <div className="kv"><span>الحالة</span><span className={loading ? "pill" : shownError ? "pill warn" : "pill ok"}>{loading ? "جاري التحميل…" : shownError ? "خطأ" : "متصل"}</span></div>
-              {empty && <p className="err">لا تتوفر تصنيفات إحصائية لهذه المسابقة.</p>}
+              <div className="kv"><span>{t("عدد السطور")}</span><b>{rows.length}{t(" سطر متاح")}</b></div>
+              <div className="kv"><span>{t("آخر تحديث")}</span><b>{forLeague?.fetchedAt ? new Date(forLeague.fetchedAt).toLocaleString() : "—"}</b></div>
+              <div className="kv"><span>{t("الحالة")}</span><span className={loading ? "pill" : shownError ? "pill warn" : "pill ok"}>{loading ? t("جاري التحميل…", "Loading…") : shownError ? t("خطأ", "Error") : t("متصل", "Connected")}</span></div>
+              {empty && <p className="err">{t("لا تتوفر تصنيفات إحصائية لهذه المسابقة.")}</p>}
               {shownError && <p className="err">{shownError}</p>}
-              <button className="btn" disabled={loading} onClick={() => fetchStats()}>{loading ? "جاري التحديث…" : "تحديث"}</button>
+              <button className="btn" disabled={loading} onClick={() => fetchStats()}>{loading ? t("جاري التحديث…", "Refreshing…") : t("تحديث", "Refresh")}</button>
             </div>
 
-            <TemplateUploader isCustom={templateSrc !== null} onTemplate={onTemplate} defaultLabel="لا يوجد قالب بعد — يتم استخدام خلفية بسيطة. ارفع قالب الإحصائيات." resetLabel="حذف القالب" />
-            <ExportControls posterRef={posterRef} canExport={rows.length > 0} blocked={rows.length === 0 ? "لا توجد بيانات لهذه الإحصائية بعد" : null} onResetDesign={() => updateLayout(DEFAULT_STATS_LAYOUT)} fileBase={`choufsport-stats-${catKey || "none"}`} />
+            <TemplateUploader isCustom={templateSrc !== null} onTemplate={onTemplate} defaultLabel={t("لا يوجد قالب بعد — يتم استخدام خلفية بسيطة. ارفع قالب الإحصائيات.")} resetLabel={t("حذف القالب")} />
+            <ExportControls posterRef={posterRef} canExport={rows.length > 0} blocked={rows.length === 0 ? t("لا توجد بيانات لهذه الإحصائية بعد", "No data for this stat yet") : null} onResetDesign={() => updateLayout(DEFAULT_STATS_LAYOUT)} fileBase={`choufsport-stats-${catKey || "none"}`} />
 
             <StatsDesign layout={layout} onChange={updateLayout} />
           </section>
 
           <section className="previewpane" ref={paneRef}>
             <div className="previewsticky">
-              <h3 className="muted">معاينة مباشرة</h3>
+              <h3 className="muted">{t("معاينة مباشرة")}</h3>
               <div className={busy ? "previewbox busy" : "previewbox"} style={{ width: previewW, height: layout.height * scale }}>
                 <div style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}>
                   <StatsPoster ref={posterRef} title={category?.name ?? ""} subtitle={subtitle} rows={rows} layout={layout} templateSrc={templateSrc} kind={category?.kind ?? "player"} />

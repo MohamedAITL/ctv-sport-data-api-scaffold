@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import MatchStatsPoster from "./MatchStatsPoster";
 import MatchStatsDesign from "./MatchStatsDesign";
 import PosterExport from "./PosterExport";
 import { DEFAULT_MATCH_STATS_LAYOUT, type MatchStatsLayout } from "@/config/matchStatsLayout";
 import type { LiveDetail, LiveMatch, StatRow } from "@/types/live";
+import { useLang } from "@/lib/prefs";
 
 // Which statistics go on the poster, by the source's stat id — the same ids on
 // every match, so a choice made once carries over. null = the "major" ones.
@@ -14,6 +15,11 @@ const PICKS_KEY = "live.statsPosterPicks";
  * `inline=1` fetch so the crests are data URLs html-to-image can read.
  */
 export default function MatchStatsExport({ match, onClose }: { match: LiveMatch; onClose: () => void }) {
+  const { t } = useLang();
+  // Read through a ref: the language settles just after mount, and a fetch
+  // must not run twice for it.
+  const tRef = useRef(t);
+  tRef.current = t;
   const [d, setD] = useState<LiveDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [period, setPeriod] = useState(0);
@@ -37,10 +43,10 @@ export default function MatchStatsExport({ match, onClose }: { match: LiveMatch;
       .then((j) => {
         if (!live) return;
         const det: LiveDetail | undefined = j.detail;
-        if (!det?.statGroups.length) { setError("لم تُنشر إحصائيات هذه المباراة بعد."); return; }
+        if (!det?.statGroups.length) { setError(tRef.current("لم تُنشر إحصائيات هذه المباراة بعد.", "No stats for this match yet.")); return; }
         setD(det);
       })
-      .catch(() => { if (live) setError("تعذر تجهيز الملصق."); });
+      .catch(() => { if (live) setError(tRef.current("تعذر تجهيز الملصق.", "Could not prepare the poster.")); });
     return () => { live = false; };
   }, [match.id, match.matchupId]);
 
@@ -58,7 +64,7 @@ export default function MatchStatsExport({ match, onClose }: { match: LiveMatch;
 
   return (
     <PosterExport<MatchStatsLayout>
-      title="ملصق إحصائيات المباراة"
+      title={t("ملصق إحصائيات المباراة")}
       layoutKey="botola.matchStatsLayout"
       templateKey="matchStats"
       defaults={DEFAULT_MATCH_STATS_LAYOUT}
@@ -70,12 +76,12 @@ export default function MatchStatsExport({ match, onClose }: { match: LiveMatch;
         <MatchStatsPoster ref={ref} match={d.match} rows={rows} period={period === 0 ? null : group.name} layout={l} templateSrc={tpl} />
       )}
       design={(l, set) => <MatchStatsDesign layout={l} onChange={set} />}
-      note={() => d && rows.length === 0 && <p className="kxp-note">اختر إحصائية واحدة على الأقل لتظهر على الملصق.</p>}
+      note={() => d && rows.length === 0 && <p className="kxp-note">{t("اختر إحصائية واحدة على الأقل لتظهر على الملصق.")}</p>}
       aside={d && group && (
         <div className="card">
           {d.statGroups.length > 1 && (
             <>
-              <h3>الفترة</h3>
+              <h3>{t("الفترة")}</h3>
               <div className="kxp-actions kxp-pick">
                 {d.statGroups.map((g, i) => (
                   <button key={g.id} type="button" className={`kxp-btn${i === period ? " on" : ""}`} aria-pressed={i === period} onClick={() => setPeriod(i)}>
@@ -85,11 +91,11 @@ export default function MatchStatsExport({ match, onClose }: { match: LiveMatch;
               </div>
             </>
           )}
-          <h3 style={{ marginTop: d.statGroups.length > 1 ? 16 : 0 }}>الإحصائيات على الملصق ({rows.length})</h3>
+          <h3 style={{ marginTop: d.statGroups.length > 1 ? 16 : 0 }}>{t("الإحصائيات على الملصق (")}{rows.length})</h3>
           <div className="kxp-actions kxp-pick">
-            <button type="button" className={`kxp-btn${picks === null ? " on" : ""}`} onClick={() => savePicks(null)}>الأهم</button>
-            <button type="button" className="kxp-btn" onClick={() => savePicks(all.map((s) => s.id))}>الكل</button>
-            <button type="button" className="kxp-btn" onClick={() => savePicks([])}>مسح</button>
+            <button type="button" className={`kxp-btn${picks === null ? " on" : ""}`} onClick={() => savePicks(null)}>{t("الأهم")}</button>
+            <button type="button" className="kxp-btn" onClick={() => savePicks(all.map((s) => s.id))}>{t("الكل")}</button>
+            <button type="button" className="kxp-btn" onClick={() => savePicks([])}>{t("مسح")}</button>
           </div>
           <div className="kxp-stats">
             {all.map((s) => (

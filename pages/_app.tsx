@@ -10,7 +10,12 @@ import "@fontsource/cairo/700.css";
 import "@fontsource/cairo/800.css";
 import "@fontsource/cairo/900.css";
 import type { AppProps } from "next/app";
+import { PrefsProvider } from "@/lib/prefs";
 
 export default function App({ Component, pageProps }: AppProps) {
-  return <Component {...pageProps} />;
+  return (
+    <PrefsProvider>
+      <Component {...pageProps} />
+    </PrefsProvider>
+  );
 }

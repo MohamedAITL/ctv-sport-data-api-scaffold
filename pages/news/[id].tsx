@@ -1,10 +1,11 @@
 import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import Nav from "@/components/Nav";
 import { sourceName, type NewsItem } from "@/types/news";
 import { sanitizeArticle } from "@/lib/sanitize";
+import { useLang } from "@/lib/prefs";
 
 // Publishers send the body as one blob: hesport uses blank lines, elbotola runs
 // paragraphs together with no space after the full stop. Both are handled here
@@ -15,12 +16,17 @@ const splitParagraphs = (text: string): string[] =>
     .map((p) => p.trim())
     .filter(Boolean);
 
-const arDate = (iso: string): string => {
+const arDate = (iso: string, locale: string): string => {
   const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? "" : d.toLocaleString("ar-MA", { dateStyle: "long", timeStyle: "short" });
+  return Number.isNaN(d.getTime()) ? "" : d.toLocaleString(locale, { dateStyle: "long", timeStyle: "short" });
 };
 
 export default function NewsDetail() {
+  const { t, lang, locale } = useLang();
+  // Read through a ref: the language settles just after mount, and a fetch
+  // must not run twice for it.
+  const tRef = useRef(t);
+  tRef.current = t;
   const { query, isReady } = useRouter();
   const id = typeof query.id === "string" ? query.id : "";
   const [item, setItem] = useState<NewsItem | null>(null);
@@ -37,7 +43,7 @@ export default function NewsDetail() {
     setLoading(true);
     fetch(`/api/news/${id}`)
       .then((r) => r.json())
-      .then((j) => (j.item ? setItem(j.item) : setError(j.error || "تعذر تحميل الخبر")))
+      .then((j) => (j.item ? setItem(j.item) : setError(j.error || tRef.current("تعذر تحميل الخبر", "Could not load the article"))))
       .catch((e) => setError(String(e)))
       .finally(() => setLoading(false));
   }, [isReady, id]);
@@ -53,7 +59,7 @@ export default function NewsDetail() {
       });
       const j = await r.json();
       if (j.titles?.length) { setTitles(j.titles); setEngine(j.engine ?? null); }
-      else setTitlesError(j.error || "تعذر توليد العناوين");
+      else setTitlesError(j.error || tRef.current("تعذر توليد العناوين", "Could not generate titles"));
     } catch (e) {
       setTitlesError(String(e));
     } finally {
@@ -76,7 +82,7 @@ export default function NewsDetail() {
 
   return (
     <>
-      <Head><title>{item?.title ? `${item.title} — Chouf TV` : "خبر — Chouf TV"}</title></Head>
+      <Head><title>{item?.title ? `${item.title} — Chouf TV` : t("خبر — Chouf TV", "Article — Chouf TV")}</title></Head>
       <main className="app">
         <header className="topbar">
           <div className="brand">
@@ -87,10 +93,10 @@ export default function NewsDetail() {
         </header>
 
         <div className="pagehead">
-          <Link href="/news" className="navlink">‹ كل الأخبار</Link>
+          <Link href="/news" className="navlink">{t("‹ كل الأخبار")}</Link>
         </div>
 
-        {loading && <p className="muted">جاري التحميل…</p>}
+        {loading && <p className="muted">{t("جاري التحميل…")}</p>}
         {error && <p className="err">{error}</p>}
 
         {item && (
@@ -103,7 +109,7 @@ export default function NewsDetail() {
 
             <div className="articlemeta">
               {item.section && <span>{item.section}</span>}
-              <span>{arDate(item.publishedAt)}</span>
+              <span>{arDate(item.publishedAt, locale)}</span>
             </div>
 
             {body ? (
@@ -119,7 +125,7 @@ export default function NewsDetail() {
               <div className="articlebody">
                 {summary && <p>{summary}</p>}
                 <p className="muted">
-                  هذا المصدر لا ينشر نص المقال كاملا. اقرأ الخبر كاملا من المصدر الأصلي.
+                  {t("هذا المصدر لا ينشر نص المقال كاملا. اقرأ الخبر كاملا من المصدر الأصلي.", "This source does not publish the full text. Read the whole article at the original.")}
                 </p>
               </div>
             )}
@@ -140,24 +146,24 @@ export default function NewsDetail() {
 
             <div className="titlebox">
               <div className="titlebox-head">
-                <h3>عناوين للنشر على مواقع التواصل</h3>
+                <h3>{t("عناوين للنشر على مواقع التواصل")}</h3>
                 <button className="btn" disabled={titlesLoading} onClick={makeTitles}>
-                  {titlesLoading ? "جاري التوليد…" : titles.length ? "توليد عناوين أخرى" : "توليد عناوين"}
+                  {titlesLoading ? t("جاري التوليد…", "Generating…") : titles.length ? t("توليد عناوين أخرى", "Generate more titles") : t("توليد عناوين", "Generate titles")}
                 </button>
               </div>
               {titlesError && <p className="err">{titlesError}</p>}
               {engine === "rules" && titles.length > 0 && (
                 <p className="muted" style={{ marginTop: 10, fontSize: 12 }}>
-                  مقتطعة من نص المقال. لصياغة عناوين جديدة، أضف ANTHROPIC_API_KEY.
+                  {t("مقتطعة من نص المقال. لصياغة عناوين جديدة، أضف ANTHROPIC_API_KEY.", "Taken from the article text. To write new titles, add ANTHROPIC_API_KEY.")}
                 </p>
               )}
               {titles.length > 0 && (
                 <ul className="titlelist">
-                  {titles.map((t, i) => (
+                  {titles.map((title, i) => (
                     <li key={i}>
-                      <span>{t}</span>
-                      <button className="copybtn" onClick={() => copy(t, i)}>
-                        {copied === i ? "تم النسخ" : "نسخ"}
+                      <span>{title}</span>
+                      <button className="copybtn" onClick={() => copy(title, i)}>
+                        {copied === i ? t("تم النسخ", "Copied") : t("نسخ", "Copy")}
                       </button>
                     </li>
                   ))}
@@ -167,11 +173,11 @@ export default function NewsDetail() {
 
             <div className="articlesource">
               <div className="muted">
-                {sourceName(item.source)}
+                {sourceName(item.source, lang)}
                 {item.author ? ` — ${item.author}` : ""}
               </div>
               <a className="btn" href={item.url} target="_blank" rel="noopener noreferrer nofollow">
-                اقرأ المقال الأصلي ↗
+                {t("اقرأ المقال الأصلي ↗", "Read the original article ↗")}
               </a>
             </div>
           </article>

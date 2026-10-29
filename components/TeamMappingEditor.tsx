@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import type { TeamRow } from "@/types/standings";
 import { fileToDataUrl } from "@/lib/file";
+import { useLang } from "@/lib/prefs";
 
 interface Props {
   rows: TeamRow[];
@@ -23,6 +24,7 @@ export default function TeamMappingEditor({
   onLogo,
   onClearLogo,
 }: Props) {
+  const { t } = useLang();
   const fileInputs = useRef<Record<string, HTMLInputElement | null>>({});
 
   async function pick(teamId: string, e: React.ChangeEvent<HTMLInputElement>) {
@@ -33,11 +35,12 @@ export default function TeamMappingEditor({
 
   return (
     <details className="card collapsible" open>
-      <summary><h3>الفرق — الأسماء والشعارات</h3><span className="chev" /></summary>
+      <summary><h3>{t("الفرق — الأسماء والشعارات")}</h3><span className="chev" /></summary>
       <p className="muted">
-        ارفع شعاراً من جهازك لتصحيح شعار خاطئ — تحتفظ بقية الأندية بشعارها الرسمي،
-        و<b>تراجع</b> يعيد الشعار الأصلي. تُحفظ تعديلات الأسماء والشعارات على جهازك
-        وتبقى بعد التحديث. الأرقام تأتي من المصدر ولا يمكن تعديلها.
+        {t(
+          "ارفع شعاراً من جهازك لتصحيح شعار خاطئ — تحتفظ بقية الأندية بشعارها الرسمي، و«تراجع» يعيد الشعار الأصلي. تُحفظ تعديلات الأسماء والشعارات على جهازك وتبقى بعد التحديث. الأرقام تأتي من المصدر ولا يمكن تعديلها.",
+          "Upload a logo from your device to fix a wrong one — the other clubs keep their official logo, and “Undo” restores the original. Name and logo edits are saved on this device and survive a refresh. The numbers come from the source and cannot be edited.",
+        )}
       </p>
       <div className="teamlist">
         {rows.map((r) => {
@@ -55,14 +58,14 @@ export default function TeamMappingEditor({
               )}
               <input
                 className="namein"
-                dir="rtl"
+                dir="auto"
                 value={nameOverrides[r.teamId] ?? r.nameAr}
                 title={r.nameOriginal}
                 onChange={(e) => onName(r.teamId, e.target.value)}
               />
               <span className="stats" title="played / wins / points">{r.played} · {r.wins} · {r.points}</span>
               <button className="btn tiny" onClick={() => fileInputs.current[r.teamId]?.click()}>
-                {custom ? "تغيير الشعار" : "رفع شعار"}
+                {custom ? t("تغيير الشعار", "Change logo") : t("رفع شعار", "Upload logo")}
               </button>
               {custom && (
                 <button className="btn tiny ghost" title="restore official logo" onClick={() => onClearLogo(r.teamId)}>

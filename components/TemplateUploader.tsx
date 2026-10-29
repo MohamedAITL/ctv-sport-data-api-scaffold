@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import { fileToDataUrl } from "@/lib/file";
+import { useLang } from "@/lib/prefs";
 
 interface Props {
   isCustom: boolean;
@@ -11,6 +12,7 @@ interface Props {
 // Upload a PNG/JPG template (stored in IndexedDB by the page) or reset to the
 // bundled Chouf TV reference poster.
 export default function TemplateUploader({ isCustom, onTemplate, defaultLabel = "يتم استخدام قالب شوف تي في الأصلي.", resetLabel = "استعادة القالب الأصلي" }: Props) {
+  const { t } = useLang();
   const input = useRef<HTMLInputElement>(null);
 
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -22,14 +24,14 @@ export default function TemplateUploader({ isCustom, onTemplate, defaultLabel = 
 
   return (
     <div className="card">
-      <h3>القالب</h3>
+      <h3>{t("القالب")}</h3>
       <p className="muted">
-        {isCustom ? "يتم استخدام قالب مرفوع." : defaultLabel}
+        {isCustom ? t("يتم استخدام قالب مرفوع.", "Using an uploaded template.") : t(defaultLabel)}
       </p>
       <div className="row">
-        <button className="btn" onClick={() => input.current?.click()}>رفع قالب…</button>
+        <button className="btn" onClick={() => input.current?.click()}>{t("رفع قالب…")}</button>
         <button className="btn ghost" disabled={!isCustom} onClick={() => onTemplate(null)}>
-          {resetLabel}
+          {t(resetLabel)}
         </button>
       </div>
       <input ref={input} type="file" accept="image/png,image/jpeg" hidden onChange={onFile} />
