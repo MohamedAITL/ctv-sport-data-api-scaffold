@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { fetchLiveDetail } from "@/lib/live365";
 import { inlineImages, toDataUrl } from "@/lib/inlineImage";
 import type { LineupPlayer, LiveDetail, TeamLineup } from "@/types/live";
+import { publicError } from "@/lib/publicError";
 
 // The lineups poster needs the crests and the faces as data URLs — html-to-
 // image cannot read cross-origin pixels. The benches too: any substitute can
@@ -36,6 +37,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const out = req.query.inline === "1" ? await inlineForPoster(detail) : detail;
     return res.status(200).json({ detail: out, fetchedAt: new Date().toISOString() });
   } catch (e) {
-    return res.status(502).json({ error: (e as Error).message });
+    return res.status(502).json({ error: publicError(e) });
   }
 }

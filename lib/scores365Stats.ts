@@ -74,7 +74,8 @@ function mapBlock(b: S365Block, kind: "player" | "team"): StatCategory {
   return {
     key: `${kind}-${b.id ?? 0}`,
     kind,
-    name: b.name ?? "",
+    // The source brands its rating with its own name; the app never names it.
+    name: (b.name ?? "").replace(/تقييم 365/g, "التقييم"),
     average: b.averageStat?.value ? { text: b.averageStat.text ?? "", value: b.averageStat.value } : null,
     rows,
   };

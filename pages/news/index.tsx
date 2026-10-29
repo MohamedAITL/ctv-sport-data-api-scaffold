@@ -91,7 +91,7 @@ export default function NewsPage() {
         <div className="pagehead newshead">
           <div>
             <h1>الأخبار</h1>
-            <span className="muted" dir="rtl">آخر الأخبار من هسبورت وهسبريس والبطولة وكووورة وبي إن سبورتس وسكاي نيوز وGoal والرياضة و365scores</span>
+            <span className="muted" dir="rtl">آخر الأخبار الرياضية</span>
           </div>
           <div className="newshead-actions">
             {fresh !== null && (
@@ -111,18 +111,18 @@ export default function NewsPage() {
           <button role="tab" aria-selected={filter === "all"} className={filter === "all" ? "seg-btn on" : "seg-btn"} onClick={() => setFilter("all")}>
             الكل ({items.length})
           </button>
-          {NEWS_SOURCES.map((s) => {
-            const n = items.filter((i: NewsItem) => i.source === s.key).length;
+          {NEWS_SOURCES.map((key) => {
+            const n = items.filter((i: NewsItem) => i.source === key).length;
             return (
-              <button key={s.key} role="tab" aria-selected={filter === s.key} className={filter === s.key ? "seg-btn on" : "seg-btn"} onClick={() => setFilter(s.key)}>
-                {s.name} ({n})
+              <button key={key} role="tab" aria-selected={filter === key} className={filter === key ? "seg-btn on" : "seg-btn"} onClick={() => setFilter(key)}>
+                {sourceName(key)} ({n})
               </button>
             );
           })}
         </div>
 
         {failed.length > 0 && (
-          <p className="err">تعذر تحميل: {failed.map(sourceName).join("، ")} — باقي المصادر معروضة.</p>
+          <p className="err">تعذر تحميل: {failed.map(sourceName).join("، ")} — الباقي معروض.</p>
         )}
         {error && <p className="err">{error}</p>}
 

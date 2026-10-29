@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { fetchNews } from "@/lib/news";
 import type { NewsSourceKey } from "@/types/news";
+import { publicError } from "@/lib/publicError";
 
 const MAX_PAGE = 50;
 
@@ -21,6 +22,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
     return res.status(200).json({ items: list, failed, page });
   } catch (e) {
-    return res.status(502).json({ error: (e as Error).message, items: [], failed: [] });
+    return res.status(502).json({ error: publicError(e), items: [], failed: [] });
   }
 }

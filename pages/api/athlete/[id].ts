@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { fetchAthlete } from "@/lib/live365";
+import { publicError } from "@/lib/publicError";
 
 // GET /api/athlete/<athleteId> — bio only; the match payload already carries
 // the player's stats for the game itself.
@@ -12,6 +13,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.setHeader("Cache-Control", "public, max-age=3600");
     return res.status(200).json({ bio });
   } catch (e) {
-    return res.status(502).json({ error: (e as Error).message });
+    return res.status(502).json({ error: publicError(e) });
   }
 }

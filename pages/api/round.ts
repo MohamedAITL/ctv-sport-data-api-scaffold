@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { fetch365Games, roundsOf } from "@/lib/scores365Games";
 import { inlineMatchImages } from "@/lib/inlineImage";
 import { ROUND_LEAGUES, BOTOLA_LEAGUE, leagueById } from "@/config/standingsLeagues";
+import { publicError } from "@/lib/publicError";
 
 // GET /api/round?competition=<365scores id> — every game 365scores currently
 // exposes for the league, with the rounds present. An empty/short list means the
@@ -22,6 +23,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       fetchedAt: new Date().toISOString(),
     });
   } catch (e) {
-    return res.status(502).json({ error: (e as Error).message, matches: [], rounds: [] });
+    return res.status(502).json({ error: publicError(e), matches: [], rounds: [] });
   }
 }

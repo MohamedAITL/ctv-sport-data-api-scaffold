@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { fetchNewsItem } from "@/lib/news";
 import { generateTitles, hasAnthropicKey } from "@/lib/titles";
 import { generateTitlesOffline } from "@/lib/titlesOffline";
+import { publicError } from "@/lib/publicError";
 
 // POST /api/titles { id } — social-post headline suggestions for one article.
 // Claude writes them when a key is configured; otherwise they are cut from the
@@ -27,6 +28,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (titles.length === 0) return res.status(422).json({ error: "No text to work from" });
     return res.status(200).json({ titles, engine: "rules" });
   } catch (e) {
-    return res.status(502).json({ error: (e as Error).message });
+    return res.status(502).json({ error: publicError(e) });
   }
 }

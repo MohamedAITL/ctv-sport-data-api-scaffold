@@ -142,7 +142,7 @@ export default function RoundPage() {
         </header>
         <div className="pagehead">
           <h1>ملصق الجولة</h1>
-          <span className="muted">{leagueById(league)?.ar} · مباريات حسب الجولة · مباشر من 365scores · تصدير 1080×1350 PNG</span>
+          <span className="muted">{leagueById(league)?.ar} · مباريات حسب الجولة · مباشر · تصدير 1080×1350 PNG</span>
         </div>
 
         <div className="layout">
@@ -172,7 +172,7 @@ export default function RoundPage() {
               <div className="kv"><span>آخر تحديث</span><b>{forLeague?.fetchedAt ? new Date(forLeague.fetchedAt).toLocaleString() : "—"}</b></div>
               <div className="kv"><span>الحالة</span><span className={loading ? "pill" : shownError ? "pill warn" : "pill ok"}>{loading ? "جاري التحميل…" : shownError ? "خطأ" : "متصل"}</span></div>
               {empty && (
-                <p className="err">365scores has not published a schedule for this league yet. It will appear here once the next round is announced.</p>
+                <p className="err">لم يُنشر برنامج هذه المسابقة بعد. سيظهر هنا عند الإعلان عن الجولة المقبلة.</p>
               )}
               {shownError && <p className="err">{shownError}</p>}
               <button className="btn" disabled={loading} onClick={() => fetchRound()}>{loading ? "جاري التحديث…" : "تحديث"}</button>

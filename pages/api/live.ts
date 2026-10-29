@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { fetchLiveMatches } from "@/lib/live365";
 import type { LiveMatch } from "@/types/live";
 import { todayMA } from "@/lib/today";
+import { publicError } from "@/lib/publicError";
 
 // Today refreshes every ~5s upstream, so a short cache keeps an always-on wall
 // screen from hammering it. A past day never changes, so it is cached for long.
@@ -32,9 +33,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (hit) {
       return res.status(200).json({
         matches: hit.items, date: key, fetchedAt: new Date(hit.at).toISOString(),
-        stale: true, error: (e as Error).message,
+        stale: true, error: publicError(e),
       });
     }
-    return res.status(502).json({ matches: [], date: key, error: (e as Error).message });
+    return res.status(502).json({ matches: [], date: key, error: publicError(e) });
   }
 }

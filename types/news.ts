@@ -25,23 +25,9 @@ export interface NewsItem {
   bodyIsHtml?: boolean;
 }
 
-export interface NewsSourceMeta {
-  key: NewsSourceKey;
-  name: string; // Arabic label
-  site: string;
-}
-
-export const NEWS_SOURCES: NewsSourceMeta[] = [
-  { key: "hesport", name: "هسبورت", site: "https://www.hesport.com" },
-  { key: "hespress", name: "هسبريس", site: "https://www.hespress.com" },
-  { key: "elbotola", name: "البطولة", site: "https://www.elbotola.com" },
-  { key: "kooora", name: "كووورة", site: "https://www.kooora.com" },
-  { key: "bein", name: "بي إن سبورتس", site: "https://www.beinsports.com" },
-  { key: "skynews", name: "سكاي نيوز عربية", site: "https://www.skynewsarabia.com" },
-  { key: "goal", name: "Goal", site: "https://www.goal.com" },
-  { key: "elsport", name: "الرياضة", site: "https://elsport.com" },
-  { key: "scores365", name: "365scores", site: "https://www.365scores.com" },
+// Publishers are never named in the app: each is "مصدر N" by its place here.
+export const NEWS_SOURCES: NewsSourceKey[] = [
+  "hesport", "hespress", "elbotola", "kooora", "bein", "skynews", "goal", "elsport", "scores365",
 ];
 
-export const sourceName = (k: NewsSourceKey): string =>
-  NEWS_SOURCES.find((s) => s.key === k)?.name ?? k;
+export const sourceName = (k: NewsSourceKey): string => `مصدر ${NEWS_SOURCES.indexOf(k) + 1}`;

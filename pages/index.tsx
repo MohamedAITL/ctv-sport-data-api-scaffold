@@ -171,7 +171,7 @@ export default function Home() {
         </header>
         <div className="pagehead">
           <h1>ملصق الترتيب</h1>
-          <span className="muted">{leagueById(league)?.ar ?? "البطولة"} · جدول مباشر من 365scores · تصدير 1080×1350 PNG</span>
+          <span className="muted">{leagueById(league)?.ar ?? "البطولة"} · جدول مباشر · تصدير 1080×1350 PNG</span>
         </div>
 
         <div className="layout">
@@ -191,7 +191,7 @@ export default function Home() {
               <div className="card">
                 <h3>لا يوجد جدول</h3>
                 <p className="err" style={{ direction: "rtl" }}>لا يوجد جدول ترتيب لهذه المسابقة حاليا</p>
-                <p className="muted">ينشر 365scores الجدول فقط بعد انطلاق الدوري أو دور المجموعات. اختر مسابقة أخرى أو عد عند انطلاقها.</p>
+                <p className="muted">يُنشر الجدول فقط بعد انطلاق الدوري أو دور المجموعات. اختر مسابقة أخرى أو عد عند انطلاقها.</p>
               </div>
             )}
             {data && data.validation.warnings.length > 0 && (

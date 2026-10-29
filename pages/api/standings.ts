@@ -9,6 +9,7 @@ import { readSettings, writeSettings } from "@/lib/settings";
 import { BOTOLA_LEAGUE, DEFAULT_LEAGUE, isStandingsLeague, leagueById } from "@/config/standingsLeagues";
 import type { NormalizedStandings, RawStandingsResponse, TeamRow } from "@/types/standings";
 import seedNames from "@/data/botolaTeams.json";
+import { publicError } from "@/lib/publicError";
 
 function nameMap(): Record<string, string> {
   const { _comment, ...rest } = seedNames as Record<string, string>;
@@ -125,9 +126,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         validation: validateStandings(last.rows, meta?.teams),
         fetchedAt: last.fetchedAt,
         stale: true,
-        error: (e as Error).message,
+        error: publicError(e),
       });
     }
-    return res.status(status).json({ error: (e as Error).message, stale: true });
+    return res.status(status).json({ error: publicError(e), stale: true });
   }
 }

@@ -29,7 +29,8 @@ const STATUS_FINISHED = 4;
 export async function get<T>(path: string): Promise<T> {
   const r = await fetch(`${B}${path}`, { headers: { Accept: "application/json" } });
   if (!r.ok) throw new Error(`365scores ${r.status} for ${path}`);
-  return (await r.json()) as T;
+  // The source brands its player rating with its own name; the app never names it.
+  return JSON.parse(JSON.stringify(await r.json()).replace(/تقييم 365/g, "التقييم")) as T;
 }
 
 export const crest = (id?: number, v?: number) =>

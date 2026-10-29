@@ -6,6 +6,7 @@ import H2HDesign from "@/components/live/H2HDesign";
 import LineupDesign from "@/components/live/LineupDesign";
 import MatchStatsDesign from "@/components/live/MatchStatsDesign";
 import TotwDesign from "@/components/TotwDesign";
+import MoroccanDesign from "@/components/MoroccanDesign";
 import { DEFAULT_LAYOUT } from "@/config/defaultLayout";
 import { DEFAULT_MATCHDAY_LAYOUT } from "@/config/matchdayLayout";
 import { DEFAULT_STATS_LAYOUT, type StatsLayout } from "@/config/statsLayout";
@@ -13,6 +14,7 @@ import { DEFAULT_H2H_LAYOUT } from "@/config/h2hLayout";
 import { DEFAULT_LINEUP_LAYOUT } from "@/config/lineupLayout";
 import { DEFAULT_MATCH_STATS_LAYOUT } from "@/config/matchStatsLayout";
 import { DEFAULT_TOTW_LAYOUT } from "@/config/totwLayout";
+import { DEFAULT_MOROCCAN_LAYOUT } from "@/config/moroccanLayout";
 
 // The canvas is fixed at 1080x1350; everything else on a poster is meant to be
 // editable from its page. The stats panel exposed eight of thirty-eight values,
@@ -49,6 +51,7 @@ const H2H = allShown(DEFAULT_H2H_LAYOUT);
 const LINEUP = allShown(DEFAULT_LINEUP_LAYOUT);
 const TOTW = allShown(DEFAULT_TOTW_LAYOUT);
 const MSTATS = allShown(DEFAULT_MATCH_STATS_LAYOUT);
+const MOROCCANS = allShown(DEFAULT_MOROCCAN_LAYOUT);
 
 const PANELS = [
   ["الترتيب", <DesignSettings key="s" layout={STANDINGS} onChange={() => {}} />, STANDINGS],
@@ -58,6 +61,7 @@ const PANELS = [
   ["التشكيلة", <LineupDesign key="l" layout={LINEUP} onChange={() => {}} />, LINEUP],
   ["تشكيلة الجولة", <TotwDesign key="w" layout={TOTW} onChange={() => {}} />, TOTW],
   ["إحصائيات المباراة", <MatchStatsDesign key="x" layout={MSTATS} onChange={() => {}} />, MSTATS],
+  ["المغاربة", <MoroccanDesign key="ma" layout={MOROCCANS} onChange={() => {}} />, MOROCCANS],
 ] as const;
 
 describe("poster design panels", () => {

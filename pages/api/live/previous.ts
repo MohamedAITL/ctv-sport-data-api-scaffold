@@ -4,6 +4,7 @@ import { fetch365Standings } from "@/lib/scores365";
 import { toDataUrl } from "@/lib/inlineImage";
 import type { PreviousMatches } from "@/types/live";
 import type { TeamRow } from "@/types/standings";
+import { publicError } from "@/lib/publicError";
 
 // GET /api/live/previous?game=<id>&matchup=<h-a-c>&home=<id>&away=<id>[&competition=<id>]
 // The meetings come from the head-to-head endpoint, which needs the game and
@@ -74,6 +75,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     cache.set(key, { at: now, data });
     return res.status(200).json(data);
   } catch (e) {
-    return res.status(502).json({ error: (e as Error).message });
+    return res.status(502).json({ error: publicError(e) });
   }
 }

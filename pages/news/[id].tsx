@@ -167,11 +167,11 @@ export default function NewsDetail() {
 
             <div className="articlesource">
               <div className="muted">
-                المصدر: {sourceName(item.source)}
+                {sourceName(item.source)}
                 {item.author ? ` — ${item.author}` : ""}
               </div>
               <a className="btn" href={item.url} target="_blank" rel="noopener noreferrer nofollow">
-                اقرأ المقال من المصدر ↗
+                اقرأ المقال الأصلي ↗
               </a>
             </div>
           </article>

@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { fetch365Stats, type StatCategory } from "@/lib/scores365Stats";
 import { inlineUrls } from "@/lib/inlineImage";
 import { BOTOLA_LEAGUE, isStandingsLeague, leagueById } from "@/config/standingsLeagues";
+import { publicError } from "@/lib/publicError";
 
 // Only the rows a poster can show are worth inlining — fetching every photo for
 // all 16 categories would be hundreds of images per refresh.
@@ -32,6 +33,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       fetchedAt: new Date().toISOString(),
     });
   } catch (e) {
-    return res.status(502).json({ error: (e as Error).message, categories: [] });
+    return res.status(502).json({ error: publicError(e), categories: [] });
   }
 }

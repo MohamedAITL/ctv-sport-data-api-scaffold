@@ -3,6 +3,7 @@ import { fetchMatchday, MOROCCAN_FAME } from "@/lib/scores365Games";
 import { inlineMatchImages } from "@/lib/inlineImage";
 import { todayMA } from "@/lib/today";
 import type { Match } from "@/types/fixtures";
+import { publicError } from "@/lib/publicError";
 
 // The day's list is fetched once and reused while the page inlines the
 // matches it picks, one request per change of selection.
@@ -42,6 +43,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const moroccanCount = all.filter((m) => m.fame > MOROCCAN_FAME).length;
     return res.status(200).json({ date, matches: all, moroccanCount, errors: [], fetchedAt: new Date().toISOString(), stale: false });
   } catch (e) {
-    return res.status(502).json({ date, matches: [], error: (e as Error).message });
+    return res.status(502).json({ date, matches: [], error: publicError(e) });
   }
 }

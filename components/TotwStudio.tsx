@@ -187,9 +187,9 @@ export default function TotwStudio({ league, leagueField }: { league: number; le
               </select>
             )}
           </label>
-          <div className="kv"><span>المصدر</span><b>{!forLeague ? "—" : official ? "تشكيلة 365scores الرسمية" : "اختيار يدوي"}</b></div>
+          <div className="kv"><span>المصدر</span><b>{!forLeague ? "—" : official ? "التشكيلة الرسمية" : "اختيار يدوي"}</b></div>
           {forLeague && !official && (
-            <p className="muted">لا ينشر 365scores تشكيلة للجولة ولا تقييمات اللاعبين لهذه المسابقة — اختر اللاعبين من أساسيي الجولة.</p>
+            <p className="muted">لا تتوفر تشكيلة رسمية للجولة ولا تقييمات للاعبين في هذه المسابقة — اختر اللاعبين من أساسيي الجولة.</p>
           )}
           <div className="kv"><span>الحالة</span><span className={loading ? "pill" : error ? "pill warn" : "pill ok"}>{loading ? "جاري التحميل…" : error ? "خطأ" : "متصل"}</span></div>
           {error && <p className="err">{error}</p>}

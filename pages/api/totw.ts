@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { fetchRoundPool, fetchTotw, playedRounds, type RoundPool, type TotwPlayer } from "@/lib/totw";
 import { inlineUrls } from "@/lib/inlineImage";
 import { isStandingsLeague } from "@/config/standingsLeagues";
+import { publicError } from "@/lib/publicError";
 
 // GET /api/totw?competition=<id>[&key=<weekKey>]
 //   365scores' own team of the round, or — where it has none — the rounds
@@ -77,6 +78,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     remember(cacheKey, data);
     return res.status(200).json(data);
   } catch (e) {
-    return res.status(502).json({ error: (e as Error).message });
+    return res.status(502).json({ error: publicError(e) });
   }
 }

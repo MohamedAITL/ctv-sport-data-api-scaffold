@@ -197,7 +197,7 @@ export default function Matchday() {
             {candidates.length > 0 && (
               <details className="card collapsible">
                 <summary><h3>اختيار المباريات ({matches.length})</h3><span className="chev" /></summary>
-                <p className="muted">كل مباريات اليوم من 365scores، الكرة المغربية أولاً. اختر ما يظهر على الملصق — يتسع الملصق لأي عدد ويصغّر الصفوف تلقائياً.</p>
+                <p className="muted">كل مباريات اليوم، الكرة المغربية أولاً. اختر ما يظهر على الملصق — يتسع الملصق لأي عدد ويصغّر الصفوف تلقائياً.</p>
                 <div className="row">
                   <button type="button" className="btn ghost" onClick={() => savePicks(null)}>الافتراضي ({Math.min(DEFAULT_PICK, candidates.length)})</button>
                   <button type="button" className="btn ghost" onClick={() => pick(new Set(candidates.filter((m) => m.fame > MOROCCAN_FAME).map((m) => m.id)))}>المغربية فقط</button>
