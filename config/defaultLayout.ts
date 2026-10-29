@@ -151,8 +151,36 @@ export const FULL_CANVAS_LAYOUT: LayoutConfig = {
   },
 };
 
+// The bundled La Liga / Serie A / Bundesliga / Ligue 1 templates share one
+// frame: a table panel (x 60-923, y 196-1318) with a rank strip to its right
+// (x 923-1052), the band above it left for the heading.
+export const FRAMED_LAYOUT: LayoutConfig = {
+  ...FULL_CANVAS_LAYOUT,
+  heading: { ...FULL_CANVAS_LAYOUT.heading, y: 100, fontSize: 54 },
+  columnHeaders: { ...FULL_CANVAS_LAYOUT.columnHeaders, y: 232, color: "#ffffff" },
+  updatedLabel: { ...FULL_CANVAS_LAYOUT.updatedLabel, y: 1336 },
+  table: {
+    ...FULL_CANVAS_LAYOUT.table,
+    firstRowCenterY: 282,
+    rowHeight: 53.5,
+    pointsX: 120,
+    winsX: 205,
+    playedX: 290,
+    nameRightX: 830,
+    logoCenterX: 875,
+    rankX: 988,
+    spanLeft: 64,
+    spanRight: 1050,
+    bottomY: 1300,
+  },
+};
+
+/** Leagues whose bundled template is the framed one above. */
+export const FRAMED_LEAGUES = [11, 17, 25, 35];
+
 export function defaultLayoutFor(leagueId: number): LayoutConfig {
-  return MOROCCAN_LEAGUES.includes(leagueId) ? DEFAULT_LAYOUT : FULL_CANVAS_LAYOUT;
+  if (MOROCCAN_LEAGUES.includes(leagueId)) return DEFAULT_LAYOUT;
+  return FRAMED_LEAGUES.includes(leagueId) ? FRAMED_LAYOUT : FULL_CANVAS_LAYOUT;
 }
 
 // Colour for a given 1-based rank, used for the rank number and points value.

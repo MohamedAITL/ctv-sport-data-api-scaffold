@@ -23,9 +23,17 @@ import {
 import { useFitWidth } from "@/lib/useFitWidth";
 
 const BOTOLA_TEMPLATE = "/templates/botola.jpg";
-// Only Botola ships with a bundled template; other leagues start on a plain
-// background until the user uploads their own.
-const defaultTemplateFor = (league: number) => (league === BOTOLA_LEAGUE ? BOTOLA_TEMPLATE : "");
+// The big competitions ship with a bundled template; the others start on a
+// plain background until the user uploads their own.
+const BUNDLED_TEMPLATES: Record<number, string> = {
+  [BOTOLA_LEAGUE]: BOTOLA_TEMPLATE,
+  572: "/templates/ucl.jpg",
+  11: "/templates/laliga.jpg",
+  17: "/templates/seriea.jpg",
+  25: "/templates/bundesliga.jpg",
+  35: "/templates/ligue1.jpg",
+};
+const defaultTemplateFor = (league: number) => BUNDLED_TEMPLATES[league] ?? "";
 const templateKey = (league: number) => `standings:${league}`;
 const LEAGUE_KEY = "botola.league";
 const PREVIEW_W = 480;
