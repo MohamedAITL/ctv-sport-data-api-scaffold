@@ -556,7 +556,7 @@ html, body {
 .kp:fullscreen .kp-name, .kp.cssfull .kp-name { font-size: 17px; max-width: 120px; }
 
 /* ---- live: return link, bench drag, fullscreen fit ---- */
-.kiosk-brand { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.kiosk-brand { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
 .kiosk-back {
   text-decoration: none; color: var(--text); background: var(--panel);
   border: 1.5px solid var(--border-2); border-radius: 10px;
@@ -1198,5 +1198,6 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
 .skel-row .skel, .skel-pane .skel { display: block; }
 .skel-pane { padding: 0 28px; }
 .kiosk-wait { align-self: stretch; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+.kiosk-wait .loader { flex: none; }
 .kiosk-wait .skel-pane { width: min(720px, 100%); margin: 0 auto; }
 .preview-loader { position: absolute; inset: 0; z-index: 4; display: flex; background: var(--bg); }

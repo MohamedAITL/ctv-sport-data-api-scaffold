@@ -6,7 +6,7 @@ import path from "path";
 
 const css = fs.readFileSync(path.join(__dirname, "..", "styles", "studio.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
 
-/** Every style rule's selector list, descending into @media and skipping @keyframes. */
+/** Every style rule's selector list, descending into @media and @supports, skipping @keyframes. */
 function selectors(src: string): string[] {
   const out: string[] = [];
   let i = 0;
@@ -16,7 +16,7 @@ function selectors(src: string): string[] {
     const head = src.slice(i, open).trim();
     let depth = 1, j = open + 1;
     while (depth > 0) { if (src[j] === "{") depth++; if (src[j] === "}") depth--; j++; }
-    if (head.startsWith("@media")) out.push(...selectors(src.slice(open + 1, j - 1)));
+    if (/^@(media|supports)/.test(head)) out.push(...selectors(src.slice(open + 1, j - 1)));
     else if (!head.startsWith("@keyframes")) out.push(...head.split(/,(?![^(]*\))/).map((s) => s.trim()));
     i = j;
   }

@@ -26,7 +26,8 @@
   --shadow: none;
   --shadow-2: none;
   --shim: rgba(255, 255, 255, .08);
-  --display: Cairo, "Rubik Variable", Rubik, system-ui, sans-serif;
+  /* Alexandria: strong at title size, clear at 13px, and its digits share one width. */
+  --display: "Alexandria Variable", Cairo, system-ui, sans-serif;
   /* The slant from the logo's panel. */
   --cut: 10px;
   --slant: polygon(var(--cut) 0, 100% 0, calc(100% - var(--cut)) 100%, 0 100%);
@@ -73,7 +74,8 @@
 :root[data-design="studio"][data-theme="light"][data-section="live"] { --sec-text: #b81f26; }
 
 /* ---- type and numbers ---- */
-:root[data-design="studio"] h1, :root[data-design="studio"] h2, :root[data-design="studio"] h3, :root[data-design="studio"] h4 { font-family: var(--display); letter-spacing: 0; }
+:root[data-design="studio"], :root[data-design="studio"] body { font-family: var(--display); }
+:root[data-design="studio"] h1, :root[data-design="studio"] h2, :root[data-design="studio"] h3, :root[data-design="studio"] h4 { letter-spacing: 0; }
 :root[data-design="studio"] .muted { font-size: 14px; }
 :root[data-design="studio"] .ico { display: inline-block; width: 18px; height: 18px; flex: none; }
 :root[data-design="studio"] .glyph { display: none; }
@@ -168,12 +170,28 @@
 :root[data-design="studio"] .warnlist { font-size: 13px; }
 
 :root[data-design="studio"] .field { font-size: 13px; }
+/* Columns narrow enough that a label stays beside its input. */
+:root[data-design="studio"] .grid { grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px 22px; }
+:root[data-design="studio"] .field.wide:has(select) + .field.wide:has(select), :root[data-design="studio"] .field.wide:has(select) + .kv { margin-top: 10px; }
+:root[data-design="studio"] .field.wide:not(:has(select)) > span { flex: 0 0 auto; max-width: 50%; }
+:root[data-design="studio"] .field.wide input[type="text"] { flex: 1; width: auto; min-width: 0; }
 :root[data-design="studio"] .field input[type="number"], :root[data-design="studio"] .field input[type="text"], :root[data-design="studio"] .field input[type="date"], :root[data-design="studio"] .field input[type="search"] {
   min-height: 38px; border-radius: var(--radius); border-color: var(--border-2);
 }
 :root[data-design="studio"] .field input[type="color"] { border-radius: var(--radius); }
-:root[data-design="studio"] .field select { border-radius: var(--radius); font-size: 15px; padding-block: 11px; }
-:root[data-design="studio"] .field select:focus-visible { box-shadow: none; }
+:root[data-design="studio"] .field input[type="checkbox"], :root[data-design="studio"] .pick-group > summary input { accent-color: var(--sec); }
+
+/* Dropdowns: a scoreboard block with the tab's colour on its edge. */
+:root[data-design="studio"] .field select, :root[data-design="studio"] .kxs select {
+  min-height: 46px; padding-block: 10px; padding-inline: 14px 44px;
+  border: 1px solid var(--border-2); border-inline-start: 4px solid var(--sec); border-radius: var(--radius);
+  background-position: right 13px center; font-size: 15px; font-weight: 700; line-height: 1.4;
+  transition: background-color var(--fast) var(--ease), border-color var(--fast) var(--ease);
+}
+:root[data-design="studio"][dir="rtl"] .field select, :root[data-design="studio"][dir="rtl"] .kxs select { background-position: left 13px center; }
+:root[data-design="studio"] .field select:hover:not(:disabled), :root[data-design="studio"] .kxs select:hover:not(:disabled) { border-color: var(--border-2); border-inline-start-color: var(--sec); }
+:root[data-design="studio"] .field select:focus-visible, :root[data-design="studio"] .kxs select:focus-visible { box-shadow: none; border-color: var(--accent); }
+:root[data-design="studio"] .field select option, :root[data-design="studio"] .kxs select option { font-family: var(--display); }
 :root[data-design="studio"][data-theme="light"] .field select {
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2317101f' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
 }
@@ -203,6 +221,31 @@
 :root[data-design="studio"] .previewbox.busy::after { border-radius: 2px; border-color: var(--accent); animation-name: studio-tile; animation-duration: 900ms; animation-timing-function: ease-in-out; }
 :root[data-design="studio"] .preview-loader { background: var(--panel); }
 :root[data-design="studio"] .skel::after { background: linear-gradient(90deg, transparent, var(--shim), transparent); }
+
+/* The open list too, where the browser lets a page draw it.
+   shortcut: Safari and Firefox keep their own open list; it matches once they ship base-select. */
+@supports (appearance: base-select) {
+  :root[data-design="studio"] select, :root[data-design="studio"] select::picker(select) { appearance: base-select; }
+  :root[data-design="studio"] select::picker-icon { display: none; }
+  :root[data-design="studio"] select:open { background-color: var(--panel-3); border-color: var(--sec); }
+  :root[data-design="studio"] select::picker(select) {
+    max-height: min(440px, 62vh); margin-block: 4px; padding: 4px;
+    border: 1px solid var(--border-2); border-top: 4px solid var(--sec); border-radius: var(--radius);
+    background: var(--panel); color: var(--text); scrollbar-width: thin; scrollbar-color: var(--panel-3) transparent;
+  }
+  :root[data-design="studio"] .field select optgroup, :root[data-design="studio"] .kxs select optgroup {
+    padding-block: 8px 2px; background: none; color: var(--sec-text);
+    font-family: var(--display); font-size: 13px; font-weight: 800; letter-spacing: 0;
+  }
+  :root[data-design="studio"] .field select option, :root[data-design="studio"] .kxs select option {
+    min-height: 42px; padding: 8px 10px; border-radius: 2px; background: none; color: var(--text);
+    font-size: 15px; font-weight: 600; cursor: pointer;
+    transition: background-color var(--fast) var(--ease);
+  }
+  :root[data-design="studio"] .field select option:hover, :root[data-design="studio"] .field select option:focus-visible, :root[data-design="studio"] .kxs select option:hover, :root[data-design="studio"] .kxs select option:focus-visible { background: var(--panel-3); outline: 0; }
+  :root[data-design="studio"] .field select option:checked, :root[data-design="studio"] .kxs select option:checked { background: var(--sec); color: var(--sec-ink); font-weight: 800; }
+  :root[data-design="studio"] select option::checkmark { content: none; }
+}
 
 /* ---- news ---- */
 :root[data-design="studio"] .newsgrid { gap: 12px; }
@@ -276,7 +319,7 @@
 :root[data-design="studio"] .kh { position: relative; background: var(--brand); color: #fff; border-bottom: 4px solid var(--sec); }
 :root[data-design="studio"] .kh-meta { justify-content: center; color: rgba(255, 255, 255, .84); }
 :root[data-design="studio"] .kh-side img { background: #fff; padding: 6px; border-radius: var(--radius); }
-:root[data-design="studio"] .kh-side span { font-family: var(--display); font-weight: 900; }
+:root[data-design="studio"] .kh-side span { font-family: var(--display); font-size: clamp(20px, 1.9vw, 28px); font-weight: 900; line-height: 1.25; white-space: normal; }
 :root[data-design="studio"] .kh-nums {
   --cut: 18px; padding: 4px 34px; font-family: var(--display); clip-path: var(--slant);
   background: var(--accent); color: var(--accent-ink);
@@ -356,6 +399,7 @@
 :root[data-design="studio"] .kpc-shirt, :root[data-design="studio"] .kpc-season h4 { color: var(--sec-text); }
 :root[data-design="studio"] .kxp-preview { border-radius: var(--radius); }
 :root[data-design="studio"] .kxp h3 { font-weight: 900; }
+:root[data-design="studio"] .kxp-btn { font-size: 15px; }
 :root[data-design="studio"] .kxp-btn.on { color: var(--text); border-color: var(--accent); }
 
 :root[data-design="studio"] .kiosk-foot { border-top-color: var(--border); }
@@ -391,10 +435,18 @@
 @keyframes studio-tile { 50% { transform: rotate(180deg) scale(.8); } 100% { transform: rotate(360deg); } }
 @keyframes studio-flash { 22% { transform: scale(1.22); } }
 
+/* Wall screens are wide; a tablet's rail is 320px and Alexandria runs wide. */
+@media (max-width: 1100px) {
+  :root[data-design="studio"] .kiosk-seg button { font-size: 13px; }
+  :root[data-design="studio"] .kiosk-tabs button { font-size: 16px; }
+  :root[data-design="studio"] .kp-tool { font-size: 15px; }
+}
+
 /* ---- phones: the sizes the shared stylesheet sets here ---- */
 @media (max-width: 760px) {
   :root[data-design="studio"] .kh-side img { padding: 3px; }
   :root[data-design="studio"] .kh-nums { --cut: 12px; padding: 2px 22px; }
+  :root[data-design="studio"] .kh-side span { font-size: 16px; }
   :root[data-design="studio"] .pagehead .muted { padding: 8px 14px; }
   /* A phone cannot spare 64px rows: the match list and the pitch need the height. */
   :root[data-design="studio"] .kiosk { grid-template-rows: minmax(0, 36vh) minmax(0, 1fr); }

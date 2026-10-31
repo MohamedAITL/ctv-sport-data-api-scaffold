@@ -21,6 +21,8 @@ const timeAgo = (iso: string, t: T): string => {
   return t(`منذ ${Math.round(h / 24)} يوم`, `${Math.round(h / 24)} d ago`);
 };
 
+const NO_PHOTO = "/chouftv-logo.png";
+
 export default function NewsPage() {
   const { t, lang, locale } = useLang();
   const [failed, setFailed] = useState<NewsSourceKey[]>([]);
@@ -146,11 +148,19 @@ export default function NewsPage() {
               <div className="newsthumb">
                 {n.image ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={n.image} alt="" loading="lazy" />
+                  <img
+                    src={n.image} alt="" loading="lazy"
+                    onError={(e) => {
+                      const img = e.currentTarget;
+                      if (img.src.endsWith(NO_PHOTO)) return;
+                      img.src = NO_PHOTO;
+                      img.parentElement?.classList.add("newsthumb-empty");
+                    }}
+                  />
                 ) : (
                   <div className="newsthumb-empty">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src="/chouftv-logo.png" alt="" />
+                    <img src={NO_PHOTO} alt="" />
                   </div>
                 )}
 
