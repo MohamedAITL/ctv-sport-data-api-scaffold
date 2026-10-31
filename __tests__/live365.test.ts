@@ -190,6 +190,16 @@ describe("fetchLiveDetail", () => {
     }),
   };
 
+  it("reads the feed's -1 rating as no rating, and its English substitution label in Arabic", async () => {
+    const payload = structuredClone(detailPayload);
+    (payload.game.homeCompetitor.lineups.members[0] as { ranking?: number }).ranking = -1;
+    payload.game.events[0].eventType.name = "Substitution";
+    mock((u) => (u.includes("/game/stats/") ? { statistics: [], statisticsFilters: [] } : payload));
+    const d = (await fetchLiveDetail(100, "140-174-11"))!;
+    expect(d.homeLineup!.starting[0].rating).toBeNull();
+    expect(d.events[0].type).toBe("تبديل");
+  });
+
   it("joins lineup entries to members and splits them by role", async () => {
     mock((u) => (u.includes("/game/stats/")
       ? { statistics: [], statisticsFilters: [{ filterId: -1, name: "المباراة" }] }

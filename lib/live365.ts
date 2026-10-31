@@ -303,7 +303,8 @@ function buildLineup(lu: RawLineups | undefined, members: RawMember[]): TeamLine
       photo: m.athleteId ? `${FACE_IMG}/v${m.imageVersion ?? 1}/Athletes/${m.athleteId}` : null,
       position: lm.position?.name ?? null,
       role: ROLE[lm.status ?? 0] ?? "substitute",
-      rating: typeof lm.ranking === "number" ? lm.ranking : null,
+      // -1 is the feed's "no rating": a late substitute with too few minutes.
+      rating: typeof lm.ranking === "number" && lm.ranking >= 0 ? lm.ranking : null,
       stats: playerStats(lm.stats),
       topStats: playerStats(lm.stats).filter((_, i) => (lm.stats ?? [])[i]?.isTop),
       line: lm.yardFormation?.fieldLine ?? null,
@@ -610,7 +611,8 @@ export async function fetchLiveDetail(gameId: number, matchupId: string): Promis
   const events: LiveEvent[] = (g.events ?? []).map((e, i) => ({
     competitorId: e.competitorId ?? 0,
     minute: e.gameTimeDisplay ?? "",
-    type: e.eventType?.name ?? "",
+    // The Arabic feed still sends this one label in English.
+    type: (e.eventType?.name ?? "").replace(/^Substitution$/, "تبديل"),
     player: byPlayer.get(e.playerId)?.name ?? null,
     isMajor: Boolean(e.isMajor),
     order: e.order ?? i,
