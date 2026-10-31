@@ -191,8 +191,8 @@ describe("fetchLiveDetail", () => {
   };
 
   it("reads the feed's -1 rating as no rating, and its English substitution label in Arabic", async () => {
-    const payload = structuredClone(detailPayload);
-    (payload.game.homeCompetitor.lineups.members[0] as { ranking?: number }).ranking = -1;
+    const payload = JSON.parse(JSON.stringify(detailPayload));
+    payload.game.homeCompetitor.lineups.members[0].ranking = -1;
     payload.game.events[0].eventType.name = "Substitution";
     mock((u) => (u.includes("/game/stats/") ? { statistics: [], statisticsFilters: [] } : payload));
     const d = (await fetchLiveDetail(100, "140-174-11"))!;
