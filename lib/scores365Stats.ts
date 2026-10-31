@@ -44,8 +44,11 @@ interface S365Block {
   averageStat?: { text?: string; value?: string } | null;
   rows?: S365StatRow[];
 }
+// The feed moved its blocks under `tables`; either shape may come back.
+type S365Blocks = S365Block[] | { tables?: S365Block[] };
+const blocksOf = (b?: S365Blocks): S365Block[] => (Array.isArray(b) ? b : b?.tables ?? []);
 interface S365StatsResp {
-  stats?: { athletesStats?: S365Block[]; competitorsStats?: S365Block[] };
+  stats?: { athletesStats?: S365Blocks; competitorsStats?: S365Blocks };
 }
 
 function mapBlock(b: S365Block, kind: "player" | "team"): StatCategory {
@@ -87,7 +90,7 @@ export async function fetch365Stats(competitionId: number): Promise<StatCategory
   });
   if (!r.ok) throw new Error(`365scores stats ${r.status}`);
   const d = (await r.json()) as S365StatsResp;
-  const players = (d.stats?.athletesStats ?? []).map((b) => mapBlock(b, "player"));
-  const teams = (d.stats?.competitorsStats ?? []).map((b) => mapBlock(b, "team"));
+  const players = blocksOf(d.stats?.athletesStats).map((b) => mapBlock(b, "player"));
+  const teams = blocksOf(d.stats?.competitorsStats).map((b) => mapBlock(b, "team"));
   return [...players, ...teams].filter((c) => c.rows.length > 0);
 }

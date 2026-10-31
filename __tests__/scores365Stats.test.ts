@@ -57,6 +57,14 @@ describe("fetch365Stats", () => {
     expect(cats[1].name).toBe("أهداف للمباراة الواحدة");
   });
 
+  it("reads the feed's newer { tables } shape the same way", async () => {
+    const { athletesStats, competitorsStats } = payload.stats;
+    const wrapped = { stats: { athletesStats: { tables: athletesStats, filters: [] }, competitorsStats: { tables: competitorsStats, filters: [] } } };
+    global.fetch = jest.fn(async () => ({ ok: true, json: async () => wrapped })) as unknown as typeof fetch;
+    const cats = await fetch365Stats(557);
+    expect(cats.map((c) => c.name)).toEqual(["الأهداف", "أهداف للمباراة الواحدة"]);
+  });
+
   it("takes the displayed value from stats[0], not from statsTypes", async () => {
     mock();
     const [goals] = await fetch365Stats(557);
