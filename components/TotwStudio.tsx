@@ -1,3 +1,4 @@
+import Loader from "./Loader";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import TotwPoster, { type TotwSlot } from "./TotwPoster";
 import TotwDesign from "./TotwDesign";
@@ -196,7 +197,7 @@ export default function TotwStudio({ league, leagueField }: { league: number; le
           <div className="kv"><span>{t("الحالة")}</span><span className={loading ? "pill" : error ? "pill warn" : "pill ok"}>{loading ? t("جاري التحميل…", "Loading…") : error ? t("خطأ", "Error") : t("متصل", "Connected")}</span></div>
           {error && <p className="err">{error}</p>}
           {forLeague && !official && played.length === 0 && <p className="err">{t("لم تُلعب أي جولة بعد في هذه المسابقة.")}</p>}
-          <button className="btn" disabled={loading} onClick={() => refresh()}>{loading || busy ? t("جاري التحديث…", "Refreshing…") : t("تحديث", "Refresh")}</button>
+          <button className="btn" disabled={loading} onClick={() => refresh()}>{(loading || busy) && <i className="spinner" aria-hidden="true" />}{loading || busy ? t("جاري التحديث…", "Refreshing…") : t("تحديث", "Refresh")}</button>
         </div>
 
         {round !== null && (
@@ -208,7 +209,7 @@ export default function TotwStudio({ league, leagueField }: { league: number; le
                 {Array.from(new Set([...(totw?.formation ? [totw.formation] : []), ...FORMATIONS])).map((f) => <option key={f} value={f}>{f}</option>)}
               </select>
             </label>
-            {poolLoading && !pool && <p className="kxp-wait"><i className="spinner" />{t("جاري تحميل أساسيي الجولة…")}</p>}
+            {poolLoading && !pool && <Loader label={t("جاري تحميل أساسيي الجولة…")} size={28} />}
             {pool && (
               <>
                 <label className="field wide">
@@ -252,7 +253,8 @@ export default function TotwStudio({ league, leagueField }: { league: number; le
       <section className="previewpane" ref={paneRef}>
         <div className="previewsticky">
           <h3 className="muted">{t("معاينة مباشرة")}</h3>
-          <div className={busy ? "previewbox busy" : "previewbox"} style={{ width: previewW, height: layout.height * scale }}>
+          <div className={loading || busy ? "previewbox busy" : "previewbox"} style={{ width: previewW, height: layout.height * scale }}>
+            {loading && <div className="preview-loader"><Loader label={t("جاري تحميل البيانات…", "Loading data…")} /></div>}
             <div style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}>
               <TotwPoster ref={posterRef} subtitle={subtitle} slots={slots} coach={coach} formation={formation} layout={layout} templateSrc={templateSrc} />
             </div>

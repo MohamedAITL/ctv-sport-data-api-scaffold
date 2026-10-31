@@ -1,3 +1,4 @@
+import Loader from "@/components/Loader";
 import { useEffect, useState } from "react";
 import H2HExport from "./H2HExport";
 import type { LiveDetail, PastMatch, PreviousMatches } from "@/types/live";
@@ -89,7 +90,7 @@ export default function LivePrevious({ d }: { d: LiveDetail }) {
   }, [d.match.id, d.match.matchupId, home.id, away.id, d.match.competitionId]);
 
   if (error) return <div className="kp-none"><p>{t("تعذر تحميل المواجهات السابقة")}</p></div>;
-  if (!data) return <div className="kp-none"><p>{t("جاري التحميل…")}</p></div>;
+  if (!data) return <Loader label={t("جاري التحميل…")} />;
 
   const here = (name: string) => name === home.name || name === away.name;
   const empty = data.home.length === 0 && data.away.length === 0 && table.length === 0 && data.h2h.length === 0;
@@ -126,7 +127,7 @@ export default function LivePrevious({ d }: { d: LiveDetail }) {
                 <b>{data.record.awayWins}</b>
                 <span>{away.name}</span>
               </div>
-              <p className="kh2h-meta">
+              <p className="kh2h-meta" dir="auto">
                 {data.record.played}{t(" مواجهة · الأهداف ")}{data.record.homeGoals} - {data.record.awayGoals}
               </p>
             </div>

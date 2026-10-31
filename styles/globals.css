@@ -1088,7 +1088,6 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
 .kxp-btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .kxp-btn:disabled { opacity: .6; }
 .kxp-err { color: var(--live-text); font-size: 16px; margin: 0 0 10px; }
-.kxp-wait { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 16px; margin: 0; }
 .kxp-note { margin: 12px 0 0; font-size: 15px; line-height: 1.5; color: var(--muted); }
 /* The lineup poster's team choice: the same 64px buttons, one of them lit. */
 .kxp-pick { margin-top: 0; }
@@ -1186,3 +1185,17 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
    — home on the right, as on the pitch and every poster — so English does not
    mirror the scoreline against the pitch beneath it. */
 .ks-head, .ks-bars, .kx-list, .kf-block li.paired, .ke, .kh2h, .kpv-row, .kt-pair { direction: rtl; }
+
+/* The Studio design's icons: hidden here, so this design keeps its text labels. */
+.ico { display: none; }
+.glyph { display: inline; }
+
+/* Data on its way, in both designs. Reduced motion stops the spin above. */
+.loader { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 36px 20px; color: var(--muted); font-size: 16px; font-weight: 700; text-align: center; }
+.ball { display: block; flex: none; animation: ball-spin 900ms linear infinite; }
+@keyframes ball-spin { to { transform: rotate(360deg); } }
+.skel-row { cursor: default; }
+.skel-pane { padding: 0 28px; }
+.kiosk-wait { align-self: stretch; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+.kiosk-wait .skel-pane { width: min(720px, 100%); margin: 0 auto; }
+.preview-loader { position: absolute; inset: 0; z-index: 4; display: flex; background: var(--bg); }

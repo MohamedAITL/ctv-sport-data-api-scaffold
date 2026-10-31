@@ -1,3 +1,4 @@
+import Loader from "@/components/Loader";
 import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import TemplateUploader from "../TemplateUploader";
@@ -93,7 +94,7 @@ export default function PosterExport<L>({
         <h3>{title}</h3>
 
         {shown && <p className="kxp-err">{shown}</p>}
-        {!ready && !error && <p className="kxp-wait"><i className="spinner" />{t("جاري تجهيز الملصق…")}</p>}
+        {!ready && !error && <Loader label={t("جاري تجهيز الملصق…")} size={32} />}
 
         {ready && !error && (
           <div className="kxp-body">

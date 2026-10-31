@@ -1,3 +1,4 @@
+import Loader from "./Loader";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import MoroccanPoster, { ordinal } from "./MoroccanPoster";
 import MoroccanDesign from "./MoroccanDesign";
@@ -121,7 +122,7 @@ export default function MoroccanStudio() {
           <div className="kv"><span>{t("الحالة")}</span><span className={loading ? "pill" : error ? "pill warn" : "pill ok"}>{loading ? t("جاري التحميل…", "Loading…") : error ? t("خطأ", "Error") : t("متصل", "Connected")}</span></div>
           {error && <p className="err">{error}</p>}
           {data && all.length === 0 && <p className="muted">{t("لا يوجد لاعب مغربي ضمن أفضل 20 في أي مسابقة حالياً.")}</p>}
-          <button className="btn" disabled={loading} onClick={() => refresh()}>{loading || busy ? t("جاري التحديث…", "Refreshing…") : t("تحديث", "Refresh")}</button>
+          <button className="btn" disabled={loading} onClick={() => refresh()}>{(loading || busy) && <i className="spinner" aria-hidden="true" />}{loading || busy ? t("جاري التحديث…", "Refreshing…") : t("تحديث", "Refresh")}</button>
         </div>
 
         {all.length > 0 && (
@@ -173,7 +174,8 @@ export default function MoroccanStudio() {
       <section className="previewpane" ref={paneRef}>
         <div className="previewsticky">
           <h3 className="muted">{t("معاينة مباشرة")}</h3>
-          <div className={busy ? "previewbox busy" : "previewbox"} style={{ width: previewW, height: layout.height * scale }}>
+          <div className={loading || busy ? "previewbox busy" : "previewbox"} style={{ width: previewW, height: layout.height * scale }}>
+            {loading && <div className="preview-loader"><Loader label={t("جاري تحميل البيانات…", "Loading data…")} /></div>}
             <div style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}>
               <MoroccanPoster ref={posterRef} highlights={onPoster} layout={layout} templateSrc={templateSrc} />
             </div>

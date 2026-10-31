@@ -1,3 +1,4 @@
+import Icon from "@/components/Icon";
 import { useState } from "react";
 import MatchStatsExport from "./MatchStatsExport";
 import type { LiveDetail, Performer } from "@/types/live";
@@ -107,7 +108,7 @@ export default function LiveStats({ d }: { d: LiveDetail }) {
                 <li key={`${x.minute}-${i}`} className={`${x.home ? "home" : "away"}${x.isGoal ? " goal" : ""}`}>
                   <b className="kx-min">{x.minute}</b>
                   <span className="kx-who">{x.player ?? "—"}</span>
-                  <span className="kx-out">{x.isGoal ? t("⚽ هدف", "⚽ Goal") : x.outcome ?? ""}{x.bodyPart ? ` · ${x.bodyPart}` : ""}</span>
+                  <span className="kx-out">{x.isGoal ? <><Icon name="matchday" /><span className="glyph">⚽ </span>{t("هدف", "Goal")}</> : x.outcome ?? ""}{x.bodyPart ? ` · ${x.bodyPart}` : ""}</span>
                   <b className="kx-xg">{x.xg ?? "-"}</b>
                 </li>
               ))}

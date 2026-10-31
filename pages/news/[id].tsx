@@ -1,3 +1,4 @@
+import Loader from "@/components/Loader";
 import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -96,7 +97,7 @@ export default function NewsDetail() {
           <Link href="/news" className="navlink">{t("‹ كل الأخبار")}</Link>
         </div>
 
-        {loading && <p className="muted">{t("جاري التحميل…")}</p>}
+        {loading && <Loader label={t("جاري التحميل…")} />}
         {error && <p className="err">{error}</p>}
 
         {item && (
@@ -148,7 +149,7 @@ export default function NewsDetail() {
               <div className="titlebox-head">
                 <h3>{t("عناوين للنشر على مواقع التواصل")}</h3>
                 <button className="btn" disabled={titlesLoading} onClick={makeTitles}>
-                  {titlesLoading ? t("جاري التوليد…", "Generating…") : titles.length ? t("توليد عناوين أخرى", "Generate more titles") : t("توليد عناوين", "Generate titles")}
+                  {titlesLoading && <i className="spinner" aria-hidden="true" />}{titlesLoading ? t("جاري التوليد…", "Generating…") : titles.length ? t("توليد عناوين أخرى", "Generate more titles") : t("توليد عناوين", "Generate titles")}
                 </button>
               </div>
               {titlesError && <p className="err">{titlesError}</p>}

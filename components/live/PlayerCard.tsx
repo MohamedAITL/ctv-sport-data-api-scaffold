@@ -1,3 +1,4 @@
+import Loader from "@/components/Loader";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import type { AthleteBio, LineupPlayer, PerformerStat } from "@/types/live";
@@ -130,9 +131,9 @@ export default function PlayerCard({
               </section>
             ))
           ) : (
-            <p className="kpc-none">
-              {bio === null && player.athleteId ? t("جاري تحميل إحصائيات اللاعب…", "Loading player stats…") : t("لا تتوفر إحصائيات لهذا اللاعب.", "No stats are available for this player.")}
-            </p>
+            bio === null && player.athleteId
+              ? <Loader label={t("جاري تحميل إحصائيات اللاعب…", "Loading player stats…")} size={32} />
+              : <p className="kpc-none">{t("لا تتوفر إحصائيات لهذا اللاعب.", "No stats are available for this player.")}</p>
           )
         )}
       </div>

@@ -1,3 +1,4 @@
+import Loader from "@/components/Loader";
 import Head from "next/head";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Nav from "@/components/Nav";
@@ -237,7 +238,7 @@ export default function RoundPage() {
                 <p className="err">{t("لم يُنشر برنامج هذه المسابقة بعد. سيظهر هنا عند الإعلان عن الجولة المقبلة.")}</p>
               )}
               {shownError && <p className="err">{shownError}</p>}
-              <button className="btn" disabled={loading} onClick={() => fetchRound()}>{loading ? t("جاري التحديث…", "Refreshing…") : t("تحديث", "Refresh")}</button>
+              <button className="btn" disabled={loading} onClick={() => fetchRound()}>{loading && <i className="spinner" aria-hidden="true" />}{loading ? t("جاري التحديث…", "Refreshing…") : t("تحديث", "Refresh")}</button>
             </div>
             {matches.length > 0 && (
               <details className="card collapsible" open={matches.length > DEFAULT_PICK}>
@@ -265,7 +266,8 @@ export default function RoundPage() {
           <section className="previewpane" ref={paneRef}>
             <div className="previewsticky">
               <h3 className="muted">{t("معاينة مباشرة")}</h3>
-              <div className={busy ? "previewbox busy" : "previewbox"} style={{ width: previewW, height: layout.height * scale }}>
+              <div className={loading || busy ? "previewbox busy" : "previewbox"} style={{ width: previewW, height: layout.height * scale }}>
+                {loading && <div className="preview-loader"><Loader label={t("جاري تحميل البيانات…", "Loading data…")} /></div>}
                 <div style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}>
                   <MatchdayPoster ref={posterRef} groupBy="date" mode={results ? "results" : "fixtures"} matches={posterMatches} layout={effLayout} templateSrc={templateSrc} nameOverrides={nameOverrides} logoOverrides={logoOverrides} />
                 </div>

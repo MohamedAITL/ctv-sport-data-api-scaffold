@@ -1,3 +1,4 @@
+import Loader from "@/components/Loader";
 import Head from "next/head";
 import { useCachedData } from "@/lib/useCachedData";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -193,7 +194,7 @@ export default function Matchday() {
               {dataForDate?.errors && dataForDate.errors.length > 0 && (
                 <ul className="warnlist">{dataForDate.errors.map((e, i) => <li key={i}>{e}</li>)}</ul>
               )}
-              <button className="btn" disabled={loadingDate} onClick={() => fetchFixtures()}>{loadingDate ? t("جاري التحديث…", "Refreshing…") : t("تحديث", "Refresh")}</button>
+              <button className="btn" disabled={loadingDate} onClick={() => fetchFixtures()}>{loadingDate && <i className="spinner" aria-hidden="true" />}{loadingDate ? t("جاري التحديث…", "Refreshing…") : t("تحديث", "Refresh")}</button>
             </div>
             <TemplateUploader isCustom={templateSrc !== null} onTemplate={onTemplate} defaultLabel={t("لا يوجد قالب بعد — تُستخدم خلفية بسيطة. ارفع قالب مباريات اليوم.")} resetLabel={t("حذف القالب")} />
             {candidates.length > 0 && (
@@ -244,7 +245,8 @@ export default function Matchday() {
           <section className="previewpane" ref={paneRef}>
             <div className="previewsticky">
               <h3 className="muted">{t("معاينة مباشرة")}</h3>
-              <div className={busy ? "previewbox busy" : "previewbox"} style={{ width: previewW, height: layout.height * scale }}>
+              <div className={loadingDate || busy ? "previewbox busy" : "previewbox"} style={{ width: previewW, height: layout.height * scale }}>
+                {loadingDate && <div className="preview-loader"><Loader label={t("جاري تحميل البيانات…", "Loading data…")} /></div>}
                 <div style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}>
                   <MatchdayPoster ref={posterRef} mode={mode} matches={matches} layout={effLayout} templateSrc={templateSrc} nameOverrides={nameOverrides} logoOverrides={logoOverrides} />
                 </div>

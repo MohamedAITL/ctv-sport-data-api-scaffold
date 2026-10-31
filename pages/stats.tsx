@@ -1,3 +1,4 @@
+import Loader from "@/components/Loader";
 import Head from "next/head";
 import { useCachedData } from "@/lib/useCachedData";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -158,7 +159,7 @@ export default function StatsPage() {
               <div className="kv"><span>{t("الحالة")}</span><span className={loading ? "pill" : shownError ? "pill warn" : "pill ok"}>{loading ? t("جاري التحميل…", "Loading…") : shownError ? t("خطأ", "Error") : t("متصل", "Connected")}</span></div>
               {empty && <p className="err">{t("لا تتوفر تصنيفات إحصائية لهذه المسابقة.")}</p>}
               {shownError && <p className="err">{shownError}</p>}
-              <button className="btn" disabled={loading} onClick={() => fetchStats()}>{loading ? t("جاري التحديث…", "Refreshing…") : t("تحديث", "Refresh")}</button>
+              <button className="btn" disabled={loading} onClick={() => fetchStats()}>{loading && <i className="spinner" aria-hidden="true" />}{loading ? t("جاري التحديث…", "Refreshing…") : t("تحديث", "Refresh")}</button>
             </div>
 
             <TemplateUploader isCustom={templateSrc !== null} onTemplate={onTemplate} defaultLabel={t("لا يوجد قالب بعد — يتم استخدام خلفية بسيطة. ارفع قالب الإحصائيات.")} resetLabel={t("حذف القالب")} />
@@ -170,7 +171,8 @@ export default function StatsPage() {
           <section className="previewpane" ref={paneRef}>
             <div className="previewsticky">
               <h3 className="muted">{t("معاينة مباشرة")}</h3>
-              <div className={busy ? "previewbox busy" : "previewbox"} style={{ width: previewW, height: layout.height * scale }}>
+              <div className={loading || busy ? "previewbox busy" : "previewbox"} style={{ width: previewW, height: layout.height * scale }}>
+                {loading && <div className="preview-loader"><Loader label={t("جاري تحميل البيانات…", "Loading data…")} /></div>}
                 <div style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}>
                   <StatsPoster ref={posterRef} title={category?.name ?? ""} subtitle={subtitle} rows={rows} layout={layout} templateSrc={templateSrc} kind={category?.kind ?? "player"} />
                 </div>

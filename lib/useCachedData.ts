@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { readCache, writeCache } from "./db";
+import { fetchEnd, fetchStart } from "./fetching";
 
 /**
  * "Show what we already have, then look only for what is new."
@@ -35,6 +36,7 @@ export function useCachedData<T>(
   const run = useCallback(async (k: string, hasContent: boolean) => {
     if (hasContent) setBusy(true); else setLoading(true);
     setError(null);
+    fetchStart();
     try {
       const fresh = await fetchRef.current();
       if (latest.current !== k) return; // the page moved on
@@ -47,6 +49,7 @@ export function useCachedData<T>(
     } catch (e) {
       if (latest.current === k) setError(e instanceof Error ? e.message : String(e));
     } finally {
+      fetchEnd();
       if (latest.current === k) { setLoading(false); setBusy(false); }
     }
   }, []);

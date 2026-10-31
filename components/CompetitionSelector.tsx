@@ -56,6 +56,7 @@ export default function CompetitionSelector({
       <div className="kv"><span>{t("الحالة")}</span><span className={statusClass}>{status}</span></div>
       {error && <p className="err">{error}</p>}
       <button className="btn" disabled={loading} onClick={onRefresh}>
+        {loading && <i className="spinner" aria-hidden="true" />}
         {loading ? t("جاري التحديث…", "Refreshing…") : t("تحديث الترتيب", "Refresh standings")}
       </button>
     </div>

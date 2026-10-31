@@ -39,9 +39,11 @@ export default function ExportControls({ posterRef, canExport, blocked, onResetD
       {failed && <p className="err">{failed}</p>}
       <div className="row">
         <button className="btn primary" disabled={!canExport || !!busy || !!blocked} onClick={() => run("png")}>
+          {busy === "png" && <i className="spinner" aria-hidden="true" />}
           {busy === "png" ? t("جاري التجهيز…", "Preparing…") : t("تحميل PNG (1080×1350)", "Download PNG (1080×1350)")}
         </button>
         <button className="btn" disabled={!canExport || !!busy || !!blocked} onClick={() => run("jpeg")}>
+          {busy === "jpeg" && <i className="spinner" aria-hidden="true" />}
           {busy === "jpeg" ? t("جاري التجهيز…", "Preparing…") : t("تحميل JPEG", "Download JPEG")}
         </button>
       </div>

@@ -3,7 +3,7 @@ import { PREFS_BOOT } from "@/lib/prefs";
 
 export default function Document() {
   return (
-    <Html lang="ar" dir="rtl" data-theme="dark">
+    <Html lang="ar" dir="rtl" data-theme="dark" data-design="studio">
       <Head>
         <script dangerouslySetInnerHTML={{ __html: PREFS_BOOT }} />
       </Head>

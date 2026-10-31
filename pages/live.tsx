@@ -3,6 +3,8 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import LiveList from "@/components/live/LiveList";
 import PrefsToggle from "@/components/PrefsToggle";
+import Loader, { PaneSkeleton, RailSkeleton } from "@/components/Loader";
+import { fetchEnd, fetchStart } from "@/lib/fetching";
 import LiveHeader from "@/components/live/LiveHeader";
 import LinePitch from "@/components/live/LinePitch";
 import LiveStats from "@/components/live/LiveStats";
@@ -35,6 +37,7 @@ export default function LivePage() {
   const [date, setDate] = useState<string>(isoToday());
   const [updatedAt, setUpdatedAt] = useState<string>("");
   const [busy, setBusy] = useState(false);
+  const [listLoading, setListLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Refs so the poller never closes over stale state and never forces a
@@ -77,7 +80,7 @@ export default function LivePage() {
   }, []);
 
   const refreshAll = useCallback(async (manual = false) => {
-    if (manual) setBusy(true);
+    if (manual) { setBusy(true); fetchStart(); }
     setError(null);
     try {
       await loadList(manual);
@@ -86,7 +89,8 @@ export default function LivePage() {
     } catch (e) {
       setError(String(e));
     } finally {
-      if (manual) setBusy(false);
+      setListLoading(false);
+      if (manual) { setBusy(false); fetchEnd(); }
     }
   }, [loadList, loadDetail]);
 
@@ -114,7 +118,7 @@ export default function LivePage() {
     setDate(iso);
     dateRef.current = iso;
     setSelected(null); selectedRef.current = null;
-    setDetail(null); setMatches([]);
+    setDetail(null); setMatches([]); setListLoading(true);
     // Past days are results; future days are fixtures; today leads with live.
     setFilter(iso === isoToday() ? "live" : iso < isoToday() ? "done" : "all");
     toTop();
@@ -158,7 +162,7 @@ export default function LivePage() {
             </div>
           </div>
           <div className="kl-scroll" ref={railRef}>
-            <LiveList matches={shown} selectedId={selected?.id ?? null} onSelect={pick} />
+            {listLoading ? <RailSkeleton /> : <LiveList matches={shown} selectedId={selected?.id ?? null} onSelect={pick} />}
           </div>
         </aside>
 
@@ -181,12 +185,17 @@ export default function LivePage() {
               </section>
             </>
           ) : (
-            <div className="kiosk-loading">{selected ? t("جاري تحميل المباراة…", "Loading the match…") : t("اختر مباراة", "Pick a match")}</div>
+            <div className="kiosk-loading">
+              {selected || listLoading
+                ? <div className="kiosk-wait"><Loader label={t("جاري تحميل المباراة…", "Loading the match…")} /><PaneSkeleton /></div>
+                : t("اختر مباراة", "Pick a match")}
+            </div>
           )}
 
           <footer className="kiosk-foot">
             <span>{t("آخر تحديث: ")}{clock}</span>
             <button type="button" className="kiosk-refresh" disabled={busy} onClick={() => refreshAll(true)}>
+              {busy && <i className="spinner" aria-hidden="true" />}
               {busy ? t("جاري التحديث…", "Refreshing…") : t("تحديث", "Refresh")}
             </button>
           </footer>
