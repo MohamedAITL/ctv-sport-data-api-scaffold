@@ -10,6 +10,7 @@ import { fetchSkyNews } from "./skynews";
 import { fetchGoal } from "./goal";
 import { fetchElsport } from "./elsport";
 import { articleFromJsonLd } from "./jsonld";
+import { scrubNews } from "./scrub";
 import { decodeNewsId, sourceOfUrl } from "./id";
 
 const TTL_MS = 5 * 60 * 1000;
@@ -97,7 +98,7 @@ export async function fetchNews(page = 1, refresh = false): Promise<NewsFeed> {
   const byUrl = new Map<string, NewsItem>();
   for (const it of all) if (!byUrl.has(it.url)) byUrl.set(it.url, it);
 
-  const items = Array.from(byUrl.values()).sort((a, b) =>
+  const items = Array.from(byUrl.values()).map(scrubNews).sort((a, b) =>
     b.publishedAt.localeCompare(a.publishedAt)
   );
   if (items.length) cache.set(key, { at: Date.now(), items });
@@ -138,7 +139,7 @@ export async function fetchNewsItem(id: string): Promise<NewsItem | null> {
         : source === "elbotola"
         ? await fetchElbotolaArticle(url)
         : await articleFromJsonLd(url);
-    return { ...base, ...extra, title: base.title || extra.summary?.slice(0, 80) || base.title };
+    return scrubNews({ ...base, ...extra, title: base.title || extra.summary?.slice(0, 80) || base.title });
   } catch {
     return base; // body unavailable — the page links to the source instead
   }
