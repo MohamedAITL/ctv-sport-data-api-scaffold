@@ -12,7 +12,7 @@ interface Props {
 const ORDINALS = ["الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس", "السابع", "الثامن", "التاسع", "العاشر"];
 export const ordinal = (rank: number) => ORDINALS[rank - 1] ?? `المركز ${rank}`;
 
-function Img({ src, size, x, y, round, ring }: { src: string | null; size: number; x: number; y: number; round?: boolean; ring?: { width: number; color: string } }) {
+export function Img({ src, size, x, y, round, ring }: { src: string | null; size: number; x: number; y: number; round?: boolean; ring?: { width: number; color: string } }) {
   const box: CSSProperties = {
     position: "absolute", left: x, top: y, transform: "translate(-50%, -50%)", width: size, height: size,
     objectFit: round ? "cover" : "contain", borderRadius: round ? "50%" : undefined,

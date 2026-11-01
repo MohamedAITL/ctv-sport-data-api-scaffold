@@ -7,7 +7,7 @@
 //      Southern League and a Colombian second-division game). Every lineup field
 //      is therefore optional and the caller must cope with null.
 import type {
-  AthleteBio, AthleteSeason, FactBlock, FactRow, Goal, H2HRecord, LineupPlayer, MoroccanPlayer, PastMatch, PreviousMatches, Shot, LineupRole, LiveDetail, LiveEvent,
+  AthleteBio, AthleteSeason, FactBlock, FactRow, Goal, H2HRecord, LineupPlayer, MatchSheet, MoroccanPlayer, PastMatch, PreviousMatches, Shot, LineupRole, LiveDetail, LiveEvent,
   LiveMatch, Performer, PerformerStat, StatGroup, StatRow, TeamLineup,
   TopPerformerRow,
 } from "@/types/live";
@@ -209,7 +209,7 @@ interface RawLineupMember {
   /** On a substitute who has come on: who he replaced (`playerId`) and when. */
   substitution?: { playerId?: number; time?: number };
 }
-interface RawLineups { formation?: string; hasFieldPositions?: boolean; members?: RawLineupMember[] }
+interface RawLineups { formation?: string; hasFieldPositions?: boolean; members?: RawLineupMember[]; status?: string }
 interface RawDetailCompetitor extends RawCompetitor { lineups?: RawLineups }
 interface RawEvent {
   competitorId?: number; gameTimeDisplay?: string; playerId?: number; addedTime?: number; stageId?: number;
@@ -629,6 +629,29 @@ export async function fetchPreviousMatches(
     record,
     home: clean(games(h), (g) => !isMeeting(g), limit),
     away: clean(games(a), (g) => !isMeeting(g), limit),
+  };
+}
+
+const YELLOW_CARD = 2;
+const RED_CARD = 3;
+// The Arabic feed's two lineup states are "مؤكد" and "ليس مؤكد".
+const isConfirmed = (lu?: RawLineups) => lu?.status === "مؤكد";
+
+/** The lineups and cards of a game, without the stats requests LiveDetail makes. */
+export async function fetchMatchSheet(gameId: number, matchupId: string): Promise<MatchSheet | null> {
+  const g = (await get<RawDetail>(`/game/?${Q}&gameId=${gameId}&matchupId=${encodeURIComponent(matchupId)}`)).game;
+  if (!g) return null;
+  const members = g.members ?? [];
+  const home = g.homeCompetitor?.lineups;
+  const away = g.awayCompetitor?.lineups;
+  return {
+    home: buildLineup(home, members),
+    away: buildLineup(away, members),
+    homeConfirmed: isConfirmed(home),
+    awayConfirmed: isConfirmed(away),
+    cards: (g.events ?? [])
+      .filter((e) => e.playerId !== undefined && (e.eventType?.id === YELLOW_CARD || e.eventType?.id === RED_CARD))
+      .map((e) => ({ playerId: e.playerId as number, red: e.eventType?.id === RED_CARD })),
   };
 }
 

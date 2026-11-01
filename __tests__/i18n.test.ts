@@ -39,7 +39,7 @@ describe("English dictionary", () => {
 
 describe("posters stay Arabic", () => {
   const posters = ["MatchdayPoster.tsx", "MoroccanPoster.tsx", "Poster.tsx", "StatsPoster.tsx", "TotwPoster.tsx",
-    "live/H2HPoster.tsx", "live/LineupPoster.tsx", "live/MatchStatsPoster.tsx", "live/GoalPoster.tsx", "live/FullTimePoster.tsx"];
+    "live/H2HPoster.tsx", "live/LineupPoster.tsx", "live/MatchStatsPoster.tsx", "live/GoalPoster.tsx", "live/FullTimePoster.tsx", "MoroccansTodayPoster.tsx"];
   it.each(posters)("%s does not follow the UI language", (f) => {
     expect(fs.readFileSync(path.join(root, "components", f), "utf8")).not.toMatch(/useLang|lib\/prefs/);
   });

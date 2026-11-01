@@ -81,6 +81,16 @@ export interface Goal {
   score: { home: number; away: number };
 }
 
+/** A match reduced to who played: what a day of Moroccans is built from. */
+export interface MatchSheet {
+  home: TeamLineup | null;
+  away: TeamLineup | null;
+  /** A published lineup can be a prediction until an hour or so before kickoff. */
+  homeConfirmed: boolean;
+  awayConfirmed: boolean;
+  cards: Array<{ playerId: number; red: boolean }>;
+}
+
 export interface LiveEvent {
   competitorId: number;
   minute: string;

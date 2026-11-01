@@ -9,6 +9,7 @@ import ExportControls from "@/components/ExportControls";
 import StatsDesign from "@/components/StatsDesign";
 import TotwStudio from "@/components/TotwStudio";
 import MoroccanStudio from "@/components/MoroccanStudio";
+import MoroccansTodayStudio from "@/components/MoroccansTodayStudio";
 import { DEFAULT_STATS_LAYOUT, type StatsLayout } from "@/config/statsLayout";
 import { leaguesByGroup, BOTOLA_LEAGUE, leagueById } from "@/config/standingsLeagues";
 import type { StatCategory } from "@/lib/scores365Stats";
@@ -22,7 +23,7 @@ const LKEY = "botola.statsLayout";
 const LEAGUE_KEY = "botola.statsLeague";
 const CAT_KEY = "botola.statsCategory";
 const MODE_KEY = "botola.statsMode";
-type Mode = "stats" | "totw" | "moroccans";
+type Mode = "stats" | "totw" | "moroccans" | "today";
 
 const loadLayout = (): StatsLayout => {
   try { const r = localStorage.getItem(LKEY); return r ? deepMerge(DEFAULT_STATS_LAYOUT, JSON.parse(r)) : DEFAULT_STATS_LAYOUT; } catch { return DEFAULT_STATS_LAYOUT; }
@@ -47,7 +48,7 @@ export default function StatsPage() {
       const s = localStorage.getItem(LEAGUE_KEY); if (s) lg = Number(s);
       const c = localStorage.getItem(CAT_KEY); if (c) setCatKey(c);
       const m = localStorage.getItem(MODE_KEY);
-      if (m === "totw" || m === "moroccans") setMode(m);
+      if (m === "totw" || m === "moroccans" || m === "today") setMode(m);
     } catch { /* ignore */ }
     setLeague(lg);
     setLayout(loadLayout());
@@ -129,10 +130,11 @@ export default function StatsPage() {
             <button role="tab" aria-selected={mode === "stats"} className={mode === "stats" ? "seg-btn on" : "seg-btn"} onClick={() => pickMode("stats")}>{t("الإحصائيات")}</button>
             <button role="tab" aria-selected={mode === "totw"} className={mode === "totw" ? "seg-btn on" : "seg-btn"} onClick={() => pickMode("totw")}>{t("تشكيلة الجولة")}</button>
             <button role="tab" aria-selected={mode === "moroccans"} className={mode === "moroccans" ? "seg-btn on" : "seg-btn"} onClick={() => pickMode("moroccans")}>{t("المغاربة")}</button>
+            <button role="tab" aria-selected={mode === "today"} className={mode === "today" ? "seg-btn on" : "seg-btn"} onClick={() => pickMode("today")}>{t("المغاربة اليوم", "Moroccans today")}</button>
           </div>
         </div>
 
-        {mode === "moroccans" ? <MoroccanStudio /> : mode === "totw" ? <TotwStudio league={league} leagueField={leagueField} /> : (
+        {mode === "today" ? <MoroccansTodayStudio /> : mode === "moroccans" ? <MoroccanStudio /> : mode === "totw" ? <TotwStudio league={league} leagueField={leagueField} /> : (
         <div className="layout">
           <section className="controls">
             <div className="card">
