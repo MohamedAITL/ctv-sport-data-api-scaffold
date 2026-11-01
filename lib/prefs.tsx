@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { EN } from "./i18n/en";
+import { transition } from "./motion";
 
 export type Lang = "ar" | "en";
 export type Theme = "dark" | "light";
@@ -8,6 +9,7 @@ export type Design = "studio" | "classic";
 export const LANG_KEY = "chouf.lang";
 export const THEME_KEY = "chouf.theme";
 export const DESIGN_KEY = "chouf.design";
+export const RAIL_KEY = "chouf.rail";
 
 /** The tab a path belongs to; the Studio design gives each its own colour. */
 export const sectionOf = (path: string) => /^\/(round|matchday|stats|news|live)/.exec(path)?.[1] ?? "standings";
@@ -17,9 +19,10 @@ export const sectionOf = (path: string) => /^\/(round|matchday|stats|news|live)/
  * theme (Studio opens dark; classic follows the system), the language's
  * direction and the tab's colour, so none of them flashes on load.
  */
-export const PREFS_BOOT = `try{var d=document.documentElement,g=localStorage.getItem("${DESIGN_KEY}")==="classic"?"classic":"studio",m=/^\\/(round|matchday|stats|news|live)/.exec(location.pathname),t=localStorage.getItem("${THEME_KEY}");d.dataset.design=g;d.dataset.section=m?m[1]:"standings";if(t!=="light"&&t!=="dark")t=g==="classic"&&matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";d.dataset.theme=t;var l=localStorage.getItem("${LANG_KEY}")==="en"?"en":"ar";d.lang=l;d.dir=l==="en"?"ltr":"rtl"}catch(e){}`;
+export const PREFS_BOOT = `try{var d=document.documentElement,g=localStorage.getItem("${DESIGN_KEY}")==="classic"?"classic":"studio",m=/^\\/(round|matchday|stats|news|live)/.exec(location.pathname),t=localStorage.getItem("${THEME_KEY}");d.dataset.design=g;d.dataset.section=m?m[1]:"standings";d.dataset.rail=localStorage.getItem("${RAIL_KEY}")==="closed"?"closed":"open";if(t!=="light"&&t!=="dark")t=g==="classic"&&matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";d.dataset.theme=t;var l=localStorage.getItem("${LANG_KEY}")==="en"?"en":"ar";d.lang=l;d.dir=l==="en"?"ltr":"rtl"}catch(e){}`;
 
-interface Prefs { lang: Lang; theme: Theme; design: Design; setLang: (l: Lang) => void; setTheme: (t: Theme) => void; setDesign: (d: Design) => void }
+type From = { x: number; y: number };
+interface Prefs { lang: Lang; theme: Theme; design: Design; setLang: (l: Lang) => void; setTheme: (t: Theme, from?: From) => void; setDesign: (d: Design, from?: From) => void }
 const Ctx = createContext<Prefs>({ lang: "ar", theme: "dark", design: "studio", setLang: () => {}, setTheme: () => {}, setDesign: () => {} });
 
 export function PrefsProvider({ children }: { children: ReactNode }) {
@@ -44,15 +47,15 @@ export function PrefsProvider({ children }: { children: ReactNode }) {
     root.dir = "ltr";
   }, [lang]);
 
-  const setTheme = useCallback((t: Theme) => {
+  const setTheme = useCallback((t: Theme, from?: From) => {
     setThemeState(t);
-    document.documentElement.dataset.theme = t;
     try { localStorage.setItem(THEME_KEY, t); } catch { /* private mode */ }
+    transition("theme", () => { document.documentElement.dataset.theme = t; }, from);
   }, []);
-  const setDesign = useCallback((g: Design) => {
+  const setDesign = useCallback((g: Design, from?: From) => {
     setDesignState(g);
-    document.documentElement.dataset.design = g;
     try { localStorage.setItem(DESIGN_KEY, g); } catch { /* private mode */ }
+    transition("theme", () => { document.documentElement.dataset.design = g; }, from);
   }, []);
   // A switch reloads, so every page re-renders in the new language and direction.
   const setLang = useCallback((l: Lang) => {

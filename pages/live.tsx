@@ -12,10 +12,12 @@ import LiveEvents from "@/components/live/LiveEvents";
 import LivePrevious from "@/components/live/LivePrevious";
 import type { LiveDetail, LiveMatch } from "@/types/live";
 import { todayMA } from "@/lib/today";
-import { useLang, type T } from "@/lib/prefs";
+import { RAIL_KEY, useLang, type T } from "@/lib/prefs";
+import Icon from "@/components/Icon";
 
 const POLL_MS = 15_000; // the source itself caches for 5s
-type Tab = "lineup" | "stats" | "events" | "previous";
+const TABS = ["lineup", "stats", "events", "previous"] as const;
+type Tab = (typeof TABS)[number];
 type Filter = "live" | "done" | "all";
 
 const isoToday = () => todayMA();
@@ -33,6 +35,8 @@ export default function LivePage() {
   const [selected, setSelected] = useState<LiveMatch | null>(null);
   const [detail, setDetail] = useState<LiveDetail | null>(null);
   const [tab, setTab] = useState<Tab>("lineup");
+  const [tabDir, setTabDir] = useState<"next" | "prev">("next");
+  const [railOpen, setRailOpen] = useState(true);
   const [filter, setFilter] = useState<Filter>("live");
   const [date, setDate] = useState<string>(isoToday());
   const [updatedAt, setUpdatedAt] = useState<string>("");
@@ -95,6 +99,15 @@ export default function LivePage() {
   }, [loadList, loadDetail]);
 
   useEffect(() => { refreshAll(); }, [refreshAll]);
+  useEffect(() => { setRailOpen(document.documentElement.dataset.rail !== "closed"); }, []);
+
+  const toggleRail = () => {
+    const open = !railOpen;
+    setRailOpen(open);
+    document.documentElement.dataset.rail = open ? "open" : "closed";
+    try { localStorage.setItem(RAIL_KEY, open ? "open" : "closed"); } catch { /* private mode */ }
+  };
+  const goTab = (next: Tab) => { setTabDir(TABS.indexOf(next) < TABS.indexOf(tab) ? "prev" : "next"); setTab(next); };
 
   // Poll, but never while the screen is not being shown.
   useEffect(() => {
@@ -142,7 +155,8 @@ export default function LivePage() {
       </Head>
 
       <div className="kiosk">
-        <aside className="kiosk-rail">
+        {/* Closed, its controls leave the tab order as well as the screen. */}
+        <aside id="kiosk-rail" className="kiosk-rail" {...(railOpen ? {} : ({ inert: "" } as object))}>
           <div className="kiosk-railhead">
             <div className="kiosk-brand">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -172,12 +186,12 @@ export default function LivePage() {
             <>
               <LiveHeader d={detail} />
               <nav className="kiosk-tabs">
-                <button type="button" className={tab === "lineup" ? "on" : ""} onClick={() => setTab("lineup")}>{t("التشكيلة")}</button>
-                <button type="button" className={tab === "stats" ? "on" : ""} onClick={() => setTab("stats")}>{t("الإحصائيات")}</button>
-                <button type="button" className={tab === "events" ? "on" : ""} onClick={() => setTab("events")}>{t("الأحداث")}</button>
-                <button type="button" className={tab === "previous" ? "on" : ""} onClick={() => setTab("previous")}>{t("مواجهات سابقة")}</button>
+                <button type="button" className={tab === "lineup" ? "on" : ""} onClick={() => goTab("lineup")}>{t("التشكيلة")}</button>
+                <button type="button" className={tab === "stats" ? "on" : ""} onClick={() => goTab("stats")}>{t("الإحصائيات")}</button>
+                <button type="button" className={tab === "events" ? "on" : ""} onClick={() => goTab("events")}>{t("الأحداث")}</button>
+                <button type="button" className={tab === "previous" ? "on" : ""} onClick={() => goTab("previous")}>{t("مواجهات سابقة")}</button>
               </nav>
-              <section className="kiosk-pane">
+              <section className="kiosk-pane" data-dir={tabDir}>
                 {tab === "lineup" && <LinePitch d={detail} />}
                 {tab === "stats" && <LiveStats d={detail} />}
                 {tab === "events" && <LiveEvents d={detail} />}
@@ -194,10 +208,16 @@ export default function LivePage() {
 
           <footer className="kiosk-foot">
             <span>{t("آخر تحديث: ")}{clock}</span>
-            <button type="button" className="kiosk-refresh" disabled={busy} onClick={() => refreshAll(true)}>
-              {busy && <i className="spinner" aria-hidden="true" />}
-              {busy ? t("جاري التحديث…", "Refreshing…") : t("تحديث", "Refresh")}
-            </button>
+            <div className="kiosk-actions">
+              <button type="button" className="kiosk-refresh kiosk-railbtn" aria-expanded={railOpen} aria-controls="kiosk-rail" onClick={toggleRail}>
+                <Icon name="rail" />
+                {railOpen ? t("إخفاء القائمة", "Hide list") : t("إظهار القائمة", "Show list")}
+              </button>
+              <button type="button" className="kiosk-refresh" disabled={busy} onClick={() => refreshAll(true)}>
+                {busy && <i className="spinner" aria-hidden="true" />}
+                {busy ? t("جاري التحديث…", "Refreshing…") : t("تحديث", "Refresh")}
+              </button>
+            </div>
           </footer>
         </main>
       </div>

@@ -315,13 +315,18 @@ html, body {
    Driven by a finger on a wall screen: no hover affordances, targets >=64px,
    momentum scrolling, and no double-tap zoom delay. */
 .kiosk {
+  --rail-w: 420px;
+  transition: grid-template-columns var(--med) var(--ease), grid-template-rows var(--med) var(--ease);
   position: fixed; inset: 0; display: grid; grid-template-columns: 420px 1fr;
   background: var(--bg); color: var(--text); overflow: hidden;
   touch-action: manipulation; -webkit-tap-highlight-color: transparent;
 }
 .kiosk button { touch-action: manipulation; user-select: none; -webkit-user-select: none; font-family: inherit; }
 
-.kiosk-rail { display: flex; flex-direction: column; border-left: 1px solid var(--border); background: var(--bg-2); min-height: 0; }
+.kiosk-rail { display: flex; flex-direction: column; border-left: 1px solid var(--border); background: var(--bg-2); min-height: 0; min-width: 0; overflow: hidden; }
+/* A fixed width, so the list slides away whole instead of squeezing as it goes. */
+.kiosk-rail > * { flex: none; width: calc(var(--rail-w) - 1px); }
+.kiosk-rail > .kl-scroll { flex: 1; }
 .kiosk-railhead { padding: 16px; border-bottom: 1px solid var(--border); }
 .kiosk-brand { margin-bottom: 12px; }
 .kiosk-seg.three { grid-template-columns: repeat(3, 1fr); }
@@ -499,7 +504,7 @@ html, body {
 .ke-min { font-size: 16px; font-weight: 900; color: var(--muted); min-width: 56px; text-align: center; }
 
 @media (max-width: 1100px) {
-  .kiosk { grid-template-columns: 320px 1fr; }
+  .kiosk { --rail-w: 320px; grid-template-columns: 320px 1fr; }
   .kh-nums { font-size: 54px; }
 }
 
@@ -1126,7 +1131,7 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
 @media (max-width: 760px) {
   /* minmax(0, …): a bare 1fr will not shrink below its widest child, and the
      kiosk's overflow:hidden would quietly clip the rest. */
-  .kiosk { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 44vh) minmax(0, 1fr); }
+  .kiosk { --rail-w: 100vw; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 44vh) minmax(0, 1fr); }
   .kiosk-rail { border-left: 0; border-bottom: 1px solid var(--border); }
   .kiosk-railhead { padding: 10px 12px; }
   .kh { padding: 12px 12px 8px; }
@@ -1168,6 +1173,15 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
 .kl-ma img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; background: var(--panel-3); border: 2px solid #c1272d; flex: none; }
 .kl-ma img + img { margin-inline-start: -12px; }
 .kl-ma em { font-style: normal; font-size: 13px; font-weight: 800; color: #f3c6c7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
+
+/* The match list closes, and the match takes the whole screen. */
+:root[data-rail="closed"] .kiosk { grid-template-columns: 0px 1fr; }
+:root[data-rail="closed"] .kiosk-rail { border: 0; }
+/* Two buttons and the clock share a phone's width. */
+@media (max-width: 760px) { .kiosk-refresh { padding: 0 14px; } }
+@media (max-width: 760px) { :root[data-rail="closed"] .kiosk { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 0px) minmax(0, 1fr); } }
+.kiosk-actions { display: flex; gap: 8px; flex: none; }
+.kiosk-railbtn { display: inline-flex; align-items: center; gap: 8px; }
 
 /* Theme and language switches, at the end of the nav. */
 .prefs { display: inline-flex; gap: 6px; flex: none; }

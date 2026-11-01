@@ -77,9 +77,147 @@
 /* ---- type and numbers ---- */
 :root[data-design="studio"], :root[data-design="studio"] body { font-family: var(--display); }
 :root[data-design="studio"] h1, :root[data-design="studio"] h2, :root[data-design="studio"] h3, :root[data-design="studio"] h4 { letter-spacing: 0; }
-:root[data-design="studio"] .muted { font-size: 14px; }
+:root[data-design="studio"] .muted { font-size: 15px; }
 :root[data-design="studio"] .ico { display: inline-block; width: 18px; height: 18px; flex: none; }
 :root[data-design="studio"] .glyph { display: none; }
+
+/* A size up across the app. Generated from the sizes in globals.css; the rules further down refine it. */
+:root[data-design="studio"] body { font-size: 17px; }
+:root[data-design="studio"] .card h4,
+:root[data-design="studio"] .btn.tiny,
+:root[data-design="studio"] .newsbadge,
+:root[data-design="studio"] .kp-bench .kp-face b,
+:root[data-design="studio"] .kp-xi .kp-face b,
+:root[data-design="studio"] .kp-benches.strip .kp-onpitch { font-size: 12px; }
+:root[data-design="studio"] .pill,
+:root[data-design="studio"] .err,
+:root[data-design="studio"] .warnlist,
+:root[data-design="studio"] .teamrow .rank,
+:root[data-design="studio"] .teamrow .logo.fallback,
+:root[data-design="studio"] .teamrow .stats,
+:root[data-design="studio"] .field,
+:root[data-design="studio"] .field.wide:has(select) > span,
+:root[data-design="studio"] .newsbody .muted,
+:root[data-design="studio"] .copybtn,
+:root[data-design="studio"] .kp-onpitch,
+:root[data-design="studio"] .kp-in,
+:root[data-design="studio"] .kl-grouphead em,
+:root[data-design="studio"] .kpc-tile span,
+:root[data-design="studio"] .kpv-when em,
+:root[data-design="studio"] .previewsticky > h3 { font-size: 13px; }
+:root[data-design="studio"] .muted,
+:root[data-design="studio"] .navlink,
+:root[data-design="studio"] .kv,
+:root[data-design="studio"] .btn,
+:root[data-design="studio"] .field input[type="number"],
+:root[data-design="studio"] .field input[type="text"],
+:root[data-design="studio"] .field input[type="date"],
+:root[data-design="studio"] .field input[type="search"],
+:root[data-design="studio"] .field select optgroup,
+:root[data-design="studio"] .articlemeta,
+:root[data-design="studio"] .tagchip,
+:root[data-design="studio"] .kl-comp,
+:root[data-design="studio"] .kp-name,
+:root[data-design="studio"] .kp-xi li em,
+:root[data-design="studio"] .kt-info span,
+:root[data-design="studio"] .kt-info li,
+:root[data-design="studio"] .kp-benches.strip .kp-bench li,
+:root[data-design="studio"] .seg-btn,
+:root[data-design="studio"] .kp-rate,
+:root[data-design="studio"] .kpc-rate,
+:root[data-design="studio"] .kx-out,
+:root[data-design="studio"] .kpt th,
+:root[data-design="studio"] .kh2h-side span,
+:root[data-design="studio"] .kl-ma em { font-size: 14px; }
+:root[data-design="studio"] .teamrow .namein,
+:root[data-design="studio"] .kl-live,
+:root[data-design="studio"] .kl-when,
+:root[data-design="studio"] .kp-bench h5,
+:root[data-design="studio"] .kp-est,
+:root[data-design="studio"] .kp-face b,
+:root[data-design="studio"] .kp-hint,
+:root[data-design="studio"] .kiosk-back,
+:root[data-design="studio"] .kp-benches.strip .kp-bench h4,
+:root[data-design="studio"] .kl-grouphead,
+:root[data-design="studio"] .kpc-head p,
+:root[data-design="studio"] .kpv-when b,
+:root[data-design="studio"] .kh2h-meta,
+:root[data-design="studio"] .pick-match span { font-size: 15px; }
+:root[data-design="studio"] .card h3,
+:root[data-design="studio"] .field select option,
+:root[data-design="studio"] .newsbody h3,
+:root[data-design="studio"] .titlebox-head h3,
+:root[data-design="studio"] .titlelist li,
+:root[data-design="studio"] .kiosk-seg button,
+:root[data-design="studio"] .kh-meta,
+:root[data-design="studio"] .kiosk-foot,
+:root[data-design="studio"] .kp-coach,
+:root[data-design="studio"] .ke-player,
+:root[data-design="studio"] .kt-info li i,
+:root[data-design="studio"] .kt-note,
+:root[data-design="studio"] .kf-block h4,
+:root[data-design="studio"] .kpc-list li,
+:root[data-design="studio"] .kx-list li,
+:root[data-design="studio"] .kpv-pill,
+:root[data-design="studio"] .kpt,
+:root[data-design="studio"] .kxp-note,
+:root[data-design="studio"] .kxp-stats .field,
+:root[data-design="studio"] .prefs-btn { font-size: 16px; }
+:root[data-design="studio"] .field select,
+:root[data-design="studio"] .kp-bench li,
+:root[data-design="studio"] .kp-xi li,
+:root[data-design="studio"] .ks-btn,
+:root[data-design="studio"] .ks-head span,
+:root[data-design="studio"] .ke-min,
+:root[data-design="studio"] .kt-row h4,
+:root[data-design="studio"] .ks-period,
+:root[data-design="studio"] .kf-block li,
+:root[data-design="studio"] .kpc-none,
+:root[data-design="studio"] .kpc-tabs button,
+:root[data-design="studio"] .kpc-season h4,
+:root[data-design="studio"] .loadbox,
+:root[data-design="studio"] .kpv-empty,
+:root[data-design="studio"] .kpv-export,
+:root[data-design="studio"] .kxp-btn,
+:root[data-design="studio"] .kxp-err,
+:root[data-design="studio"] .kxs select,
+:root[data-design="studio"] .loader { font-size: 17px; }
+:root[data-design="studio"] .articlebody,
+:root[data-design="studio"] .kiosk-refresh,
+:root[data-design="studio"] .kp-bench h4,
+:root[data-design="studio"] .ke-type,
+:root[data-design="studio"] .kiosk-day .kiosk-daylabel,
+:root[data-design="studio"] .kp-tool,
+:root[data-design="studio"] .kp:fullscreen .kp-name,
+:root[data-design="studio"] .kp.cssfull .kp-name,
+:root[data-design="studio"] .kt-info b,
+:root[data-design="studio"] .kpv-row { font-size: 19px; }
+:root[data-design="studio"] .teamrow .edited,
+:root[data-design="studio"] .kl-name,
+:root[data-design="studio"] .kh-status,
+:root[data-design="studio"] .ks-head { font-size: 20px; }
+:root[data-design="studio"] .kiosk-tabs button,
+:root[data-design="studio"] .kp-num,
+:root[data-design="studio"] .kh-soon span,
+:root[data-design="studio"] .kpv h3,
+:root[data-design="studio"] .kpv-score { font-size: 21px; }
+:root[data-design="studio"] .kt h3,
+:root[data-design="studio"] .kf h3,
+:root[data-design="studio"] .kpc-rate,
+:root[data-design="studio"] .kx h3 { font-size: 22px; }
+:root[data-design="studio"] .kl-score,
+:root[data-design="studio"] .kiosk-day button,
+:root[data-design="studio"] .kxp h3 { font-size: 24px; }
+:root[data-design="studio"] .kp-none p,
+:root[data-design="studio"] .kpc-head h3,
+:root[data-design="studio"] .kpc-tile b { font-size: 26px; }
+:root[data-design="studio"] .pagehead h1,
+:root[data-design="studio"] .kiosk-loading { font-size: 28px; }
+:root[data-design="studio"] .kh-side span,
+:root[data-design="studio"] .kpc-num { font-size: 30px; }
+:root[data-design="studio"] .articletitle,
+:root[data-design="studio"] .kpc-x,
+:root[data-design="studio"] .kh2h-side b { font-size: 32px; }
 
 /* ---- shell ---- */
 :root[data-design="studio"] .app { max-width: 1480px; padding-top: 0; }
@@ -92,7 +230,7 @@
 :root[data-design="studio"] .nav { gap: 2px; }
 :root[data-design="studio"] .navlink {
   display: inline-flex; align-items: center; gap: 7px; min-height: 48px; padding: 0 18px;
-  font-family: var(--display); font-size: 14px; font-weight: 800;
+  font-family: var(--display); font-size: 15px; font-weight: 800;
   color: rgba(255, 255, 255, .86);
   transition: background-color var(--fast) var(--ease), color var(--fast) var(--ease);
 }
@@ -123,7 +261,7 @@
 :root[data-design="studio"] .pagehead > div:first-child { display: flex; flex-wrap: wrap; align-items: stretch; min-width: 0; }
 :root[data-design="studio"] .pagehead h1 {
   display: flex; align-items: center; margin: 0; padding: 10px 44px 10px 22px;
-  font-size: clamp(22px, 2.3vw, 30px); font-weight: 900;
+  font-size: clamp(24px, 2.4vw, 32px); font-weight: 900;
   background: var(--sec); color: var(--sec-ink);
   clip-path: polygon(0 0, 100% 0, calc(100% - 22px) 100%, 0 100%);
 }
@@ -141,36 +279,36 @@
   border: 1px solid var(--border); border-radius: var(--radius-lg);
 }
 :root[data-design="studio"] .card:hover { transform: none; border-color: var(--border); box-shadow: none; }
-:root[data-design="studio"] .card h3 { font-size: 16px; font-weight: 800; }
+:root[data-design="studio"] .card h3 { font-size: 17px; font-weight: 800; }
 :root[data-design="studio"] .card h3::before {
   content: ""; display: inline-block; width: 11px; height: 14px; margin-inline-end: 8px;
   vertical-align: -1px; background: var(--sec); clip-path: polygon(45% 0, 100% 0, 55% 100%, 0 100%);
 }
-:root[data-design="studio"] .card h4 { font-size: 13px; letter-spacing: 0; color: var(--sec-text); }
+:root[data-design="studio"] .card h4 { font-size: 14px; letter-spacing: 0; color: var(--sec-text); }
 :root[data-design="studio"] .collapsible > summary { min-height: 50px; padding-block: 12px; }
-:root[data-design="studio"] .collapsible > summary h3 { font-size: 15px; }
-:root[data-design="studio"] .kv { font-size: 14px; }
+:root[data-design="studio"] .collapsible > summary h3 { font-size: 16px; }
+:root[data-design="studio"] .kv { font-size: 15px; }
 :root[data-design="studio"] .kv:not(:last-of-type) { border-bottom-style: solid; }
 
 :root[data-design="studio"] .btn {
-  min-height: 44px; border-radius: var(--radius); font-family: var(--display); font-size: 14px; font-weight: 800;
+  min-height: 44px; border-radius: var(--radius); font-family: var(--display); font-size: 15px; font-weight: 800;
   transition: background-color var(--fast) var(--ease), border-color var(--fast) var(--ease);
 }
 :root[data-design="studio"] .btn:hover:not(:disabled) { transform: none; box-shadow: none; background: var(--panel-3); border-color: var(--border-2); }
 :root[data-design="studio"] .btn.primary:hover:not(:disabled) { background: #ffa63d; border-color: #ffa63d; box-shadow: none; }
 :root[data-design="studio"] .btn.ghost { border-style: solid; }
 :root[data-design="studio"] .btn.ghost:hover:not(:disabled) { background: var(--panel-2); }
-:root[data-design="studio"] .btn.tiny { min-height: 36px; border-radius: var(--radius); font-size: 12px; }
+:root[data-design="studio"] .btn.tiny { min-height: 36px; border-radius: var(--radius); font-size: 13px; }
 @media (pointer: coarse) { :root[data-design="studio"] .btn.tiny { min-height: 44px; } }
 :root[data-design="studio"] a:focus-visible, :root[data-design="studio"] button:focus-visible, :root[data-design="studio"] select:focus-visible, :root[data-design="studio"] input:focus-visible, :root[data-design="studio"] summary:focus-visible, :root[data-design="studio"] [tabindex]:focus-visible { border-radius: var(--radius); }
 
 :root[data-design="studio"] .pill { padding: 3px 10px; border: 0; border-radius: 2px; font-weight: 800; background: var(--panel-3); color: var(--text); }
 :root[data-design="studio"] .pill.ok { background: #2fd27a; color: #06240f; }
 :root[data-design="studio"] .pill.warn { background: #ffc94d; color: #1a1420; }
-:root[data-design="studio"] .err { font-size: 13px; }
-:root[data-design="studio"] .warnlist { font-size: 13px; }
+:root[data-design="studio"] .err { font-size: 14px; }
+:root[data-design="studio"] .warnlist { font-size: 14px; }
 
-:root[data-design="studio"] .field { font-size: 13px; }
+:root[data-design="studio"] .field { font-size: 14px; }
 /* Columns narrow enough that a label stays beside its input. */
 :root[data-design="studio"] .grid { grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px 22px; }
 :root[data-design="studio"] .field.wide:has(select) + .field.wide:has(select), :root[data-design="studio"] .field.wide:has(select) + .kv { margin-top: 10px; }
@@ -186,7 +324,7 @@
 :root[data-design="studio"] .field select, :root[data-design="studio"] .kxs select {
   min-height: 46px; padding-block: 10px; padding-inline: 14px 44px;
   border: 1px solid var(--border-2); border-inline-start: 4px solid var(--sec); border-radius: var(--radius);
-  background-position: right 13px center; font-size: 15px; font-weight: 700; line-height: 1.4;
+  background-position: right 13px center; font-size: 16px; font-weight: 700; line-height: 1.4;
   transition: background-color var(--fast) var(--ease), border-color var(--fast) var(--ease);
 }
 :root[data-design="studio"][dir="rtl"] .field select, :root[data-design="studio"][dir="rtl"] .kxs select { background-position: left 13px center; }
@@ -196,13 +334,13 @@
 :root[data-design="studio"][data-theme="light"] .field select {
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2317101f' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
 }
-:root[data-design="studio"] .field.wide:has(select) > span { font-size: 13px; letter-spacing: 0; }
+:root[data-design="studio"] .field.wide:has(select) > span { font-size: 14px; letter-spacing: 0; }
 :root[data-design="studio"] .teamrow .namein { border-radius: var(--radius); }
 :root[data-design="studio"] .teamrow .logo { border-radius: var(--radius); object-fit: contain; }
-:root[data-design="studio"] .teamrow .rank { font-family: var(--display); font-weight: 900; font-size: 14px; color: var(--text); }
+:root[data-design="studio"] .teamrow .rank { font-family: var(--display); font-weight: 900; font-size: 15px; color: var(--text); }
 
 :root[data-design="studio"] .seg { gap: 4px; border-bottom: 0; }
-:root[data-design="studio"] .seg-btn { min-height: 44px; border: 0; background: var(--panel); font-family: var(--display); font-size: 14px; font-weight: 800; }
+:root[data-design="studio"] .seg-btn { min-height: 44px; border: 0; background: var(--panel); font-family: var(--display); font-size: 15px; font-weight: 800; }
 :root[data-design="studio"] .seg-btn.on { background: var(--sec); color: var(--sec-ink); clip-path: var(--slant); }
 
 :root[data-design="studio"] .pick-list { scrollbar-width: thin; scrollbar-color: var(--panel-3) transparent; }
@@ -214,7 +352,7 @@
 /* The poster stage: a slanted label on a clean-edged frame. */
 :root[data-design="studio"] .previewsticky { gap: 0; }
 :root[data-design="studio"] .previewsticky > h3 {
-  align-self: flex-start; padding: 7px 26px 7px 26px; font-size: 13px; letter-spacing: 0;
+  align-self: flex-start; padding: 7px 26px 7px 26px; font-size: 14px; letter-spacing: 0;
   background: var(--sec); color: var(--sec-ink); clip-path: var(--slant);
 }
 :root[data-design="studio"] .previewbox { border: 0; border-radius: 0; box-shadow: 0 0 0 1px var(--border-2); }
@@ -236,37 +374,39 @@
   }
   :root[data-design="studio"] .field select optgroup, :root[data-design="studio"] .kxs select optgroup {
     padding-block: 8px 2px; background: none; color: var(--sec-text);
-    font-family: var(--display); font-size: 13px; font-weight: 800; letter-spacing: 0;
+    font-family: var(--display); font-size: 14px; font-weight: 800; letter-spacing: 0;
   }
   :root[data-design="studio"] .field select option, :root[data-design="studio"] .kxs select option {
     min-height: 42px; padding: 8px 10px; border-radius: 2px; background: none; color: var(--text);
-    font-size: 15px; font-weight: 600; cursor: pointer;
+    font-size: 16px; font-weight: 600; cursor: pointer;
     transition: background-color var(--fast) var(--ease);
   }
   :root[data-design="studio"] .field select option:hover, :root[data-design="studio"] .field select option:focus-visible, :root[data-design="studio"] .kxs select option:hover, :root[data-design="studio"] .kxs select option:focus-visible { background: var(--panel-3); outline: 0; }
   :root[data-design="studio"] .field select option:checked, :root[data-design="studio"] .kxs select option:checked { background: var(--sec); color: var(--sec-ink); font-weight: 800; }
   :root[data-design="studio"] select option::checkmark { content: none; }
+  :root[data-design="studio"] select::picker(select) { transition: opacity 180ms ease-out, transform 240ms var(--land), overlay 240ms allow-discrete, display 240ms allow-discrete; }
+  @starting-style { :root[data-design="studio"] select:open::picker(select) { opacity: 0; transform: translateY(-8px); } }
 }
 
 /* ---- news ---- */
 :root[data-design="studio"] .newsgrid { gap: 12px; }
 :root[data-design="studio"] .newscard { background: var(--panel); border: 0; border-bottom: 4px solid transparent; border-radius: var(--radius); }
 :root[data-design="studio"] .newscard:hover { transform: none; box-shadow: none; border-color: var(--sec); }
-:root[data-design="studio"] .newsbody h3 { font-size: 16px; font-weight: 800; line-height: 1.5; }
-:root[data-design="studio"] .newsbody .muted { font-size: 13px; }
+:root[data-design="studio"] .newsbody h3 { font-size: 17px; font-weight: 800; line-height: 1.5; }
+:root[data-design="studio"] .newsbody .muted { font-size: 14px; }
 :root[data-design="studio"] .newsbadge {
   inset-inline-start: 0; bottom: 0; padding: 4px 18px; border: 0; border-radius: 0; backdrop-filter: none;
-  background: var(--sec); color: var(--sec-ink); font-size: 12px; font-weight: 800; clip-path: var(--slant);
+  background: var(--sec); color: var(--sec-ink); font-size: 13px; font-weight: 800; clip-path: var(--slant);
 }
 @media (min-width: 1000px) {
   /* The lead story reads as the lead. */
   :root[data-design="studio"] .newsgrid > :first-child { grid-column: span 2; grid-row: span 2; }
   :root[data-design="studio"] .newsgrid > :first-child .newsthumb { flex: 1; aspect-ratio: auto; min-height: 260px; }
-  :root[data-design="studio"] .newsgrid > :first-child h3 { font-size: 24px; font-weight: 900; line-height: 1.4; }
+  :root[data-design="studio"] .newsgrid > :first-child h3 { font-size: 26px; font-weight: 900; line-height: 1.4; }
   :root[data-design="studio"] .newsgrid > :first-child .newsbody { flex: none; }
 }
 :root[data-design="studio"] .articlehero, :root[data-design="studio"] .articlebody img { border-radius: var(--radius); }
-:root[data-design="studio"] .articletitle { font-weight: 900; font-size: clamp(26px, 3vw, 36px); line-height: 1.35; }
+:root[data-design="studio"] .articletitle { font-weight: 900; font-size: clamp(28px, 3vw, 38px); line-height: 1.35; }
 :root[data-design="studio"] .articlebody a { color: var(--sec-text); }
 :root[data-design="studio"] .tagchip { border: 0; border-radius: 2px; background: var(--panel-2); }
 :root[data-design="studio"] .titlelist li { border-radius: var(--radius); }
@@ -298,11 +438,11 @@
 :root[data-design="studio"] .kl-row:hover { background: var(--panel-2); }
 :root[data-design="studio"] .kl-row.on { background: var(--panel-2); border-inline-start-color: var(--sec); box-shadow: none; outline: 2px solid var(--sec); outline-offset: -2px; }
 :root[data-design="studio"] .kl-team { padding: 2px 0; }
-:root[data-design="studio"] .kl-name { font-size: 17px; }
+:root[data-design="studio"] .kl-name { font-size: 19px; }
 :root[data-design="studio"] .kl-score {
   display: inline-flex; align-items: center; justify-content: center;
   min-width: 36px; height: 30px; background: var(--panel-3);
-  font-family: var(--display); font-size: 19px; font-weight: 900;
+  font-family: var(--display); font-size: 21px; font-weight: 900;
 }
 :root[data-design="studio"] .kl-row.on .kl-score { background: var(--sec); color: var(--sec-ink); }
 :root[data-design="studio"] .kl-live { padding: 2px 8px; border-radius: 2px; background: var(--live); color: #fff; font-family: var(--display); }
@@ -313,14 +453,13 @@
 :root[data-design="studio"] .kl-row.ma { background: rgba(193, 39, 45, .14); border-inline-start: 6px solid #c1272d; }
 :root[data-design="studio"] .kl-row.ma:hover, :root[data-design="studio"] .kl-row.ma.on { background: rgba(193, 39, 45, .24); }
 :root[data-design="studio"] .kl-ma img { width: 34px; height: 34px; border-radius: var(--radius); border: 2px solid #c1272d; }
-:root[data-design="studio"] .kl-ma em { font-size: 14px; color: #ffd9da; }
+:root[data-design="studio"] .kl-ma em { font-size: 15px; color: #ffd9da; }
 :root[data-design="studio"][data-theme="light"] .kl-ma em { color: #8f1a20; }
 
 /* ---- live: match header ---- */
 :root[data-design="studio"] .kh { position: relative; background: var(--brand); color: #fff; border-bottom: 4px solid var(--sec); }
 :root[data-design="studio"] .kh-meta { justify-content: center; color: rgba(255, 255, 255, .84); }
-:root[data-design="studio"] .kh-side img { background: #fff; padding: 6px; border-radius: var(--radius); }
-:root[data-design="studio"] .kh-side span { font-family: var(--display); font-size: clamp(20px, 1.9vw, 28px); font-weight: 900; line-height: 1.25; white-space: normal; }
+:root[data-design="studio"] .kh-side span { font-family: var(--display); font-size: clamp(22px, 2vw, 30px); font-weight: 900; line-height: 1.25; white-space: normal; }
 :root[data-design="studio"] .kh-nums {
   --cut: 18px; padding: 4px 34px; font-family: var(--display); clip-path: var(--slant);
   background: var(--accent); color: var(--accent-ink);
@@ -349,6 +488,8 @@
 :root[data-design="studio"] .kpv-export { border-radius: var(--radius); font-family: var(--display); }
 
 /* ---- live: pitch ---- */
+/* The header is taller at this type size; fullscreen keeps its own height. */
+:root[data-design="studio"] .kp:not(:fullscreen):not(.cssfull) .kp-pitch { max-height: calc(100vh - 482px); }
 :root[data-design="studio"] .kp-turf { border-radius: var(--radius); border: 0; background: #154c32; }
 :root[data-design="studio"] .kp-name { padding: 0 5px; border-radius: 2px; background: rgba(8, 5, 12, .62); text-shadow: none; }
 :root[data-design="studio"] .kp-rate, :root[data-design="studio"] .kpc-rate { border-radius: 2px; font-family: var(--display); background: #ffc94d; color: #1a1420; }
@@ -360,7 +501,7 @@
 :root[data-design="studio"] .kp-benches.dropzone .kp-bench { border-color: var(--accent); background: var(--accent-soft); }
 
 /* ---- live: stats, shots, events ---- */
-:root[data-design="studio"] .ks-head b { font-family: var(--display); font-size: 21px; }
+:root[data-design="studio"] .ks-head b { font-family: var(--display); font-size: 23px; }
 :root[data-design="studio"] .ks-bars { gap: 3px; }
 :root[data-design="studio"] .ks-bar { height: 12px; border-radius: 0; }
 :root[data-design="studio"] .ks-bar i { border-radius: 0; }
@@ -384,7 +525,7 @@
 :root[data-design="studio"] .kpv-score { border: 0; border-radius: 2px; background: var(--panel-3); font-family: var(--display); }
 :root[data-design="studio"] .kpv-crest { border-radius: var(--radius); }
 :root[data-design="studio"] .kh2h { border-radius: var(--radius); }
-:root[data-design="studio"] .kh2h-side b { font-family: var(--display); font-size: 34px; }
+:root[data-design="studio"] .kh2h-side b { font-family: var(--display); font-size: 36px; }
 :root[data-design="studio"] .kpv-empty { border-style: solid; border-radius: var(--radius); }
 :root[data-design="studio"] .kpt th { background: var(--panel-3); color: var(--text); border-bottom: 0; font-family: var(--display); }
 :root[data-design="studio"] .kpt tr.on .kpt-team { color: var(--sec-text); }
@@ -400,26 +541,136 @@
 :root[data-design="studio"] .kpc-shirt, :root[data-design="studio"] .kpc-season h4 { color: var(--sec-text); }
 :root[data-design="studio"] .kxp-preview { border-radius: var(--radius); }
 :root[data-design="studio"] .kxp h3 { font-weight: 900; }
-:root[data-design="studio"] .kxp-btn { font-size: 15px; }
+:root[data-design="studio"] .kxp-btn { font-size: 16px; }
 :root[data-design="studio"] .kxp-btn.on { color: var(--text); border-color: var(--accent); }
 
 :root[data-design="studio"] .kiosk-foot { border-top-color: var(--border); }
 :root[data-design="studio"] .kiosk-refresh { border: 0; background: var(--panel-2); }
 :root[data-design="studio"] .kiosk-refresh:hover { background: var(--panel-3); }
 
-/* ---- motion: transform and opacity only, stopped by reduced motion ---- */
-:root[data-design="studio"] .controls > :nth-child(2) { animation-delay: 40ms; }
-:root[data-design="studio"] .controls > :nth-child(3) { animation-delay: 80ms; }
-:root[data-design="studio"] .controls > :nth-child(4) { animation-delay: 120ms; }
-:root[data-design="studio"] .controls > :nth-child(n+5) { animation-delay: 160ms; }
+/* ---- motion ----
+   One rhythm: arrivals land on a long tail, exits are shorter, and everything
+   is transform, opacity or clip-path. Always `backwards`: a held transform makes
+   an element the containing block of its fixed children (globals.css). */
+:root[data-design="studio"] { --land: cubic-bezier(.16, 1, .3, 1); --sweep: cubic-bezier(.76, 0, .24, 1); --dirx: 1; }
+:root[data-design="studio"][dir="rtl"] { --dirx: -1; }
+
+/* Between pages: the old page is cut away on the logo's slant, the next tab's
+   colour passes through the gap, and the header stays put while its tab moves. */
+:root[data-design="studio"][data-vt="route"] .topbar { view-transition-name: chouf-topbar; }
+:root[data-design="studio"][data-vt="route"] .navlink.active { view-transition-name: chouf-tab; }
+:root[data-design="studio"][data-vt="route"]::view-transition { background: var(--sec); }
+:root[data-design="studio"][data-vt="route"]::view-transition-old(root) { mix-blend-mode: normal; animation: studio-page-out 460ms var(--sweep) forwards; }
+:root[data-design="studio"][data-vt="route"]::view-transition-new(root) { mix-blend-mode: normal; animation: studio-page-in 520ms var(--sweep) 90ms backwards; }
+:root[data-design="studio"][dir="ltr"][data-vt="route"]::view-transition-old(root) { animation-name: studio-page-out-ltr; }
+:root[data-design="studio"][dir="ltr"][data-vt="route"]::view-transition-new(root) { animation-name: studio-page-in-ltr; }
+:root[data-design="studio"][data-vt="route"]::view-transition-group(chouf-tab) { animation-duration: 460ms; animation-timing-function: var(--sweep); }
+/* The block travels; its old label leaves before the new one arrives, so they never overlap. */
+:root[data-design="studio"][data-vt="route"]::view-transition-old(chouf-tab) { mix-blend-mode: normal; animation: studio-fade-out 200ms linear forwards; }
+:root[data-design="studio"][data-vt="route"]::view-transition-new(chouf-tab) { mix-blend-mode: normal; animation: studio-fade 200ms linear 170ms backwards; }
+@keyframes studio-fade-out { to { opacity: 0; } }
+:root[data-design="studio"][data-vt="route"]::view-transition-group(chouf-topbar) { animation-duration: 240ms; }
+@keyframes studio-page-out { from { clip-path: polygon(-30% 0, 130% 0, 130% 100%, -30% 100%); } to { clip-path: polygon(-30% 0, -30% 0, -42% 100%, -30% 100%); } }
+@keyframes studio-page-in { from { clip-path: polygon(130% 0, 142% 0, 142% 100%, 118% 100%); } to { clip-path: polygon(-30% 0, 142% 0, 142% 100%, -42% 100%); } }
+@keyframes studio-page-out-ltr { from { clip-path: polygon(-30% 0, 130% 0, 130% 100%, -30% 100%); } to { clip-path: polygon(130% 0, 130% 0, 130% 100%, 142% 100%); } }
+@keyframes studio-page-in-ltr { from { clip-path: polygon(-42% 0, -30% 0, -18% 100%, -42% 100%); } to { clip-path: polygon(-42% 0, 130% 0, 142% 100%, -42% 100%); } }
+
+/* Light, dark and the design switch open out from the button that was pressed. */
+:root[data-design="studio"][data-vt="theme"]::view-transition-old(root) { animation: none; mix-blend-mode: normal; }
+:root[data-design="studio"][data-vt="theme"]::view-transition-new(root) { mix-blend-mode: normal; animation: studio-iris 620ms var(--sweep) backwards; }
+@keyframes studio-iris { from { clip-path: circle(0 at var(--vx, 50%) var(--vy, 0)); } to { clip-path: circle(150vmax at var(--vx, 50%) var(--vy, 0)); } }
+
+/* A page arrives from the top down. */
+:root[data-design="studio"] .pagehead h1 { animation: studio-slide 480ms var(--land) backwards; }
+:root[data-design="studio"] .pagehead .muted { animation: studio-fade 420ms ease-out 120ms backwards; }
+:root[data-design="studio"] .previewsticky > h3 { animation: studio-slide 420ms var(--land) 80ms backwards; }
+:root[data-design="studio"] .previewbox { animation: studio-stage 520ms var(--land) 120ms backwards; }
+@keyframes studio-slide { from { opacity: 0; transform: translateX(calc(var(--dirx) * -46px)); } }
+@keyframes studio-fade { from { opacity: 0; } }
+@keyframes studio-stage { from { opacity: 0; transform: translateY(18px) scale(.975); } }
+@keyframes studio-rise { from { opacity: 0; transform: translateY(14px); } }
+:root[data-design="studio"] .controls > * { animation: studio-rise 420ms var(--land) backwards; }
+:root[data-design="studio"] .controls > :nth-child(2) { animation-delay: 50ms; }
+:root[data-design="studio"] .controls > :nth-child(3) { animation-delay: 100ms; }
+:root[data-design="studio"] .controls > :nth-child(4) { animation-delay: 150ms; }
+:root[data-design="studio"] .controls > :nth-child(n+5) { animation-delay: 200ms; }
+
+/* Presses answer at once; hovers ease. */
+:root[data-design="studio"] .btn, :root[data-design="studio"] .seg-btn, :root[data-design="studio"] .prefs-btn, :root[data-design="studio"] .kiosk-seg button, :root[data-design="studio"] .kiosk-tabs button, :root[data-design="studio"] .kiosk-day button, :root[data-design="studio"] .kiosk-back, :root[data-design="studio"] .kiosk-refresh, :root[data-design="studio"] .kp-tool, :root[data-design="studio"] .ks-btn, :root[data-design="studio"] .ks-period, :root[data-design="studio"] .kxp-btn, :root[data-design="studio"] .kpv-export, :root[data-design="studio"] .kpc-tabs button {
+  transition: transform 120ms var(--ease), background-color 180ms var(--ease), border-color 180ms var(--ease), color 180ms var(--ease);
+}
+:root[data-design="studio"] .btn:active:not(:disabled), :root[data-design="studio"] .seg-btn:active, :root[data-design="studio"] .prefs-btn:active, :root[data-design="studio"] .kiosk-refresh:active:not(:disabled), :root[data-design="studio"] .kxp-btn:active:not(:disabled) { transform: scale(.965); }
+:root[data-design="studio"] .navlink .ico { transition: transform 200ms var(--land); }
+:root[data-design="studio"] .navlink:hover .ico { transform: translateY(-2px); }
+
+/* Panels open instead of snapping, in browsers that can size to auto. */
+@supports (interpolate-size: allow-keywords) {
+  :root[data-design="studio"] details.collapsible { interpolate-size: allow-keywords; }
+  :root[data-design="studio"] details.collapsible::details-content { height: 0; overflow: clip; transition: height 300ms var(--ease), content-visibility 300ms allow-discrete; }
+  :root[data-design="studio"] details.collapsible[open]::details-content { height: auto; }
+}
+
+/* News: the first screen deals in; the rest reveal as they scroll up. */
+@supports (animation-timeline: view()) {
+  :root[data-design="studio"] .newsgrid > :nth-child(n+9) { animation: studio-rise linear backwards; animation-delay: 0s; animation-timeline: view(); animation-range: entry 0% entry 55%; }
+}
+:root[data-design="studio"] .articletitle { animation: studio-slide 480ms var(--land) backwards; }
+:root[data-design="studio"] .articlehero { animation: studio-stage 560ms var(--land) backwards; }
+:root[data-design="studio"] .articlebody { animation: studio-rise 480ms var(--land) 120ms backwards; }
+
+/* Live: a match opens from the scoreline out. */
+:root[data-design="studio"] .kh-nums { animation: studio-score 460ms var(--land) backwards; }
+:root[data-design="studio"] .kh-score .kh-side { --from: 34px; animation: studio-side 460ms var(--land) 60ms backwards; }
+:root[data-design="studio"] .kh-score .kh-side:last-child { --from: -34px; }
+:root[data-design="studio"] .kh-meta, :root[data-design="studio"] .kh-status { animation: studio-fade 420ms ease-out 140ms backwards; }
+@keyframes studio-score { from { opacity: 0; transform: scale(.86); } }
+@keyframes studio-side { from { opacity: 0; transform: translateX(var(--from)); } }
+
+/* Tabs slide in the direction you moved. */
+:root[data-design="studio"] .kiosk-pane > * { animation: studio-pane 300ms var(--land) backwards; }
+:root[data-design="studio"] .kiosk-pane[data-dir="prev"] > * { --back: -1; }
+@keyframes studio-pane { from { opacity: 0; transform: translateX(calc(var(--dirx) * var(--back, 1) * 44px)); } }
+:root[data-design="studio"] .kiosk-tabs button.on { animation: studio-tab 300ms var(--land) backwards; }
+@keyframes studio-tab { from { transform: scaleY(.9); } }
+
+/* The line-up walks on. Faces only: .kp-man's own transform places the player. */
+:root[data-design="studio"] .kp-man .kp-face, :root[data-design="studio"] .kp-man .kp-num { animation: studio-pop 380ms var(--land) backwards; }
+:root[data-design="studio"] .kp-man:nth-child(4n+2) .kp-face, :root[data-design="studio"] .kp-man:nth-child(4n+2) .kp-num { animation-delay: 60ms; }
+:root[data-design="studio"] .kp-man:nth-child(4n+3) .kp-face, :root[data-design="studio"] .kp-man:nth-child(4n+3) .kp-num { animation-delay: 120ms; }
+:root[data-design="studio"] .kp-man:nth-child(4n) .kp-face, :root[data-design="studio"] .kp-man:nth-child(4n) .kp-num { animation-delay: 180ms; }
+@keyframes studio-pop { from { opacity: 0; transform: scale(.7); } }
+
+/* Stats fill from the centre line; lists deal in from the top. */
+:root[data-design="studio"] .ks-bar i { animation: studio-bar 620ms var(--land) backwards; }
+:root[data-design="studio"] .ks-bar.home i { transform-origin: right; }
+:root[data-design="studio"] .ks-bar.away i { transform-origin: left; }
+@keyframes studio-bar { from { transform: scaleX(0); } }
+:root[data-design="studio"] .ks-row { animation: studio-rise 360ms var(--land) backwards; }
+:root[data-design="studio"] .kpv-row, :root[data-design="studio"] .kpt tbody tr, :root[data-design="studio"] .kx-list li, :root[data-design="studio"] .ke-row, :root[data-design="studio"] .kf-block li { animation: studio-rise 340ms var(--land) backwards; }
+:root[data-design="studio"] .kpv-row:nth-child(2), :root[data-design="studio"] .kpt tbody tr:nth-child(2), :root[data-design="studio"] .kx-list li:nth-child(2), :root[data-design="studio"] .ke-row:nth-child(2), :root[data-design="studio"] .ks-row:nth-child(2), :root[data-design="studio"] .kf-block li:nth-child(2) { animation-delay: 40ms; }
+:root[data-design="studio"] .kpv-row:nth-child(3), :root[data-design="studio"] .kpt tbody tr:nth-child(3), :root[data-design="studio"] .kx-list li:nth-child(3), :root[data-design="studio"] .ke-row:nth-child(3), :root[data-design="studio"] .ks-row:nth-child(3), :root[data-design="studio"] .kf-block li:nth-child(3) { animation-delay: 80ms; }
+:root[data-design="studio"] .kpv-row:nth-child(4), :root[data-design="studio"] .kpt tbody tr:nth-child(4), :root[data-design="studio"] .kx-list li:nth-child(4), :root[data-design="studio"] .ke-row:nth-child(4), :root[data-design="studio"] .ks-row:nth-child(4), :root[data-design="studio"] .kf-block li:nth-child(4) { animation-delay: 120ms; }
+:root[data-design="studio"] .kpv-row:nth-child(n+5), :root[data-design="studio"] .kpt tbody tr:nth-child(n+5), :root[data-design="studio"] .kx-list li:nth-child(n+5), :root[data-design="studio"] .ke-row:nth-child(n+5), :root[data-design="studio"] .ks-row:nth-child(n+5), :root[data-design="studio"] .kf-block li:nth-child(n+5) { animation-delay: 160ms; }
+:root[data-design="studio"] .kh2h { animation: studio-stage 460ms var(--land) backwards; }
+
+/* Windows rise from where they were opened: the bottom of the match. */
+:root[data-design="studio"] .kpc, :root[data-design="studio"] .kxp { animation: studio-sheet 420ms var(--land) backwards; }
+@keyframes studio-sheet { from { opacity: 0; transform: translateY(46px) scale(.98); } }
+:root[data-design="studio"] .kpc-tile { animation: studio-rise 360ms var(--land) 120ms backwards; }
+:root[data-design="studio"] .kpc-tile:nth-child(2) { animation-delay: 170ms; }
+:root[data-design="studio"] .kpc-tile:nth-child(3) { animation-delay: 220ms; }
+
+/* The rail's button turns to point the way the list will go. */
+:root[data-design="studio"] .kiosk-railbtn .ico { transition: transform 300ms var(--land); }
+:root[data-design="studio"][dir="ltr"] .kiosk-railbtn .ico { transform: scaleX(-1); }
+:root[data-design="studio"][data-rail="closed"] .kiosk-railbtn .ico { transform: rotate(180deg); }
+:root[data-design="studio"][dir="ltr"][data-rail="closed"] .kiosk-railbtn .ico { transform: scaleX(-1) rotate(180deg); }
+
 :root[data-design="studio"] .newsgrid > :nth-child(2) { animation-delay: 30ms; }
 :root[data-design="studio"] .newsgrid > :nth-child(3) { animation-delay: 60ms; }
 :root[data-design="studio"] .newsgrid > :nth-child(4) { animation-delay: 90ms; }
 :root[data-design="studio"] .newsgrid > :nth-child(5) { animation-delay: 120ms; }
 :root[data-design="studio"] .newsgrid > :nth-child(n+6) { animation-delay: 150ms; }
-:root[data-design="studio"] .ks-row:nth-child(2) { animation-delay: 30ms; }
-:root[data-design="studio"] .ks-row:nth-child(3) { animation-delay: 60ms; }
-:root[data-design="studio"] .ks-row:nth-child(n+4) { animation-delay: 90ms; }
 
 /* The moving strip while data refreshes. */
 :root[data-design="studio"][data-fetching] body::before {
@@ -429,7 +680,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  :root[data-design="studio"] .controls > *, :root[data-design="studio"] .newsgrid > *, :root[data-design="studio"] .ks-row { animation-delay: 0s; }
+  :root[data-design="studio"] *, :root[data-design="studio"] *::before, :root[data-design="studio"] *::after { animation-delay: 0s !important; animation-timeline: auto !important; }
+  :root[data-design="studio"] .kiosk { transition: none; }
 }
 @keyframes studio-strip { to { transform: translateX(56px); } }
 @keyframes studio-blink { 50% { opacity: .35; } }
@@ -438,30 +690,33 @@
 
 /* Wall screens are wide; a tablet's rail is only 320px. */
 @media (max-width: 1100px) {
-  :root[data-design="studio"] .kiosk-seg button { font-size: 13px; }
+  :root[data-design="studio"] .kiosk-seg button { font-size: 14px; padding-inline: 2px; }
   :root[data-design="studio"] .kiosk-tabs button { font-size: 16px; }
-  :root[data-design="studio"] .kp-tool { font-size: 15px; }
+  :root[data-design="studio"] .kp-tool { font-size: 16px; }
+  :root[data-design="studio"] .navlink { padding-inline: 10px; font-size: 14px; }
+  :root[data-design="studio"] .kpv-row { font-size: 16px; }
+  :root[data-design="studio"] .kl-name { font-size: 16px; }
 }
 
 /* ---- phones: the sizes the shared stylesheet sets here ---- */
 @media (max-width: 760px) {
-  :root[data-design="studio"] .kh-side img { padding: 3px; }
   :root[data-design="studio"] .kh-nums { --cut: 12px; padding: 2px 22px; }
-  :root[data-design="studio"] .kh-side span { font-size: 16px; }
+  :root[data-design="studio"] .kh-side span { font-size: 17px; }
   :root[data-design="studio"] .pagehead .muted { padding: 8px 14px; }
   /* A phone cannot spare 64px rows: the match list and the pitch need the height. */
   :root[data-design="studio"] .kiosk { grid-template-rows: minmax(0, 36vh) minmax(0, 1fr); }
+  :root[data-design="studio"][data-rail="closed"] .kiosk { grid-template-rows: minmax(0, 0px) minmax(0, 1fr); }
   :root[data-design="studio"] .kiosk-logo { height: 44px; }
   :root[data-design="studio"] .kiosk-brand { margin-bottom: 6px; }
   :root[data-design="studio"] .kiosk-day { grid-template-columns: 44px 1fr 44px; margin-bottom: 6px; }
   :root[data-design="studio"] .kiosk-back, :root[data-design="studio"] .kiosk-day button, :root[data-design="studio"] .kiosk-seg button { min-height: 44px; }
   :root[data-design="studio"] .kl-grouphead { min-height: 48px; }
   :root[data-design="studio"] .kl-row { min-height: 0; }
-  :root[data-design="studio"] .kh-meta { flex-wrap: nowrap; justify-content: flex-start; overflow: hidden; white-space: nowrap; margin-bottom: 6px; font-size: 13px; }
-  :root[data-design="studio"] .kh-status { margin-top: 6px; font-size: 15px; }
+  :root[data-design="studio"] .kh-meta { flex-wrap: nowrap; justify-content: flex-start; overflow: hidden; white-space: nowrap; margin-bottom: 6px; font-size: 14px; }
+  :root[data-design="studio"] .kh-status { margin-top: 6px; font-size: 16px; }
   :root[data-design="studio"] .kiosk-tabs { padding-block: 6px; }
   :root[data-design="studio"] .kiosk-tabs button, :root[data-design="studio"] .kp-tool, :root[data-design="studio"] .ks-btn, :root[data-design="studio"] .ks-period, :root[data-design="studio"] .kiosk-refresh { min-height: 44px; }
-  :root[data-design="studio"] .kiosk-tabs button { font-size: 14px; line-height: 1.2; }
-  :root[data-design="studio"] .kp-tool { padding-inline: 14px; font-size: 15px; }
+  :root[data-design="studio"] .kiosk-tabs button { font-size: 15px; line-height: 1.2; }
+  :root[data-design="studio"] .kp-tool { padding-inline: 14px; font-size: 16px; }
   :root[data-design="studio"] .kiosk-foot { padding-block: 4px; }
 }
