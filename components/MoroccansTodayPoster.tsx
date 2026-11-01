@@ -1,11 +1,13 @@
 import { forwardRef } from "react";
 import { centred } from "./live/H2HPoster";
-import { Img } from "./MoroccanPoster";
+import PlayerSpotlight, { Img } from "./PlayerSpotlight";
 import type { MoroccansTodayLayout } from "@/config/moroccansTodayLayout";
 import type { MoroccanLine } from "@/lib/moroccanDay";
 
 interface Props {
   title: string;
+  /** The title when the poster holds one player: "the Moroccans" would be wrong. */
+  soloTitle: string;
   subtitle: string;
   lines: MoroccanLine[];
   layout: MoroccansTodayLayout;
@@ -13,12 +15,13 @@ interface Props {
 }
 
 /** A row per Moroccan: face, match, and what he did. Every size comes from the layout. */
-const MoroccansTodayPoster = forwardRef<HTMLDivElement, Props>(function MoroccansTodayPoster({ title, subtitle, lines, layout, templateSrc }, ref) {
+const MoroccansTodayPoster = forwardRef<HTMLDivElement, Props>(function MoroccansTodayPoster({ title, soloTitle, subtitle, lines, layout, templateSrc }, ref) {
   const L = layout;
   const R = L.rows;
   // However many are picked, the list ends above lastRowY.
   const pitch = lines.length > 1 ? Math.min(R.rowHeight, (R.lastRowY - R.firstRowY) / (lines.length - 1)) : R.rowHeight;
   const k = pitch / R.rowHeight;
+  const solo = lines.length === 1 ? lines[0] : null;
 
   return (
     <div
@@ -33,14 +36,21 @@ const MoroccansTodayPoster = forwardRef<HTMLDivElement, Props>(function Moroccan
         // eslint-disable-next-line @next/next/no-img-element
         <img src={templateSrc} alt="" width={L.width} height={L.height} style={{ position: "absolute", inset: 0, width: L.width, height: L.height, objectFit: "cover" }} />
       )}
-      {L.title.show && (
+      {!solo && L.title.show && (
         <div style={{ ...centred(L.title.x, L.title.y), fontSize: L.title.fontSize, fontWeight: 900, color: L.title.color }}>{L.title.text || title}</div>
       )}
-      {L.subtitle.show && (L.subtitle.text || subtitle) && (
+      {!solo && L.subtitle.show && (L.subtitle.text || subtitle) && (
         <div style={{ ...centred(L.subtitle.x, L.subtitle.y), fontSize: L.subtitle.fontSize, fontWeight: 700, color: L.subtitle.color }}>{L.subtitle.text || subtitle}</div>
       )}
 
-      {lines.map((l, i) => {
+      {solo && (
+        <PlayerSpotlight
+          width={L.width} layout={L.player} photo={solo.photo} clubLogo={solo.clubLogo} name={solo.name} chip={solo.meta} stats={solo.stats}
+          title={L.title.show ? L.title.text || soloTitle : null} subtitle={L.subtitle.show ? L.subtitle.text || subtitle : null}
+        />
+      )}
+
+      {!solo && lines.map((l, i) => {
         const y = R.firstRowY + i * pitch;
         const face = R.faceSize * k;
         return (

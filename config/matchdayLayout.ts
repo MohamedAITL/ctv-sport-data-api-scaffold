@@ -35,7 +35,7 @@ export const DEFAULT_MATCHDAY_LAYOUT: MatchdayLayout = {
   title: { show: false, text: "أبرز مباريات اليوم", x: 540, y: 95, fontSize: 54, color: "#ffffff" },
   resultsTitle: { show: true, text: "نتائج مباريات اليوم", x: 540, y: 92, fontSize: 54, color: "#ffffff" },
   dateLabel: { show: true, text: "", x: 540, y: 150, fontSize: 28, color: "#f6c744" },
-  firstRowCenterY: 205,
+  firstRowCenterY: 235,
   rowHeight: 84,
   groupHeader: { show: true, height: 62, fontSize: 32, color: "#f6c744", logoSize: 40, dy: 0 },
   groupGap: 8,

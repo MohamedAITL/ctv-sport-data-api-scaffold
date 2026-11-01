@@ -1,6 +1,7 @@
 import { render } from "@testing-library/react";
 import { pickHighlights, type MoroccanHighlight } from "../lib/moroccanHighlights";
-import MoroccanPoster from "../components/MoroccanPoster";
+import MoroccanPoster, { highlightStats, onePlayer } from "@/components/MoroccanPoster";
+import { tileRows } from "@/components/PlayerSpotlight";
 import { DEFAULT_MOROCCAN_LAYOUT } from "../config/moroccanLayout";
 import type { StatCategory } from "../lib/scores365Stats";
 
@@ -44,10 +45,34 @@ const draw = (n: number) =>
   render(<MoroccanPoster highlights={Array.from({ length: n }, (_, i) => hl(i + 1))} layout={DEFAULT_MOROCCAN_LAYOUT} templateSrc={null} />);
 
 describe("MoroccanPoster", () => {
-  it("one highlight is a spotlight with its place spelled out", () => {
+  it("one highlight is his own poster with its place spelled out", () => {
     const { container } = draw(1);
-    expect(container.textContent).toContain("الثاني في الدوري الإسباني");
+    expect(container.textContent).toContain("المركز الثاني");
+    expect(container.textContent).toContain("الدوري الإسباني");
     expect(container.textContent).not.toContain("#2");
+    expect(container.textContent).not.toContain("المغاربة في الصدارة");
+  });
+
+  it("several stats of one player are still his own poster, not a list", () => {
+    const two = [hl(1), { ...hl(1), key: "x", category: "صناعة الأهداف" }];
+    const { container } = render(<MoroccanPoster highlights={two} layout={DEFAULT_MOROCCAN_LAYOUT} templateSrc={null} />);
+    expect(container.textContent).toContain("الأهداف");
+    expect(container.textContent).toContain("صناعة الأهداف");
+    expect(container.textContent).not.toContain("#2");
+  });
+
+  it("names the competition on each tile when his stats span several", () => {
+    const stats = highlightStats([hl(1), { ...hl(1), key: "x", competitionId: 572, competition: "دوري الأبطال" }]);
+    expect(stats.map((s) => s.note)).toEqual(["الثاني في الدوري الإسباني", "الثاني في دوري الأبطال"]);
+  });
+
+  it("keeps too many stats of one player as a list", () => {
+    expect(onePlayer(Array.from({ length: 7 }, (_, i) => ({ ...hl(1), key: String(i) })))).toBe(false);
+    expect(onePlayer([hl(1), hl(2)])).toBe(false);
+  });
+
+  it("lays tiles out in rows", () => {
+    expect([1, 2, 3, 4, 5, 6].map(tileRows)).toEqual([[1], [2], [3], [2, 2], [3, 2], [3, 3]]);
   });
 
   it("several highlights are a roundup with rank badges", () => {

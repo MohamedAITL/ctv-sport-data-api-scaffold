@@ -1,5 +1,6 @@
 import type { MoroccansTodayLayout } from "@/config/moroccansTodayLayout";
 import { Color, Num, Text, Toggle } from "./live/designControls";
+import PlayerSpotlightDesign from "./PlayerSpotlightDesign";
 import { useLang } from "@/lib/prefs";
 
 interface Props {
@@ -82,6 +83,8 @@ export default function MoroccansTodayDesign({ layout, onChange }: Props) {
         {rColor("chipColor", t("اللون"))}
         {rColor("chipBg", t("لون الخلفية", "Background colour"))}
       </div>
+
+      <PlayerSpotlightDesign layout={layout.player} onChange={(v) => up((n) => { n.player = v; })} />
 
       {textBlock("footer", t("التذييل", "Footer"))}
     </details>

@@ -3,7 +3,7 @@ import LineupPoster, { type LineupTeams } from "./LineupPoster";
 import LineupDesign from "./LineupDesign";
 import LineupSwaps, { withSwaps, type Swaps } from "./LineupSwaps";
 import PosterExport from "./PosterExport";
-import { LIVE_BACKGROUNDS, withBackgroundFooter } from "@/config/templates";
+import { COMPETITION_BACKGROUNDS, withBackgroundFooter } from "@/config/templates";
 import { DEFAULT_LINEUP_LAYOUT, type LineupLayout } from "@/config/lineupLayout";
 import type { LiveDetail, LiveMatch } from "@/types/live";
 import { useLang } from "@/lib/prefs";
@@ -68,7 +68,7 @@ export default function LineupExport({ match, onClose }: { match: LiveMatch; onC
       // v2: the players grew; a layout saved before that would keep them small.
       layoutKey="botola.lineupLayout.v2"
       templateKey="lineup"
-      fallbackTemplate={LIVE_BACKGROUNDS[match.competitionId]?.src}
+      fallbackTemplate={COMPETITION_BACKGROUNDS[match.competitionId]?.src}
       defaults={DEFAULT_LINEUP_LAYOUT}
       fileBase={fileBase}
       ready={Boolean(d)}

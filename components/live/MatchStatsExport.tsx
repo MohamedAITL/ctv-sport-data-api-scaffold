@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import MatchStatsPoster from "./MatchStatsPoster";
 import MatchStatsDesign from "./MatchStatsDesign";
 import PosterExport from "./PosterExport";
-import { LIVE_BACKGROUNDS, withBackgroundFooter } from "@/config/templates";
+import { COMPETITION_BACKGROUNDS, withBackgroundFooter } from "@/config/templates";
 import { DEFAULT_MATCH_STATS_LAYOUT, type MatchStatsLayout } from "@/config/matchStatsLayout";
 import type { LiveDetail, LiveMatch, StatRow } from "@/types/live";
 import { useLang } from "@/lib/prefs";
@@ -68,7 +68,7 @@ export default function MatchStatsExport({ match, onClose }: { match: LiveMatch;
       title={t("ملصق إحصائيات المباراة")}
       layoutKey="botola.matchStatsLayout"
       templateKey="matchStats"
-      fallbackTemplate={LIVE_BACKGROUNDS[match.competitionId]?.src}
+      fallbackTemplate={COMPETITION_BACKGROUNDS[match.competitionId]?.src}
       defaults={DEFAULT_MATCH_STATS_LAYOUT}
       fileBase={`choufsport-stats-${match.home.id}-${match.away.id}`}
       ready={Boolean(d)}

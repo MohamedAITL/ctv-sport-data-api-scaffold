@@ -9,6 +9,7 @@ import type { MoroccanHighlight } from "@/lib/moroccanHighlights";
 import { useCachedData } from "@/lib/useCachedData";
 import { useFitWidth } from "@/lib/useFitWidth";
 import { deepMerge } from "@/lib/persist";
+import { backgroundFor, sharedCompetition, withBackgroundFooter } from "@/config/templates";
 import { clearTemplate, getTemplate, setTemplate } from "@/lib/db";
 import { useLang } from "@/lib/prefs";
 
@@ -84,6 +85,8 @@ export default function MoroccanStudio() {
   }, [missingKey, retry]);
 
   const onPoster = picked.map((h) => inlined.get(h.key) ?? bare(h));
+  const competition = sharedCompetition(picked.map((h) => h.competitionId));
+  const background = backgroundFor(templateSrc, competition);
 
   // The list, by player: each Moroccan once, with every leaderboard he is in.
   const q = query.trim();
@@ -116,7 +119,7 @@ export default function MoroccanStudio() {
       <section className="controls">
         <div className="card">
           <h3>{t("المغاربة في الصدارة")}</h3>
-          <p className="muted">{t("الدوليون المغاربة ضمن أفضل 20 في إحصائيات كل مسابقة. اختر إحصائية واحدة لبطاقة فردية، أو عدة إحصائيات لقائمة.")}</p>
+          <p className="muted">{t("الدوليون المغاربة ضمن أفضل 20 في إحصائيات كل مسابقة. إحصائيات لاعب واحد تعطي بطاقة فردية، وعدة لاعبين يعطون قائمة.")}</p>
           <div className="kv"><span>{t("على الملصق")}</span><b>{picked.length}{t(" من ")}{all.length}{picked.length === 1 ? t(" · بطاقة فردية", " · spotlight") : ""}</b></div>
           <div className="kv"><span>{t("الحالة")}</span><span className={loading ? "pill" : error ? "pill warn" : "pill ok"}>{loading ? t("جاري التحميل…", "Loading…") : error ? t("خطأ", "Error") : t("متصل", "Connected")}</span></div>
           {error && <p className="err">{error}</p>}
@@ -165,7 +168,7 @@ export default function MoroccanStudio() {
           </details>
         )}
 
-        <TemplateUploader isCustom={templateSrc !== null} onTemplate={onTemplate} defaultLabel={t("لا يوجد قالب بعد — تُستخدم خلفية بسيطة. ارفع قالب المغاربة.")} resetLabel={t("حذف القالب")} />
+        <TemplateUploader isCustom={Boolean(templateSrc)} bundled={Boolean(background)} onTemplate={onTemplate} defaultLabel={t("لا يوجد قالب بعد — تُستخدم خلفية بسيطة. ارفع قالب المغاربة.")} resetLabel={t("حذف القالب")} />
         <ExportControls posterRef={posterRef} canExport={picked.length > 0} blocked={blocked} preparing={preparing} onResetDesign={() => updateLayout(DEFAULT_MOROCCAN_LAYOUT)} fileBase={picked.length === 1 ? `choufsport-moroccan-${picked[0].playerId}` : "choufsport-moroccans"} />
         <MoroccanDesign layout={layout} onChange={updateLayout} />
       </section>
@@ -176,7 +179,7 @@ export default function MoroccanStudio() {
           <div className={loading || busy ? "previewbox busy" : "previewbox"} style={{ width: previewW, height: layout.height * scale }}>
             {loading && <div className="preview-loader"><Loader label={t("جاري تحميل البيانات…", "Loading data…")} /></div>}
             <div style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}>
-              <MoroccanPoster ref={posterRef} highlights={onPoster} layout={layout} templateSrc={templateSrc} />
+              <MoroccanPoster ref={posterRef} highlights={onPoster} layout={withBackgroundFooter(layout, competition, background)} templateSrc={background} />
             </div>
           </div>
         </div>

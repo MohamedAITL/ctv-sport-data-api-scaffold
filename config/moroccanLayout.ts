@@ -1,5 +1,7 @@
-// Moroccan players poster layout (1080x1350): a roundup of several highlights,
-// or one player's spotlight when a single highlight is picked.
+// Moroccan players poster layout (1080x1350): a roundup of several players, or
+// one player's own poster when every pick is his.
+import { DEFAULT_PLAYER_SPOTLIGHT, type PlayerSpotlightLayout } from "./playerSpotlight";
+
 export interface MLText { show: boolean; text?: string; x: number; y: number; fontSize: number; color: string }
 
 export interface MoroccanLayout {
@@ -35,29 +37,7 @@ export interface MoroccanLayout {
     rankBg: string;
     rankColor: string;
   };
-  spotlight: {
-    faceY: number;
-    faceSize: number;
-    ringWidth: number;
-    ringColor: string;
-    clubSize: number;
-    nameY: number;
-    nameFontSize: number;
-    nameColor: string;
-    compY: number;
-    compLogoSize: number;
-    compFontSize: number;
-    compColor: string;
-    valueY: number;
-    valueFontSize: number;
-    valueColor: string;
-    categoryY: number;
-    categoryFontSize: number;
-    categoryColor: string;
-    rankY: number;
-    rankFontSize: number;
-    rankColor: string;
-  };
+  player: PlayerSpotlightLayout;
 }
 
 export const DEFAULT_MOROCCAN_LAYOUT: MoroccanLayout = {
@@ -92,27 +72,5 @@ export const DEFAULT_MOROCCAN_LAYOUT: MoroccanLayout = {
     rankBg: "#c1272d",
     rankColor: "#ffffff",
   },
-  spotlight: {
-    faceY: 470,
-    faceSize: 400,
-    ringWidth: 10,
-    ringColor: "#c1272d",
-    clubSize: 110,
-    nameY: 735,
-    nameFontSize: 60,
-    nameColor: "#ffffff",
-    compY: 815,
-    compLogoSize: 48,
-    compFontSize: 30,
-    compColor: "#f6c744",
-    valueY: 960,
-    valueFontSize: 150,
-    valueColor: "#ffffff",
-    categoryY: 1075,
-    categoryFontSize: 40,
-    categoryColor: "#ffffff",
-    rankY: 1150,
-    rankFontSize: 32,
-    rankColor: "#f6c744",
-  },
+  player: DEFAULT_PLAYER_SPOTLIGHT,
 };

@@ -9,6 +9,7 @@ import { addUpWeek, dayLine, hasPlayed, sortRows, weekLine, type MoroccanDayRow,
 import { useCachedData } from "@/lib/useCachedData";
 import { useFitWidth } from "@/lib/useFitWidth";
 import { deepMerge } from "@/lib/persist";
+import { backgroundFor, sharedCompetition, withBackgroundFooter } from "@/config/templates";
 import { clearTemplate, getTemplate, setTemplate } from "@/lib/db";
 import { useLang } from "@/lib/prefs";
 import { todayMA } from "@/lib/today";
@@ -135,6 +136,9 @@ export default function MoroccansTodayStudio() {
       : null;
   const preparing = missing.length > 0 ? t("جاري تجهيز صور اللاعبين…", "Preparing player photos…") : null;
   const title = range === "week" ? "المغاربة هذا الأسبوع" : range === "yesterday" ? "المغاربة أمس" : "المغاربة اليوم";
+  const competition = sharedCompetition(onPoster.map((l) => l.competitionId));
+  const background = backgroundFor(templateSrc, competition);
+  const soloTitle = range === "week" ? "إحصائيات الأسبوع" : range === "yesterday" ? "إحصائيات الأمس" : "إحصائيات اليوم";
   const subtitle = range === "week" ? `${arDate(shiftDay(today, 1 - WEEK_DAYS))} - ${arDate(today)}` : arDate(date);
   const scale = previewW / layout.width;
 
@@ -188,7 +192,7 @@ export default function MoroccansTodayStudio() {
           </details>
         )}
 
-        <TemplateUploader isCustom={templateSrc !== null} onTemplate={onTemplate} defaultLabel={t("لا يوجد قالب بعد — تُستخدم خلفية بسيطة. ارفع قالب المغاربة.")} resetLabel={t("حذف القالب")} />
+        <TemplateUploader isCustom={Boolean(templateSrc)} bundled={Boolean(background)} onTemplate={onTemplate} defaultLabel={t("لا يوجد قالب بعد — تُستخدم خلفية بسيطة. ارفع قالب المغاربة.")} resetLabel={t("حذف القالب")} />
         <ExportControls posterRef={posterRef} canExport={onPoster.length > 0} blocked={blocked} preparing={preparing} onResetDesign={() => updateLayout(DEFAULT_MOROCCANS_TODAY_LAYOUT)} fileBase={`choufsport-moroccans-${range === "week" ? "week" : date}`} />
         <MoroccansTodayDesign layout={layout} onChange={updateLayout} />
       </section>
@@ -200,7 +204,7 @@ export default function MoroccansTodayStudio() {
             {isLoading && <div className="preview-loader"><Loader label={t("جاري تحميل البيانات…", "Loading data…")} /></div>}
             <div style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}>
               <MoroccansTodayPoster
-                ref={posterRef} title={title} subtitle={subtitle} layout={layout} templateSrc={templateSrc}
+                ref={posterRef} title={title} soloTitle={soloTitle} subtitle={subtitle} layout={withBackgroundFooter(layout, competition, background)} templateSrc={background}
                 lines={onPoster.map((l) => ({ ...l, photo: inlined.get(l.key)?.photo ?? null, clubLogo: inlined.get(l.key)?.clubLogo ?? null }))}
               />
             </div>

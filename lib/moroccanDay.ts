@@ -14,6 +14,7 @@ export interface MoroccanDayRow {
   clubLogo: string | null;
   opponent: string;
   competition: string;
+  competitionId: number;
   /** Goals for and against, from the player's side. Null before kickoff. */
   score: { for: number; against: number } | null;
   kickoff: string; // ISO
@@ -91,6 +92,7 @@ export function toMoroccanRows(
         clubLogo: own.logo,
         opponent: other.name,
         competition: match.competition,
+        competitionId: match.competitionId,
         score: own.score !== null && other.score !== null ? { for: own.score, against: other.score } : null,
         kickoff: match.startTime,
         isLive: match.isLive,
@@ -154,7 +156,18 @@ export function roleLabel(r: Pick<MoroccanDayRow, "role" | "cameOn" | "isFinishe
 }
 
 /** One line of the poster. */
-export interface MoroccanLine { key: string; name: string; photo: string | null; clubLogo: string | null; meta: string; chips: string[] }
+export interface MoroccanLine {
+  key: string;
+  name: string;
+  photo: string | null;
+  clubLogo: string | null;
+  meta: string;
+  chips: string[];
+  /** Null for a week: his matches may span several. */
+  competitionId: number | null;
+  /** The same figures as tiles, for a poster of this one player. */
+  stats: Array<{ key: string; value: string; label: string }>;
+}
 
 // Arabic counts its one and two in words.
 const count = (n: number, one: string, two: string, many: string) => (n === 1 ? one : n === 2 ? two : `${n} ${many}`);
@@ -163,6 +176,15 @@ const figures = (r: { goals: number; assists: number; rating: number | null }) =
   ...(r.goals ? [count(r.goals, "هدف", "هدفان", "أهداف")] : []),
   ...(r.assists ? [count(r.assists, "صناعة هدف", "صناعتان", "صناعات")] : []),
   ...(r.rating !== null ? [`تقييم ${r.rating.toFixed(1)}`] : []),
+];
+
+const tiles = (r: { goals: number; assists: number; rating: number | null; minutes: number; yellow: number; red: number }) => [
+  ...(r.goals ? [{ key: "goals", value: String(r.goals), label: "الأهداف" }] : []),
+  ...(r.assists ? [{ key: "assists", value: String(r.assists), label: "صناعة الأهداف" }] : []),
+  ...(r.rating !== null ? [{ key: "rating", value: r.rating.toFixed(1), label: "التقييم" }] : []),
+  ...(r.minutes ? [{ key: "minutes", value: String(r.minutes), label: "الدقائق" }] : []),
+  ...(r.yellow ? [{ key: "yellow", value: String(r.yellow), label: "البطاقات الصفراء" }] : []),
+  ...(r.red ? [{ key: "red", value: String(r.red), label: "البطاقات الحمراء" }] : []),
 ];
 
 export const dayLine = (r: MoroccanDayRow): MoroccanLine => {
@@ -174,6 +196,8 @@ export const dayLine = (r: MoroccanDayRow): MoroccanLine => {
     clubLogo: r.clubLogo,
     meta: `${r.club}${r.score ? ` ${r.score.for}-${r.score.against} ` : " × "}${r.opponent}`,
     chips: done.length ? done : [roleLabel(r)],
+    competitionId: r.competitionId ?? null, // a day cached before this field has none
+    stats: hasPlayed(r) ? tiles(r) : [{ key: "role", value: roleLabel(r), label: "الحالة" }],
   };
 };
 
@@ -184,4 +208,6 @@ export const weekLine = (r: MoroccanWeekRow): MoroccanLine => ({
   clubLogo: r.clubLogo,
   meta: `${r.club} · ${count(r.matches, "مباراة واحدة", "مباراتان", "مباريات")} · ${r.minutes} دقيقة`,
   chips: figures(r).slice(0, 3),
+  competitionId: null,
+  stats: tiles(r),
 });

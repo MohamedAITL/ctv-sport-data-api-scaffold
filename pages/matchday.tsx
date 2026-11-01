@@ -11,6 +11,7 @@ import ExportControls from "@/components/ExportControls";
 import { DEFAULT_MATCHDAY_LAYOUT, type MatchdayLayout } from "@/config/matchdayLayout";
 import type { Match } from "@/types/fixtures";
 import { loadNameOverrides, saveNameOverrides, deepMerge } from "@/lib/persist";
+import { backgroundFor, sharedCompetition } from "@/config/templates";
 import { getLogoOverrides, setLogoOverride, clearLogoOverride, getTemplate, setTemplate, clearTemplate } from "@/lib/db";
 import { todayMA } from "@/lib/today";
 import { BIG_FAME, MOROCCAN_FAME } from "@/lib/scores365Games";
@@ -152,6 +153,8 @@ export default function Matchday() {
   const finished = matches.filter((m) => m.isFinished).length;
   const live = matches.filter((m) => m.isLive).length;
   const results = mode === "results";
+  // A day of several competitions has no one background: it keeps the plain one.
+  const background = backgroundFor(templateSrc, sharedCompetition(matches.map((m) => (m.leagueId ? Number(m.leagueId) : null))));
   // A results poster with nothing played yet would be all dimmed kickoff times.
   const preparing = missing.length > 0 ? t("جاري تجهيز شعارات المباريات المختارة…", "Preparing the picked matches' crests…") : null;
   const exportBlock = results && matches.length > 0 && finished + live === 0
@@ -195,7 +198,7 @@ export default function Matchday() {
               )}
               <button className="btn" disabled={loadingDate} onClick={() => fetchFixtures()}>{loadingDate && <i className="spinner" aria-hidden="true" />}{loadingDate ? t("جاري التحديث…", "Refreshing…") : t("تحديث", "Refresh")}</button>
             </div>
-            <TemplateUploader isCustom={templateSrc !== null} onTemplate={onTemplate} defaultLabel={t("لا يوجد قالب بعد — تُستخدم خلفية بسيطة. ارفع قالب مباريات اليوم.")} resetLabel={t("حذف القالب")} />
+            <TemplateUploader isCustom={Boolean(templateSrc)} bundled={Boolean(background)} onTemplate={onTemplate} defaultLabel={t("لا يوجد قالب بعد — تُستخدم خلفية بسيطة. ارفع قالب مباريات اليوم.")} resetLabel={t("حذف القالب")} />
             {candidates.length > 0 && (
               <details className="card collapsible">
                 <summary><h3>{t("اختيار المباريات (")}{matches.length})</h3><span className="chev" /></summary>
@@ -247,7 +250,7 @@ export default function Matchday() {
               <div className={loadingDate || busy ? "previewbox busy" : "previewbox"} style={{ width: previewW, height: layout.height * scale }}>
                 {loadingDate && <div className="preview-loader"><Loader label={t("جاري تحميل البيانات…", "Loading data…")} /></div>}
                 <div style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}>
-                  <MatchdayPoster ref={posterRef} mode={mode} matches={matches} layout={effLayout} templateSrc={templateSrc} nameOverrides={nameOverrides} logoOverrides={logoOverrides} />
+                  <MatchdayPoster ref={posterRef} mode={mode} matches={matches} layout={effLayout} templateSrc={background} nameOverrides={nameOverrides} logoOverrides={logoOverrides} />
                 </div>
               </div>
             </div>

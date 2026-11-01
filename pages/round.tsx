@@ -13,6 +13,7 @@ import { BOTOLA_LEAGUE, isStandingsLeague, leagueById, leaguesByGroup } from "@/
 import { roundKey, UNSCHEDULED_ROUND, type RoundInfo } from "@/lib/scores365Games";
 import type { Match } from "@/types/fixtures";
 import { loadNameOverrides, saveNameOverrides, deepMerge } from "@/lib/persist";
+import { backgroundFor } from "@/config/templates";
 import { getLogoOverrides, setLogoOverride, clearLogoOverride, getTemplate, setTemplate, clearTemplate } from "@/lib/db";
 import { useFitWidth } from "@/lib/useFitWidth";
 import { useLang } from "@/lib/prefs";
@@ -178,6 +179,7 @@ export default function RoundPage() {
   // No games for a league means 365scores hasn't published its schedule yet —
   // a normal state, so say so plainly instead of exporting an empty poster.
   const empty = !loading && forLeague !== null && rounds.length === 0;
+  const background = backgroundFor(templateSrc, league);
   const exportBlock = empty
     ? t("جدول هذه البطولة غير منشور بعد", "This competition's schedule is not published yet")
     : matches.length === 0
@@ -256,7 +258,7 @@ export default function RoundPage() {
                 </div>
               </details>
             )}
-            <TemplateUploader isCustom={templateSrc !== null} onTemplate={onTemplate} defaultLabel={t("لا يوجد قالب بعد — تُستخدم خلفية بسيطة. ارفع قالب الجولة.")} resetLabel={t("حذف القالب")} />
+            <TemplateUploader isCustom={Boolean(templateSrc)} bundled={Boolean(background)} onTemplate={onTemplate} defaultLabel={t("لا يوجد قالب بعد — تُستخدم خلفية بسيطة. ارفع قالب الجولة.")} resetLabel={t("حذف القالب")} />
             <ExportControls posterRef={posterRef} canExport={matches.length > 0} blocked={exportBlock} preparing={preparing} onResetDesign={() => updateLayout(DEFAULT_MATCHDAY_LAYOUT)} fileBase={`choufsport-round-${league}-${round ?? "x"}`} fileDate={matches[0]?.date} />
             <MatchdayTeams matches={shown} nameOverrides={nameOverrides} logoOverrides={logoOverrides} onName={onName} onLogo={onLogo} onClearLogo={onClearLogo} />
             <MatchdayDesign layout={layout} onChange={updateLayout} />
@@ -268,7 +270,7 @@ export default function RoundPage() {
               <div className={loading || busy ? "previewbox busy" : "previewbox"} style={{ width: previewW, height: layout.height * scale }}>
                 {loading && <div className="preview-loader"><Loader label={t("جاري تحميل البيانات…", "Loading data…")} /></div>}
                 <div style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}>
-                  <MatchdayPoster ref={posterRef} groupBy="date" mode={results ? "results" : "fixtures"} matches={posterMatches} layout={effLayout} templateSrc={templateSrc} nameOverrides={nameOverrides} logoOverrides={logoOverrides} />
+                  <MatchdayPoster ref={posterRef} groupBy="date" mode={results ? "results" : "fixtures"} matches={posterMatches} layout={effLayout} templateSrc={background} nameOverrides={nameOverrides} logoOverrides={logoOverrides} />
                 </div>
               </div>
             </div>

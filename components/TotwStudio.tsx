@@ -10,6 +10,7 @@ import { FORMATIONS, formationSlots, roundOfKey, type RoundPool, type Totw, type
 import { useCachedData } from "@/lib/useCachedData";
 import { useFitWidth } from "@/lib/useFitWidth";
 import { deepMerge } from "@/lib/persist";
+import { backgroundFor, withBackgroundFooter } from "@/config/templates";
 import { clearTemplate, getTemplate, setTemplate } from "@/lib/db";
 import { useLang } from "@/lib/prefs";
 
@@ -161,6 +162,7 @@ export default function TotwStudio({ league, leagueField }: { league: number; le
   };
 
   const filled = slots.filter((s) => s.player).length;
+  const background = backgroundFor(templateSrc, league);
   const blocked = !forLeague
     ? null
     : filled < slots.length
@@ -244,7 +246,7 @@ export default function TotwStudio({ league, leagueField }: { league: number; le
           </details>
         )}
 
-        <TemplateUploader isCustom={templateSrc !== null} onTemplate={onTemplate} defaultLabel={t("لا يوجد قالب بعد — تُستخدم خلفية بسيطة. ارفع قالب تشكيلة الجولة.")} resetLabel={t("حذف القالب")} />
+        <TemplateUploader isCustom={Boolean(templateSrc)} bundled={Boolean(background)} onTemplate={onTemplate} defaultLabel={t("لا يوجد قالب بعد — تُستخدم خلفية بسيطة. ارفع قالب تشكيلة الجولة.")} resetLabel={t("حذف القالب")} />
         <ExportControls posterRef={posterRef} canExport={Boolean(forLeague) && round !== null} blocked={blocked} preparing={preparing} onResetDesign={() => updateLayout(DEFAULT_TOTW_LAYOUT)} fileBase={`choufsport-totw-${league}-${round ?? "x"}`} />
         <TotwDesign layout={layout} onChange={updateLayout} />
       </section>
@@ -255,7 +257,7 @@ export default function TotwStudio({ league, leagueField }: { league: number; le
           <div className={loading || busy ? "previewbox busy" : "previewbox"} style={{ width: previewW, height: layout.height * scale }}>
             {loading && <div className="preview-loader"><Loader label={t("جاري تحميل البيانات…", "Loading data…")} /></div>}
             <div style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}>
-              <TotwPoster ref={posterRef} subtitle={subtitle} slots={slots} coach={coach} formation={formation} layout={layout} templateSrc={templateSrc} />
+              <TotwPoster ref={posterRef} subtitle={subtitle} slots={slots} coach={coach} formation={formation} layout={withBackgroundFooter(layout, league, background)} templateSrc={background} />
             </div>
           </div>
         </div>

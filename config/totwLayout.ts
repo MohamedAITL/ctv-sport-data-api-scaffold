@@ -63,5 +63,5 @@ export const DEFAULT_TOTW_LAYOUT: TotwLayout = {
     show: true, y: 1258, crestSize: 50, crestX: 1000, fontSize: 26, color: "#ffffff",
     formationShow: true, formationX: 80, formationFontSize: 26, formationColor: "#d9cfe6",
   },
-  footer: { show: true, text: "Choufsport", x: 540, y: 1318, fontSize: 20, color: "#ffffff" },
+  footer: { show: true, text: "Choufsport", x: 540, y: 1300, fontSize: 20, color: "#ffffff" },
 };

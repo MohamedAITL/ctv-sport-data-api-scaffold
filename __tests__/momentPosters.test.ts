@@ -1,26 +1,40 @@
 import fs from "fs";
 import path from "path";
 import { fitFont, scorerLines } from "@/components/live/FullTimePoster";
-import { BUNDLED_TEMPLATES, LIVE_BACKGROUNDS, withBackgroundFooter } from "@/config/templates";
+import { backgroundFor, BUNDLED_TEMPLATES, COMPETITION_BACKGROUNDS, sharedCompetition, withBackgroundFooter } from "@/config/templates";
 import { crest, competitionLogo, FACE_IMG } from "@/lib/live365";
 import type { Goal } from "@/types/live";
 
 describe("goal and result posters", () => {
   it("every bundled background ships with the app", () => {
-    const files = [...Object.values(BUNDLED_TEMPLATES), ...Object.values(LIVE_BACKGROUNDS).map((b) => b.src)];
+    const files = [...Object.values(BUNDLED_TEMPLATES), ...Object.values(COMPETITION_BACKGROUNDS).map((b) => b.src)];
     for (const f of files) expect(fs.existsSync(path.join("public", f))).toBe(true);
   });
 
   it("gives the Saudi league its own background on every poster that has one", () => {
     expect(BUNDLED_TEMPLATES[649]).toBe("/templates/saudi.jpg");
-    expect(LIVE_BACKGROUNDS[649].src).toBe("/templates/moment-saudi.jpg");
+    expect(COMPETITION_BACKGROUNDS[649].src).toBe("/templates/moment-saudi.jpg");
   });
 
   it("gives both Botolas their background on goal and result posters, never on standings", () => {
-    expect(LIVE_BACKGROUNDS[557].src).toBe("/templates/moment-botola.jpg");
-    expect(LIVE_BACKGROUNDS[5651].src).toBe("/templates/moment-botola.jpg");
+    expect(COMPETITION_BACKGROUNDS[557].src).toBe("/templates/moment-botola.jpg");
+    expect(COMPETITION_BACKGROUNDS[5651].src).toBe("/templates/moment-botola.jpg");
     expect(BUNDLED_TEMPLATES[557]).toBe("/templates/botola.jpg");
     expect(BUNDLED_TEMPLATES[5651]).toBeUndefined();
+  });
+
+  it("uses the competition's background unless a template was uploaded", () => {
+    expect(backgroundFor(null, 11)).toBe("/templates/moment-laliga.jpg");
+    expect(backgroundFor("data:image/png;base64,uploaded", 11)).toBe("data:image/png;base64,uploaded");
+    expect(backgroundFor(null, 7)).toBeNull();
+    expect(backgroundFor(null, null)).toBeNull();
+  });
+
+  it("finds one competition, and none in a mix", () => {
+    expect(sharedCompetition([11, 11])).toBe(11);
+    expect(sharedCompetition([11, 17])).toBeNull();
+    expect(sharedCompetition([])).toBeNull();
+    expect(sharedCompetition([null, null])).toBeNull();
   });
 
   it("hides the poster's footer only over a background that prints its own", () => {

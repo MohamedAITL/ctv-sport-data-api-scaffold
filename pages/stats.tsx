@@ -14,6 +14,7 @@ import { DEFAULT_STATS_LAYOUT, type StatsLayout } from "@/config/statsLayout";
 import { leaguesByGroup, BOTOLA_LEAGUE, leagueById } from "@/config/standingsLeagues";
 import type { StatCategory } from "@/lib/scores365Stats";
 import { deepMerge } from "@/lib/persist";
+import { backgroundFor } from "@/config/templates";
 import { getTemplate, setTemplate, clearTemplate } from "@/lib/db";
 import { useFitWidth } from "@/lib/useFitWidth";
 import { useLang } from "@/lib/prefs";
@@ -111,6 +112,7 @@ export default function StatsPage() {
   );
   const rows = category?.rows ?? [];
   const empty = !loading && forLeague !== null && categories.length === 0;
+  const background = backgroundFor(templateSrc, league);
 
   return (
     <>
@@ -164,7 +166,7 @@ export default function StatsPage() {
               <button className="btn" disabled={loading} onClick={() => fetchStats()}>{loading && <i className="spinner" aria-hidden="true" />}{loading ? t("جاري التحديث…", "Refreshing…") : t("تحديث", "Refresh")}</button>
             </div>
 
-            <TemplateUploader isCustom={templateSrc !== null} onTemplate={onTemplate} defaultLabel={t("لا يوجد قالب بعد — يتم استخدام خلفية بسيطة. ارفع قالب الإحصائيات.")} resetLabel={t("حذف القالب")} />
+            <TemplateUploader isCustom={Boolean(templateSrc)} bundled={Boolean(background)} onTemplate={onTemplate} defaultLabel={t("لا يوجد قالب بعد — يتم استخدام خلفية بسيطة. ارفع قالب الإحصائيات.")} resetLabel={t("حذف القالب")} />
             <ExportControls posterRef={posterRef} canExport={rows.length > 0} blocked={rows.length === 0 ? t("لا توجد بيانات لهذه الإحصائية بعد", "No data for this stat yet") : null} onResetDesign={() => updateLayout(DEFAULT_STATS_LAYOUT)} fileBase={`choufsport-stats-${catKey || "none"}`} />
 
             <StatsDesign layout={layout} onChange={updateLayout} />
@@ -176,7 +178,7 @@ export default function StatsPage() {
               <div className={loading || busy ? "previewbox busy" : "previewbox"} style={{ width: previewW, height: layout.height * scale }}>
                 {loading && <div className="preview-loader"><Loader label={t("جاري تحميل البيانات…", "Loading data…")} /></div>}
                 <div style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}>
-                  <StatsPoster ref={posterRef} title={category?.name ?? ""} subtitle={subtitle} rows={rows} layout={layout} templateSrc={templateSrc} kind={category?.kind ?? "player"} />
+                  <StatsPoster ref={posterRef} title={category?.name ?? ""} subtitle={subtitle} rows={rows} layout={layout} templateSrc={background} kind={category?.kind ?? "player"} />
                 </div>
               </div>
             </div>

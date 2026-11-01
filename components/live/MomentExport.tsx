@@ -7,7 +7,7 @@ import FullTimeDesign from "./FullTimeDesign";
 import PosterExport from "./PosterExport";
 import { DEFAULT_GOAL_LAYOUT, type GoalLayout } from "@/config/goalLayout";
 import { DEFAULT_FULL_TIME_LAYOUT, type FullTimeLayout } from "@/config/fullTimeLayout";
-import { LIVE_BACKGROUNDS, withBackgroundFooter } from "@/config/templates";
+import { COMPETITION_BACKGROUNDS, withBackgroundFooter } from "@/config/templates";
 import { goalTitles } from "@/lib/goalTitles";
 import { goalsAddUp } from "@/lib/goals";
 import type { LiveDetail, LiveMatch } from "@/types/live";
@@ -50,7 +50,7 @@ export default function MomentExport({ match, initial, onClose }: { match: LiveM
       title={goal ? t("ملصق الهدف", "Goal poster") : t("ملصق النتيجة", "Result poster")}
       layoutKey="botola.momentLayout2"
       templateKey={goal ? "goal" : "fullTime"}
-      fallbackTemplate={LIVE_BACKGROUNDS[match.competitionId]?.src}
+      fallbackTemplate={COMPETITION_BACKGROUNDS[match.competitionId]?.src}
       defaults={DEFAULTS}
       fileBase={`choufsport-${goal ? `goal-${goal.order}` : "result"}-${match.home.id}-${match.away.id}`}
       ready={Boolean(d)}

@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { fetchMoroccansDay } from "@/lib/moroccansToday";
 import { inlineUrls } from "@/lib/inlineImage";
+import { bigFace } from "@/lib/live365";
 import { publicError } from "@/lib/publicError";
 import { todayMA } from "@/lib/today";
 import type { MoroccanDayRow } from "@/lib/moroccanDay";
@@ -35,9 +36,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!keys) return res.status(200).json({ rows, fetchedAt: new Date().toISOString() });
     const want = new Set(keys);
     const picked = rows.filter((r) => want.has(r.key));
-    const images = await inlineUrls(picked.flatMap((r) => [r.photo, r.clubLogo]));
+    const images = await inlineUrls(picked.flatMap((r) => [bigFace(r.photo), r.clubLogo]));
     const at = (u: string | null) => (u ? images.get(u) ?? null : null);
-    return res.status(200).json({ rows: picked.map((r) => ({ key: r.key, photo: at(r.photo), clubLogo: at(r.clubLogo) })) });
+    return res.status(200).json({ rows: picked.map((r) => ({ key: r.key, photo: at(bigFace(r.photo)), clubLogo: at(r.clubLogo) })) });
   } catch (e) {
     // The last good day rather than a blank screen.
     if (hit && !keys) return res.status(200).json({ rows: hit.rows, stale: true, error: publicError(e) });

@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import H2HPoster from "./H2HPoster";
 import H2HDesign from "./H2HDesign";
 import PosterExport from "./PosterExport";
-import { LIVE_BACKGROUNDS, withBackgroundFooter } from "@/config/templates";
+import { COMPETITION_BACKGROUNDS, withBackgroundFooter } from "@/config/templates";
 import { DEFAULT_H2H_LAYOUT, type H2HLayout } from "@/config/h2hLayout";
 import { h2hRecord } from "@/lib/h2hRecord";
 import type { H2HRecord, LiveMatch, PastMatch } from "@/types/live";
@@ -59,7 +59,7 @@ export default function H2HExport({ match, onClose }: { match: LiveMatch; onClos
       title={t("ملصق المواجهات المباشرة")}
       layoutKey="botola.h2hLayout"
       templateKey="h2h"
-      fallbackTemplate={LIVE_BACKGROUNDS[match.competitionId]?.src}
+      fallbackTemplate={COMPETITION_BACKGROUNDS[match.competitionId]?.src}
       defaults={DEFAULT_H2H_LAYOUT}
       fileBase={`choufsport-h2h-${match.home.id}-${match.away.id}`}
       ready={Boolean(rows)}

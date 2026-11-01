@@ -4,6 +4,8 @@ import { useLang } from "@/lib/prefs";
 
 interface Props {
   isCustom: boolean;
+  /** The competition's own background is showing. */
+  bundled?: boolean;
   onTemplate: (dataUrl: string | null) => void; // null -> reset to default
   defaultLabel?: string;
   resetLabel?: string;
@@ -11,7 +13,7 @@ interface Props {
 
 // Upload a PNG/JPG template (stored in IndexedDB by the page) or reset to the
 // bundled Chouf TV reference poster.
-export default function TemplateUploader({ isCustom, onTemplate, defaultLabel = "يتم استخدام قالب شوف تي في الأصلي.", resetLabel = "استعادة القالب الأصلي" }: Props) {
+export default function TemplateUploader({ isCustom, bundled, onTemplate, defaultLabel = "يتم استخدام قالب شوف تي في الأصلي.", resetLabel = "استعادة القالب الأصلي" }: Props) {
   const { t } = useLang();
   const input = useRef<HTMLInputElement>(null);
 
@@ -26,7 +28,7 @@ export default function TemplateUploader({ isCustom, onTemplate, defaultLabel = 
     <div className="card">
       <h3>{t("القالب")}</h3>
       <p className="muted">
-        {isCustom ? t("يتم استخدام قالب مرفوع.", "Using an uploaded template.") : t(defaultLabel)}
+        {isCustom ? t("يتم استخدام قالب مرفوع.", "Using an uploaded template.") : bundled ? t("يتم استخدام قالب هذه المسابقة.", "Using this competition's template.") : t(defaultLabel)}
       </p>
       <div className="row">
         <button className="btn" onClick={() => input.current?.click()}>{t("رفع قالب…")}</button>

@@ -1,6 +1,7 @@
-import { forwardRef, type CSSProperties } from "react";
+import { forwardRef } from "react";
 import { centred } from "./live/H2HPoster";
-import type { MoroccanLayout } from "@/config/moroccanLayout";
+import PlayerSpotlight, { Img, MAX_TILES, type SpotlightStat } from "./PlayerSpotlight";
+import { DEFAULT_MOROCCAN_LAYOUT, type MoroccanLayout } from "@/config/moroccanLayout";
 import type { MoroccanHighlight } from "@/lib/moroccanHighlights";
 
 interface Props {
@@ -12,27 +13,31 @@ interface Props {
 const ORDINALS = ["الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس", "السابع", "الثامن", "التاسع", "العاشر"];
 export const ordinal = (rank: number) => ORDINALS[rank - 1] ?? `المركز ${rank}`;
 
-export function Img({ src, size, x, y, round, ring }: { src: string | null; size: number; x: number; y: number; round?: boolean; ring?: { width: number; color: string } }) {
-  const box: CSSProperties = {
-    position: "absolute", left: x, top: y, transform: "translate(-50%, -50%)", width: size, height: size,
-    objectFit: round ? "cover" : "contain", borderRadius: round ? "50%" : undefined,
-    background: round ? "#2b1a45" : undefined, boxSizing: "border-box",
-    border: ring ? `${ring.width}px solid ${ring.color}` : undefined,
-  };
-  // eslint-disable-next-line @next/next/no-img-element
-  return src ? <img src={src} alt="" style={box} /> : round ? <div style={box} /> : null;
+/** Picks that are all one player, tile-sized: those make his own poster. */
+export const onePlayer = (list: MoroccanHighlight[]) =>
+  list.length > 0 && list.length <= MAX_TILES && list.every((h) => h.playerId === list[0].playerId);
+
+/** His picks as tiles. The rank names the competition only when they differ. */
+export function highlightStats(list: MoroccanHighlight[]): SpotlightStat[] {
+  const oneCompetition = list.every((h) => h.competitionId === list[0].competitionId);
+  return list.map((h) => ({
+    key: h.key,
+    value: h.value,
+    label: h.category,
+    note: oneCompetition ? (h.rank <= ORDINALS.length ? `المركز ${ordinal(h.rank)}` : ordinal(h.rank)) : `${ordinal(h.rank)} في ${h.competition}`,
+    logo: oneCompetition ? null : h.competitionLogo,
+  }));
 }
 
 /**
- * Moroccan players' standout statistics: several highlights as a roundup, or
- * one player alone as a spotlight: the leaderboard place, the value and the
- * competition it was earned in. Every size and position comes from MoroccanLayout.
+ * Moroccan players' standout statistics: a roundup of several players, or one
+ * player's own poster, however many of his statistics are picked. Every size
+ * and position comes from MoroccanLayout.
  */
 const MoroccanPoster = forwardRef<HTMLDivElement, Props>(function MoroccanPoster({ highlights, layout, templateSrc }, ref) {
   const L = layout;
-  const solo = highlights.length === 1 ? highlights[0] : null;
+  const solo = onePlayer(highlights) ? highlights[0] : null;
   const R = L.roundup;
-  const S = L.spotlight;
   // However many are picked, they end above lastRowY: the pitch shrinks, and
   // everything inside a row with it.
   const pitch = highlights.length > 1 ? Math.min(R.rowHeight, (R.lastRowY - R.firstRowY) / (highlights.length - 1)) : R.rowHeight;
@@ -51,29 +56,20 @@ const MoroccanPoster = forwardRef<HTMLDivElement, Props>(function MoroccanPoster
         // eslint-disable-next-line @next/next/no-img-element
         <img src={templateSrc} alt="" width={L.width} height={L.height} style={{ position: "absolute", inset: 0, width: L.width, height: L.height, objectFit: "cover" }} />
       )}
-      {L.title.show && (
+      {!solo && L.title.show && (
         <div style={{ ...centred(L.title.x, L.title.y), fontSize: L.title.fontSize, fontWeight: 900, color: L.title.color }}>{L.title.text || "المغاربة في الصدارة"}</div>
       )}
-      {L.subtitle.show && (
+      {!solo && L.subtitle.show && (
         <div style={{ ...centred(L.subtitle.x, L.subtitle.y), fontSize: L.subtitle.fontSize, fontWeight: 700, color: L.subtitle.color }}>{L.subtitle.text || "إحصائيات الموسم"}</div>
       )}
 
       {solo ? (
-        <>
-          <Img src={solo.photo} size={S.faceSize} x={L.width / 2} y={S.faceY} round ring={{ width: S.ringWidth, color: S.ringColor }} />
-          <Img src={solo.clubLogo} size={S.clubSize} x={L.width / 2 + S.faceSize * 0.36} y={S.faceY + S.faceSize * 0.36} />
-          <div style={{ ...centred(L.width / 2, S.nameY), fontSize: S.nameFontSize, fontWeight: 900, color: S.nameColor }}>{solo.name}</div>
-          <div style={{ ...centred(L.width / 2, S.compY), display: "flex", alignItems: "center", gap: 12, fontSize: S.compFontSize, fontWeight: 700, color: S.compColor }}>
-            {solo.competitionLogo && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={solo.competitionLogo} alt="" style={{ width: S.compLogoSize, height: S.compLogoSize, objectFit: "contain" }} />
-            )}
-            <span>{solo.competition}</span>
-          </div>
-          <div style={{ ...centred(L.width / 2, S.valueY), direction: "ltr", fontSize: S.valueFontSize, fontWeight: 900, color: S.valueColor, lineHeight: 1 }}>{solo.value}</div>
-          <div style={{ ...centred(L.width / 2, S.categoryY), fontSize: S.categoryFontSize, fontWeight: 800, color: S.categoryColor }}>{solo.category}</div>
-          <div style={{ ...centred(L.width / 2, S.rankY), fontSize: S.rankFontSize, fontWeight: 700, color: S.rankColor }}>{ordinal(solo.rank)} في {solo.competition}</div>
-        </>
+        <PlayerSpotlight
+          width={L.width} layout={L.player} photo={solo.photo} clubLogo={solo.clubLogo} name={solo.name}
+          title={L.title.show ? (L.title.text && L.title.text !== DEFAULT_MOROCCAN_LAYOUT.title.text ? L.title.text : "إحصائيات الموسم") : null}
+          subtitle={L.subtitle.show ? L.subtitle.text || (highlights.every((h) => h.competitionId === solo.competitionId) ? solo.competition : null) : null}
+          stats={highlightStats(highlights)}
+        />
       ) : (
         highlights.map((h, i) => {
           const y = R.firstRowY + i * pitch;

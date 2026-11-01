@@ -123,7 +123,7 @@ export default function PosterExport<L>({
             </div>
             <div className="kxp-right">
               {aside}
-              <TemplateUploader isCustom={Boolean(templateSrc)} onTemplate={onTemplate} defaultLabel={t("لا يوجد قالب — تُستخدم خلفية الملصق الافتراضية.")} />
+              <TemplateUploader isCustom={Boolean(templateSrc)} bundled={Boolean(fallbackTemplate)} onTemplate={onTemplate} defaultLabel={t("لا يوجد قالب — تُستخدم خلفية الملصق الافتراضية.")} />
               {design(layout, updateLayout)}
             </div>
           </div>

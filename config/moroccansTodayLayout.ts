@@ -1,4 +1,6 @@
 // "Moroccans today" poster layout (1080x1350): who played and what they did.
+import { DEFAULT_PLAYER_SPOTLIGHT, type PlayerSpotlightLayout } from "./playerSpotlight";
+
 export interface MTText { show: boolean; text?: string; x: number; y: number; fontSize: number; color: string }
 
 export interface MoroccansTodayLayout {
@@ -7,6 +9,7 @@ export interface MoroccansTodayLayout {
   title: MTText;
   subtitle: MTText;
   footer: MTText;
+  player: PlayerSpotlightLayout;
   rows: {
     firstRowY: number;
     /** Row pitch; a long list shrinks to end above lastRowY. */
@@ -38,6 +41,7 @@ export const DEFAULT_MOROCCANS_TODAY_LAYOUT: MoroccansTodayLayout = {
   title: { show: true, text: "", x: 540, y: 96, fontSize: 58, color: "#ffffff" },
   subtitle: { show: true, text: "", x: 540, y: 156, fontSize: 26, color: "#f6c744" },
   footer: { show: true, text: "Choufsport", x: 540, y: 1292, fontSize: 22, color: "#ffffff" },
+  player: DEFAULT_PLAYER_SPOTLIGHT,
   rows: {
     firstRowY: 270,
     rowHeight: 150,

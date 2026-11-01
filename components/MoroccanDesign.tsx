@@ -1,5 +1,6 @@
 import type { MoroccanLayout } from "@/config/moroccanLayout";
 import { Color, Num, Text, Toggle } from "./live/designControls";
+import PlayerSpotlightDesign from "./PlayerSpotlightDesign";
 import { useLang } from "@/lib/prefs";
 
 interface Props {
@@ -8,9 +9,8 @@ interface Props {
 }
 
 type RKey = keyof Omit<MoroccanLayout["roundup"], "card">;
-type SKey = keyof MoroccanLayout["spotlight"];
 
-/** Every value the Moroccan players poster reads, roundup and spotlight. */
+/** Every value the Moroccan players poster reads, for several players or one. */
 export default function MoroccanDesign({ layout, onChange }: Props) {
   const { t } = useLang();
   const up = (fn: (n: MoroccanLayout) => void) => {
@@ -19,12 +19,9 @@ export default function MoroccanDesign({ layout, onChange }: Props) {
     onChange(n);
   };
   const R = layout.roundup;
-  const S = layout.spotlight;
   const C = R.card;
   const rNum = (k: RKey, label: string) => <Num key={k} label={t(label)} value={R[k] as number} onChange={(v) => up((n) => { (n.roundup[k] as number) = v; })} />;
   const rColor = (k: RKey, label: string) => <Color key={k} label={t(label)} value={R[k] as string} onChange={(v) => up((n) => { (n.roundup[k] as string) = v; })} />;
-  const sNum = (k: SKey, label: string) => <Num key={k} label={t(label)} value={S[k] as number} onChange={(v) => up((n) => { (n.spotlight[k] as number) = v; })} />;
-  const sColor = (k: SKey, label: string) => <Color key={k} label={t(label)} value={S[k] as string} onChange={(v) => up((n) => { (n.spotlight[k] as string) = v; })} />;
 
   const textBlock = (key: "title" | "subtitle" | "footer", name: string, textLabel: string) => {
     const tx = layout[key];
@@ -86,30 +83,7 @@ export default function MoroccanDesign({ layout, onChange }: Props) {
         <Color label={t("لون البطاقة")} value={C.color} onChange={(v) => up((n) => (n.roundup.card.color = v))} />
       </div>
 
-      <h4>{t("البطاقة الفردية (لاعب واحد)")}</h4>
-      <div className="grid">
-        {sNum("faceY", "موضع الصورة")}
-        {sNum("faceSize", "حجم الصورة")}
-        {sNum("ringWidth", "سمك الإطار")}
-        {sColor("ringColor", "لون الإطار")}
-        {sNum("clubSize", "حجم شعار النادي")}
-        {sNum("nameY", "موضع الاسم")}
-        {sNum("nameFontSize", "حجم الاسم")}
-        {sColor("nameColor", "لون الاسم")}
-        {sNum("compY", "موضع المسابقة")}
-        {sNum("compLogoSize", "حجم شعار المسابقة")}
-        {sNum("compFontSize", "حجم اسم المسابقة")}
-        {sColor("compColor", "لون المسابقة")}
-        {sNum("valueY", "موضع الرقم")}
-        {sNum("valueFontSize", "حجم الرقم")}
-        {sColor("valueColor", "لون الرقم")}
-        {sNum("categoryY", "موضع الإحصائية")}
-        {sNum("categoryFontSize", "حجم الإحصائية")}
-        {sColor("categoryColor", "لون الإحصائية")}
-        {sNum("rankY", "موضع سطر الترتيب")}
-        {sNum("rankFontSize", "حجم سطر الترتيب")}
-        {sColor("rankColor", "لون سطر الترتيب")}
-      </div>
+      <PlayerSpotlightDesign layout={layout.player} onChange={(v) => up((n) => { n.player = v; })} />
 
       {textBlock("footer", "التذييل", "نص التذييل")}
     </details>

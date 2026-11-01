@@ -101,7 +101,7 @@ export const EN: Record<string, string> = {
   "الخصم (عند تصدير فريق واحد)": "Opponent (when exporting one team)",
   "الخطة": "Formation",
   "الخطوط والألوان": "Lines and colours",
-  "الدوليون المغاربة ضمن أفضل 20 في إحصائيات كل مسابقة. اختر إحصائية واحدة لبطاقة فردية، أو عدة إحصائيات لقائمة.": "Morocco internationals in the top 20 of each competition's stats. Pick one stat for a spotlight, or several for a list.",
+  "الدوليون المغاربة ضمن أفضل 20 في إحصائيات كل مسابقة. إحصائيات لاعب واحد تعطي بطاقة فردية، وعدة لاعبين يعطون قائمة.": "Morocco internationals in the top 20 of each competition's stats. One player's stats make a single-player poster, several players make a list.",
   "السجل": "Record",
   "السطر الإضافي": "Extra line",
   "الشفافية": "Opacity",
