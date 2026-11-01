@@ -10,7 +10,6 @@ import "@fontsource/cairo/400.css";
 import "@fontsource/cairo/700.css";
 import "@fontsource/cairo/800.css";
 import "@fontsource/cairo/900.css";
-import "@fontsource-variable/alexandria";
 import { useEffect } from "react";
 import { useRouter } from "next/router";
 import type { AppProps } from "next/app";

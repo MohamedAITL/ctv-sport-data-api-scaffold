@@ -1186,6 +1186,13 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
    mirror the scoreline against the pitch beneath it. */
 .ks-head, .ks-bars, .kx-list, .kf-block li.paired, .ke, .kh2h, .kpv-row, .kt-pair { direction: rtl; }
 
+/* Latin and digits only, so Studio's Arabic falls through to Rubik. Unused by this design, so never downloaded here. */
+@font-face {
+  font-family: "Alexandria Latin"; font-style: normal; font-weight: 100 900; font-display: swap;
+  src: url("../node_modules/@fontsource-variable/alexandria/files/alexandria-latin-wght-normal.woff2") format("woff2-variations");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 /* The Studio design's icons: hidden here, so this design keeps its text labels. */
 .ico { display: none; }
 .glyph { display: inline; }
