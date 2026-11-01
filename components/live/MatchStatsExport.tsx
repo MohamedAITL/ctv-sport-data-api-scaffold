@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import MatchStatsPoster from "./MatchStatsPoster";
 import MatchStatsDesign from "./MatchStatsDesign";
 import PosterExport from "./PosterExport";
+import { statsTitles } from "@/lib/liveTitles";
 import { COMPETITION_BACKGROUNDS, withBackgroundFooter } from "@/config/templates";
 import { DEFAULT_MATCH_STATS_LAYOUT, type MatchStatsLayout } from "@/config/matchStatsLayout";
 import type { LiveDetail, LiveMatch, StatRow } from "@/types/live";
@@ -77,6 +78,7 @@ export default function MatchStatsExport({ match, onClose }: { match: LiveMatch;
       poster={(ref, l, tpl) => d && group && (
         <MatchStatsPoster ref={ref} match={d.match} rows={rows} period={period === 0 ? null : group.name} layout={withBackgroundFooter(l, match.competitionId, tpl)} templateSrc={tpl} />
       )}
+      titles={() => (d ? statsTitles(d.match, all, period === 0 ? null : group?.name ?? null) : [])}
       design={(l, set) => <MatchStatsDesign layout={l} onChange={set} />}
       note={() => d && rows.length === 0 && <p className="kxp-note">{t("اختر إحصائية واحدة على الأقل لتظهر على الملصق.")}</p>}
       aside={d && group && (

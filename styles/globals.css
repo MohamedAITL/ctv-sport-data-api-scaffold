@@ -1255,6 +1255,13 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
     width: clamp(54px, 8vh, 74px) !important; height: clamp(54px, 8vh, 74px) !important;
   }
 }
+/* Picks one player in a click: several are ticked when the list opens. */
+.pick-only {
+  flex: none; min-height: 34px; margin-inline-start: auto; padding: 0 12px; cursor: pointer;
+  font-family: inherit; font-size: 13px; font-weight: 800; color: var(--text);
+  background: var(--panel-2); border: 1px solid var(--border-2); border-radius: 8px;
+}
+.pick-only:hover { border-color: var(--accent); }
 /* Only the new design has a goal banner. */
 .kh-goal { display: none; }
 /* Export status: waiting for images is not a failure, and a download says it worked. */

@@ -186,6 +186,10 @@ export default function MoroccansTodayStudio() {
                     {range !== "week" && dayRows[i].isLive && <>{" · "}<b className="ma-live">{dayRows[i].clock || t("مباشر", "Live")}</b></>}
                     {l.chips.length > 0 && <>{" · "}<bdi>{l.chips.join("، ")}</bdi></>}
                   </span>
+                  <button
+                    type="button" className="pick-only" aria-label={t(`${l.name} فقط`, `Only ${l.name}`)}
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPicks([l.key]); }}
+                  >{t("فقط", "Only")}</button>
                 </label>
               ))}
             </div>

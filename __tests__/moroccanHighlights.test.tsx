@@ -1,6 +1,6 @@
 import { render } from "@testing-library/react";
 import { pickHighlights, type MoroccanHighlight } from "../lib/moroccanHighlights";
-import MoroccanPoster, { highlightStats, onePlayer } from "@/components/MoroccanPoster";
+import MoroccanPoster, { highlightStats, onePlayer, posterHighlights } from "@/components/MoroccanPoster";
 import { tileRows } from "@/components/PlayerSpotlight";
 import { DEFAULT_MOROCCAN_LAYOUT } from "../config/moroccanLayout";
 import type { StatCategory } from "../lib/scores365Stats";
@@ -66,9 +66,23 @@ describe("MoroccanPoster", () => {
     expect(stats.map((s) => s.note)).toEqual(["الثاني في الدوري الإسباني", "الثاني في دوري الأبطال"]);
   });
 
-  it("keeps too many stats of one player as a list", () => {
-    expect(onePlayer(Array.from({ length: 7 }, (_, i) => ({ ...hl(1), key: String(i) })))).toBe(false);
+  it("keeps one player's poster however many stats he has, showing his best six", () => {
+    const many = Array.from({ length: 20 }, (_, i) => ({ ...hl(1), key: String(i), rank: 20 - i }));
+    expect(onePlayer(many)).toBe(true);
+    const shown = posterHighlights(many);
+    expect(shown.map((h) => h.rank)).toEqual([1, 2, 3, 4, 5, 6]);
+    const { container } = render(<MoroccanPoster highlights={many} layout={DEFAULT_MOROCCAN_LAYOUT} templateSrc={null} />);
+    expect(container.textContent).not.toContain("#");
+  });
+
+  it("puts a card count behind his better stats", () => {
+    const cards = { ...hl(1), key: "c", rank: 1, negative: true };
+    expect(posterHighlights([cards, { ...hl(1), rank: 9 }])[0].rank).toBe(9);
+  });
+
+  it("two players stay a list", () => {
     expect(onePlayer([hl(1), hl(2)])).toBe(false);
+    expect(posterHighlights([hl(1), hl(2)])).toHaveLength(2);
   });
 
   it("lays tiles out in rows", () => {

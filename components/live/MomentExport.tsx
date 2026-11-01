@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import GoalPoster from "./GoalPoster";
 import GoalDesign from "./GoalDesign";
-import GoalTitles from "./GoalTitles";
 import FullTimePoster from "./FullTimePoster";
 import FullTimeDesign from "./FullTimeDesign";
 import PosterExport from "./PosterExport";
@@ -9,6 +8,7 @@ import { DEFAULT_GOAL_LAYOUT, type GoalLayout } from "@/config/goalLayout";
 import { DEFAULT_FULL_TIME_LAYOUT, type FullTimeLayout } from "@/config/fullTimeLayout";
 import { COMPETITION_BACKGROUNDS, withBackgroundFooter } from "@/config/templates";
 import { goalTitles } from "@/lib/goalTitles";
+import { resultTitles } from "@/lib/liveTitles";
 import { goalsAddUp } from "@/lib/goals";
 import type { LiveDetail, LiveMatch } from "@/types/live";
 import { useLang } from "@/lib/prefs";
@@ -70,8 +70,10 @@ export default function MomentExport({ match, initial, onClose }: { match: LiveM
             : t("قائمة الهدافين غير مكتملة، فلا تظهر على الملصق.", "The scorer list is incomplete, so it is left off the poster.")}
         </p>
       )}
-      aside={d && (
-        <>
+      titles={() => (!d ? [] : goal
+        ? goalTitles(d.match, goal, addsUp ? d.goals : null)
+        : resultTitles(d.match, addsUp ? d.goals : null, d.shootout))}
+      lead={d && (
         <div className="card">
           <h3>{t("ماذا تريد نشره؟", "What do you want to post?")}</h3>
           <div className="kxp-moments">
@@ -85,8 +87,6 @@ export default function MomentExport({ match, initial, onClose }: { match: LiveM
             ))}
           </div>
         </div>
-        {goal && <GoalTitles key={goal.order} titles={goalTitles(d.match, goal, addsUp ? d.goals : null)} />}
-        </>
       )}
     />
   );

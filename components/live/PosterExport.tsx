@@ -2,6 +2,7 @@ import Loader from "@/components/Loader";
 import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import TemplateUploader from "../TemplateUploader";
+import PosterTitles from "./PosterTitles";
 import { clearTemplate, getTemplate, setTemplate } from "@/lib/db";
 import { downloadPoster, posterFilename } from "@/lib/exportPoster";
 import { deepMerge } from "@/lib/persist";
@@ -27,6 +28,10 @@ interface Props<L> {
   design: (layout: L, onChange: (next: L) => void) => ReactNode;
   /** Shown under the preview, e.g. when the current settings leave it empty. */
   note?: (layout: L) => ReactNode;
+  /** Chooses what the poster shows, so it comes first: above the titles. */
+  lead?: ReactNode;
+  /** Titles to post with this poster, built from what it shows. */
+  titles?: (layout: L) => string[];
   /** What goes on the poster (not how it looks): above the template and design. */
   aside?: ReactNode;
 }
@@ -37,7 +42,7 @@ interface Props<L> {
  * contract as the poster pages, in a window over the kiosk.
  */
 export default function PosterExport<L>({
-  title, layoutKey, templateKey, fallbackTemplate, defaults, fileBase, ready, error, onClose, poster, design, note, aside,
+  title, layoutKey, templateKey, fallbackTemplate, defaults, fileBase, ready, error, onClose, poster, design, note, lead, titles, aside,
 }: Props<L>) {
   const { t } = useLang();
   const posterRef = useRef<HTMLDivElement>(null);
@@ -122,6 +127,8 @@ export default function PosterExport<L>({
               </div>
             </div>
             <div className="kxp-right">
+              {lead}
+              {titles && <PosterTitles titles={titles(layout)} />}
               {aside}
               <TemplateUploader isCustom={Boolean(templateSrc)} bundled={Boolean(fallbackTemplate)} onTemplate={onTemplate} defaultLabel={t("لا يوجد قالب — تُستخدم خلفية الملصق الافتراضية.")} />
               {design(layout, updateLayout)}

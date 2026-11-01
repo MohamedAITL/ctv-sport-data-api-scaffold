@@ -13,9 +13,14 @@ interface Props {
 const ORDINALS = ["الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس", "السابع", "الثامن", "التاسع", "العاشر"];
 export const ordinal = (rank: number) => ORDINALS[rank - 1] ?? `المركز ${rank}`;
 
-/** Picks that are all one player, tile-sized: those make his own poster. */
+/** Picks that are all one player make his own poster, however many there are. */
 export const onePlayer = (list: MoroccanHighlight[]) =>
-  list.length > 0 && list.length <= MAX_TILES && list.every((h) => h.playerId === list[0].playerId);
+  list.length > 0 && list.every((h) => h.playerId === list[0].playerId);
+
+/** What the poster prints: one player's best stats (the tiles hold six), or every pick. */
+export const posterHighlights = (list: MoroccanHighlight[]) => (onePlayer(list)
+  ? [...list].sort((a, b) => Number(a.negative) - Number(b.negative) || a.rank - b.rank).slice(0, MAX_TILES)
+  : list);
 
 /** His picks as tiles. The rank names the competition only when they differ. */
 export function highlightStats(list: MoroccanHighlight[]): SpotlightStat[] {
@@ -34,8 +39,9 @@ export function highlightStats(list: MoroccanHighlight[]): SpotlightStat[] {
  * player's own poster, however many of his statistics are picked. Every size
  * and position comes from MoroccanLayout.
  */
-const MoroccanPoster = forwardRef<HTMLDivElement, Props>(function MoroccanPoster({ highlights, layout, templateSrc }, ref) {
+const MoroccanPoster = forwardRef<HTMLDivElement, Props>(function MoroccanPoster({ highlights: picks, layout, templateSrc }, ref) {
   const L = layout;
+  const highlights = posterHighlights(picks);
   const solo = onePlayer(highlights) ? highlights[0] : null;
   const R = L.roundup;
   // However many are picked, they end above lastRowY: the pitch shrinks, and

@@ -3,6 +3,7 @@ import LineupPoster, { type LineupTeams } from "./LineupPoster";
 import LineupDesign from "./LineupDesign";
 import LineupSwaps, { withSwaps, type Swaps } from "./LineupSwaps";
 import PosterExport from "./PosterExport";
+import { lineupTitles } from "@/lib/liveTitles";
 import { COMPETITION_BACKGROUNDS, withBackgroundFooter } from "@/config/templates";
 import { DEFAULT_LINEUP_LAYOUT, type LineupLayout } from "@/config/lineupLayout";
 import type { LiveDetail, LiveMatch } from "@/types/live";
@@ -77,9 +78,9 @@ export default function LineupExport({ match, onClose }: { match: LiveMatch; onC
       poster={(ref, l, tpl) => d && home && away && (
         <LineupPoster ref={ref} match={d.match} home={home} away={away} team={team} layout={withBackgroundFooter(l, match.competitionId, tpl)} templateSrc={tpl} />
       )}
+      titles={() => (d && home && away ? lineupTitles(d.match, home, away, team) : [])}
       design={(l, set) => <LineupDesign layout={l} onChange={set} />}
-      aside={d?.homeLineup && d.awayLineup && (
-        <>
+      lead={d && (
           <div className="card">
             <h3>{t("الفريق")}</h3>
             <div className="kxp-actions kxp-pick">
@@ -90,6 +91,8 @@ export default function LineupExport({ match, onClose }: { match: LiveMatch; onC
               ))}
             </div>
           </div>
+      )}
+      aside={d?.homeLineup && d.awayLineup && (
           <details className="card collapsible">
             <summary><h3>{t("تعديل التشكيلة")}</h3><span className="chev" /></summary>
             <p className="muted">{t("اختر لاعباً من الاحتياط ليأخذ مكان أي لاعب أساسي.")}</p>
@@ -99,7 +102,6 @@ export default function LineupExport({ match, onClose }: { match: LiveMatch; onC
               <button type="button" className="btn ghost" onClick={() => saveSwaps({})}>{t("إلغاء كل التبديلات")}</button>
             )}
           </details>
-        </>
       )}
     />
   );

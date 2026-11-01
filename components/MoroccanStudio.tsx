@@ -1,6 +1,7 @@
 import Loader from "./Loader";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import MoroccanPoster, { ordinal } from "./MoroccanPoster";
+import MoroccanPoster, { onePlayer, ordinal, posterHighlights } from "./MoroccanPoster";
+import { MAX_TILES } from "./PlayerSpotlight";
 import MoroccanDesign from "./MoroccanDesign";
 import TemplateUploader from "./TemplateUploader";
 import ExportControls from "./ExportControls";
@@ -85,7 +86,7 @@ export default function MoroccanStudio() {
   }, [missingKey, retry]);
 
   const onPoster = picked.map((h) => inlined.get(h.key) ?? bare(h));
-  const competition = sharedCompetition(picked.map((h) => h.competitionId));
+  const competition = sharedCompetition(posterHighlights(picked).map((h) => h.competitionId));
   const background = backgroundFor(templateSrc, competition);
 
   // The list, by player: each Moroccan once, with every leaderboard he is in.
@@ -130,6 +131,9 @@ export default function MoroccanStudio() {
         {all.length > 0 && (
           <details className="card collapsible" open>
             <summary><h3>{t("اختيار الإحصائيات (")}{picked.length})</h3><span className="chev" /></summary>
+            {onePlayer(picked) && picked.length > MAX_TILES && (
+              <p className="muted">{t(`يعرض الملصق أفضل ${MAX_TILES} إحصائيات للاعب. ألغِ تحديد ما لا تريده لتغييرها.`, `The poster shows this player's best ${MAX_TILES} stats. Untick any you don't want to change them.`)}</p>
+            )}
             <div className="row">
               <button type="button" className="btn ghost" onClick={() => savePicks(null)}>{t("الأفضل (")}{best.length})</button>
               <button type="button" className="btn ghost" onClick={() => savePicks(all.filter((h) => showNegative || !h.negative).map((h) => h.key))}>{t("الكل")}</button>
@@ -154,6 +158,10 @@ export default function MoroccanStudio() {
                         onClick={(e) => e.stopPropagation()} onChange={(e) => toggle(list, e.target.checked)}
                       />
                       <b>{list[0].name}</b> <span className="muted">({on}/{list.length})</span>
+                      <button
+                        type="button" className="pick-only" aria-label={t(`${list[0].name} فقط`, `Only ${list[0].name}`)}
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); savePicks(list.map((h) => h.key)); }}
+                      >{t("فقط", "Only")}</button>
                     </summary>
                     {list.map((h) => (
                       <label key={h.key} className="field check pick-match">
