@@ -167,7 +167,7 @@ export default function StatsPage() {
             </div>
 
             <TemplateUploader isCustom={Boolean(templateSrc)} bundled={Boolean(background)} onTemplate={onTemplate} defaultLabel={t("لا يوجد قالب بعد — يتم استخدام خلفية بسيطة. ارفع قالب الإحصائيات.")} resetLabel={t("حذف القالب")} />
-            <ExportControls posterRef={posterRef} canExport={rows.length > 0} blocked={rows.length === 0 ? t("لا توجد بيانات لهذه الإحصائية بعد", "No data for this stat yet") : null} onResetDesign={() => updateLayout(DEFAULT_STATS_LAYOUT)} fileBase={`choufsport-stats-${catKey || "none"}`} />
+            <ExportControls posterRef={posterRef} canExport={rows.length > 0} blocked={rows.length === 0 && !loading && forLeague ? t("لا توجد بيانات لهذه الإحصائية بعد", "No data for this stat yet") : null} onResetDesign={() => updateLayout(DEFAULT_STATS_LAYOUT)} fileBase={`choufsport-stats-${catKey || "none"}`} />
 
             <StatsDesign layout={layout} onChange={updateLayout} />
           </section>

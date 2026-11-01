@@ -180,7 +180,11 @@ export default function RoundPage() {
   // a normal state, so say so plainly instead of exporting an empty poster.
   const empty = !loading && forLeague !== null && rounds.length === 0;
   const background = backgroundFor(templateSrc, league);
-  const exportBlock = empty
+  // Still arriving is not a failure: the buttons wait, and no red line shows.
+  const arriving = !empty && (loading || !forLeague || round === null);
+  const exportBlock = arriving
+    ? null
+    : empty
     ? t("جدول هذه البطولة غير منشور بعد", "This competition's schedule is not published yet")
     : matches.length === 0
     ? t("لا توجد مباريات في هذه الجولة بعد", "No matches in this round yet")
