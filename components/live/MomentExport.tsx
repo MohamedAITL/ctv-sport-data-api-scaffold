@@ -6,6 +6,7 @@ import FullTimeDesign from "./FullTimeDesign";
 import PosterExport from "./PosterExport";
 import { DEFAULT_GOAL_LAYOUT, type GoalLayout } from "@/config/goalLayout";
 import { DEFAULT_FULL_TIME_LAYOUT, type FullTimeLayout } from "@/config/fullTimeLayout";
+import { MOMENT_BACKGROUNDS } from "@/config/templates";
 import { goalsAddUp } from "@/lib/goals";
 import type { LiveDetail, LiveMatch } from "@/types/live";
 import { useLang } from "@/lib/prefs";
@@ -41,20 +42,25 @@ export default function MomentExport({ match, initial, onClose }: { match: LiveM
   const goal = d && pick !== "final" ? d.goals[pick] ?? null : null;
   // Mid-update the goals can trail the score: print the match's score, never a wrong one.
   const addsUp = d ? goalsAddUp(d.goals, d.match) : true;
+  const background = MOMENT_BACKGROUNDS[match.competitionId];
+  // A background that prints its own footer replaces ours; an upload does not.
+  const noFooter = <T extends { footer: { show: boolean } }>(l: T, tpl: string | null): T =>
+    background?.branded && tpl === background.src ? { ...l, footer: { ...l.footer, show: false } } : l;
 
   return (
     <PosterExport<MomentLayout>
       title={goal ? t("ملصق الهدف", "Goal poster") : t("ملصق النتيجة", "Result poster")}
-      layoutKey="botola.momentLayout"
+      layoutKey="botola.momentLayout2"
       templateKey={goal ? "goal" : "fullTime"}
+      fallbackTemplate={background?.src}
       defaults={DEFAULTS}
       fileBase={`choufsport-${goal ? `goal-${goal.order}` : "result"}-${match.home.id}-${match.away.id}`}
       ready={Boolean(d)}
       error={error}
       onClose={onClose}
       poster={(ref, l, tpl) => d && (goal
-        ? <GoalPoster ref={ref} match={d.match} goal={goal} score={addsUp ? goal.score : { home: d.match.home.score, away: d.match.away.score }} layout={l.goal} templateSrc={tpl} />
-        : <FullTimePoster ref={ref} match={d.match} goals={addsUp ? d.goals : []} shootout={d.shootout} layout={l.final} templateSrc={tpl} />
+        ? <GoalPoster ref={ref} match={d.match} goal={goal} score={addsUp ? goal.score : { home: d.match.home.score, away: d.match.away.score }} layout={noFooter(l.goal, tpl)} templateSrc={tpl} />
+        : <FullTimePoster ref={ref} match={d.match} goals={addsUp ? d.goals : []} shootout={d.shootout} layout={noFooter(l.final, tpl)} templateSrc={tpl} />
       )}
       design={(l, set) => (goal
         ? <GoalDesign layout={l.goal} onChange={(n) => set({ ...l, goal: n })} />

@@ -7,7 +7,7 @@ import type { NormalizedStandings, TeamRow } from "@/types/standings";
 import { BOTOLA_LEAGUE } from "@/config/standingsLeagues";
 
 const API = "https://webws.365scores.com/web/standings/";
-const IMG = "https://imagecache.365scores.com/image/upload/f_png,w_100,h_100,c_limit,q_auto";
+const IMG = "https://imagecache.365scores.com/image/upload/e_trim/f_png,w_100,h_100,c_limit,q_auto";
 
 interface S365Competitor {
   id?: number;

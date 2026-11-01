@@ -28,14 +28,14 @@ export interface GoalLayout {
 export const DEFAULT_GOAL_LAYOUT: GoalLayout = {
   width: 1080,
   height: 1350,
-  title: { show: true, text: "", x: 540, y: 104, fontSize: 112, color: "#f6c744" },
-  subtitle: { show: true, text: "", x: 540, y: 196, fontSize: 30, color: "#ffffff" },
-  face: { show: true, x: 540, y: 520, size: 500, ringWidth: 12, ringColor: "#f6c744", background: "#3b2a5e" },
-  name: { show: true, x: 540, y: 838, fontSize: 76, color: "#ffffff" },
-  minute: { show: true, x: 540, y: 930, fontSize: 40, color: "#2a1340", background: "#f6c744", radius: 14 },
+  title: { show: true, text: "", x: 540, y: 92, fontSize: 96, color: "#f6c744" },
+  subtitle: { show: true, text: "", x: 540, y: 164, fontSize: 30, color: "#ffffff" },
+  face: { show: true, x: 540, y: 462, size: 460, ringWidth: 12, ringColor: "#f6c744", background: "#3b2a5e" },
+  name: { show: true, x: 540, y: 752, fontSize: 72, color: "#ffffff" },
+  minute: { show: true, x: 540, y: 842, fontSize: 40, color: "#2a1340", background: "#f6c744", radius: 14 },
   score: {
-    show: true, y: 1120, crestSize: 132, nearX: 850, farX: 230, nameDy: 100,
+    show: true, y: 1050, crestSize: 132, nearX: 830, farX: 250, nameDy: 100,
     nameFontSize: 30, nameColor: "#ffffff", fontSize: 112, color: "#ffffff",
   },
-  footer: { show: true, text: "Choufsport", x: 540, y: 1298, fontSize: 22, color: "#ffffff" },
+  footer: { show: true, text: "Choufsport", x: 540, y: 1288, fontSize: 22, color: "#ffffff" },
 };

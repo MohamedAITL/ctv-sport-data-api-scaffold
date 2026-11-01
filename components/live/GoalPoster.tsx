@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import { Crest, centred } from "./H2HPoster";
+import { fitFont } from "./FullTimePoster";
 import type { GoalLayout } from "@/config/goalLayout";
 import type { Goal, LiveMatch } from "@/types/live";
 
@@ -62,7 +63,7 @@ const GoalPoster = forwardRef<HTMLDivElement, Props>(function GoalPoster({ match
       )}
 
       {L.name.show && goal.player && (
-        <div style={{ ...centred(L.name.x, L.name.y), fontSize: L.name.fontSize, fontWeight: 900, color: L.name.color, maxWidth: L.width - 80, overflow: "hidden", textOverflow: "ellipsis" }}>
+        <div style={{ ...centred(L.name.x, L.name.y), fontSize: fitFont(goal.player ?? "", L.name.fontSize, L.width - 180), fontWeight: 900, color: L.name.color }}>
           {goal.player}
         </div>
       )}
@@ -76,8 +77,8 @@ const GoalPoster = forwardRef<HTMLDivElement, Props>(function GoalPoster({ match
         <>
           <Crest src={match.home.logo} size={S.crestSize} x={S.nearX} y={S.y} />
           <Crest src={match.away.logo} size={S.crestSize} x={S.farX} y={S.y} />
-          <div style={{ ...centred(S.nearX, S.y + S.nameDy), fontSize: S.nameFontSize, fontWeight: 800, color: S.nameColor, maxWidth: 380, overflow: "hidden", textOverflow: "ellipsis" }}>{match.home.name}</div>
-          <div style={{ ...centred(S.farX, S.y + S.nameDy), fontSize: S.nameFontSize, fontWeight: 800, color: S.nameColor, maxWidth: 380, overflow: "hidden", textOverflow: "ellipsis" }}>{match.away.name}</div>
+          <div style={{ ...centred(S.nearX, S.y + S.nameDy), fontSize: fitFont(match.home.name, S.nameFontSize, 360), fontWeight: 800, color: S.nameColor }}>{match.home.name}</div>
+          <div style={{ ...centred(S.farX, S.y + S.nameDy), fontSize: fitFont(match.away.name, S.nameFontSize, 360), fontWeight: 800, color: S.nameColor }}>{match.away.name}</div>
           {/* Left to right, following the crests: away on the left, home on the right. */}
           <div style={{ ...centred(L.width / 2, S.y), direction: "ltr", fontSize: S.fontSize, fontWeight: 900, color: S.color }}>
             {`${score.away ?? 0} - ${score.home ?? 0}`}

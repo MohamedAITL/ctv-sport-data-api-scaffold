@@ -15,6 +15,8 @@ interface Props<L> {
   layoutKey: string;
   /** IndexedDB key for this poster's uploaded template. */
   templateKey: string;
+  /** The background until a template is uploaded. */
+  fallbackTemplate?: string;
   defaults: L;
   fileBase: string;
   /** The poster's data has arrived (with its images inlined). */
@@ -35,7 +37,7 @@ interface Props<L> {
  * contract as the poster pages, in a window over the kiosk.
  */
 export default function PosterExport<L>({
-  title, layoutKey, templateKey, defaults, fileBase, ready, error, onClose, poster, design, note, aside,
+  title, layoutKey, templateKey, fallbackTemplate, defaults, fileBase, ready, error, onClose, poster, design, note, aside,
 }: Props<L>) {
   const { t } = useLang();
   const posterRef = useRef<HTMLDivElement>(null);
@@ -102,7 +104,7 @@ export default function PosterExport<L>({
               {/* The preview is the export node, so it is scaled, never resized. */}
               <div className="kxp-preview" style={{ width: PREVIEW_W, height: 1350 * scale }}>
                 <div style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}>
-                  {poster(posterRef, layout, templateSrc)}
+                  {poster(posterRef, layout, templateSrc ?? fallbackTemplate ?? null)}
                 </div>
               </div>
               {note?.(layout)}

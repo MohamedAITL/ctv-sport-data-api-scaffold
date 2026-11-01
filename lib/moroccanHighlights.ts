@@ -21,7 +21,7 @@ export interface MoroccanHighlight {
   negative: boolean;
 }
 
-const LOGO = "https://imagecache.365scores.com/image/upload/f_png,w_120,h_120,c_limit,q_auto/Competitions";
+const LOGO = "https://imagecache.365scores.com/image/upload/e_trim/f_png,w_120,h_120,c_limit,q_auto/Competitions";
 const NEGATIVE = /بطاقات/;
 
 /** Pure: the Moroccan rows of each competition's player leaderboards. */

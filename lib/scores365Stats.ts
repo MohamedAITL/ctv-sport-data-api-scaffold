@@ -8,6 +8,7 @@
 const API = "https://webws.365scores.com/web/stats/";
 const Q = "appTypeId=5&langId=27&timezoneName=Africa%2FCasablanca&userCountryId=127";
 const IMG = "https://imagecache.365scores.com/image/upload/f_png,w_120,h_120,c_limit,q_auto";
+const LOGO_IMG = IMG.replace("/f_png", "/e_trim/f_png");
 
 export interface StatRow {
   rank: number;
@@ -68,9 +69,9 @@ function mapBlock(b: S365Block, kind: "player" | "team"): StatCategory {
             ? `${IMG}/Athletes/${id}`
             : null
           : club
-          ? `${IMG}/Competitors/${club}`
+          ? `${LOGO_IMG}/Competitors/${club}`
           : null,
-      clubImage: kind === "player" && club ? `${IMG}/Competitors/${club}` : null,
+      clubImage: kind === "player" && club ? `${LOGO_IMG}/Competitors/${club}` : null,
     };
   });
   rows.sort((a, b2) => a.rank - b2.rank);

@@ -10,7 +10,7 @@ import TeamMappingEditor from "@/components/TeamMappingEditor";
 import DesignSettings from "@/components/DesignSettings";
 import ExportControls from "@/components/ExportControls";
 import { DEFAULT_LAYOUT, defaultLayoutFor, type LayoutConfig } from "@/config/defaultLayout";
-import { DEFAULT_LEAGUE, BOTOLA_LEAGUE, leagueById } from "@/config/standingsLeagues";
+import { DEFAULT_LEAGUE, leagueById } from "@/config/standingsLeagues";
 import type { TeamRow } from "@/types/standings";
 import { loadLayout, saveLayout, loadNameOverrides, saveNameOverrides } from "@/lib/persist";
 import {
@@ -23,18 +23,8 @@ import {
 } from "@/lib/db";
 import { useFitWidth } from "@/lib/useFitWidth";
 import { useLang } from "@/lib/prefs";
+import { BOTOLA_TEMPLATE, BUNDLED_TEMPLATES } from "@/config/templates";
 
-const BOTOLA_TEMPLATE = "/templates/botola.jpg";
-// The big competitions ship with a bundled template; the others start on a
-// plain background until the user uploads their own.
-const BUNDLED_TEMPLATES: Record<number, string> = {
-  [BOTOLA_LEAGUE]: BOTOLA_TEMPLATE,
-  572: "/templates/ucl.jpg",
-  11: "/templates/laliga.jpg",
-  17: "/templates/seriea.jpg",
-  25: "/templates/bundesliga.jpg",
-  35: "/templates/ligue1.jpg",
-};
 const defaultTemplateFor = (league: number) => BUNDLED_TEMPLATES[league] ?? "";
 const templateKey = (league: number) => `standings:${league}`;
 const LEAGUE_KEY = "botola.league";

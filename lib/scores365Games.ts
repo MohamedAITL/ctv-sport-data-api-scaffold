@@ -13,7 +13,7 @@ import { STANDINGS_LEAGUES } from "@/config/standingsLeagues";
 
 const API = "https://webws.365scores.com/web/games";
 const Q = "appTypeId=5&langId=27&timezoneName=Africa%2FCasablanca&userCountryId=127";
-const IMG = "https://imagecache.365scores.com/image/upload/f_png,w_100,h_100,c_limit,q_auto";
+const IMG = "https://imagecache.365scores.com/image/upload/e_trim/f_png,w_100,h_100,c_limit,q_auto";
 
 // Games with no round assigned yet (scheduled before the round is published).
 export const UNSCHEDULED_ROUND = -1;

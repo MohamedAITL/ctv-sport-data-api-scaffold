@@ -19,9 +19,11 @@ export const Q = "appTypeId=5&langId=27&timezoneName=Africa%2FCasablanca&userCou
 // placeholder instead of a 404 when a crest or player photo is missing, which
 // keeps a wall display free of broken images and the console free of noise.
 const IMG = "https://imagecache.365scores.com/image/upload/f_png,w_120,h_120,c_limit,q_auto";
-const CREST_IMG = `${IMG},d_Competitors:default1.png`;
+// `e_trim` cuts a logo's empty margins. Crests arrive with anything from none to
+// a third of the image, so equal boxes only show equal logos once those are gone.
+const CREST_IMG = `${IMG.replace("/f_png", "/e_trim/f_png")},d_Competitors:default1.png`;
 export const FACE_IMG = `${IMG},d_Athletes:default.png`;
-/** A poster draws a face far larger than the rail's thumbnail. */
+/** A poster draws a face or crest far larger than the rail's thumbnail. */
 export const bigFace = (url: string | null) => url && url.replace("w_120,h_120", "w_400,h_400");
 
 const FOOTBALL = 1;
@@ -41,7 +43,7 @@ export const crest = (id?: number, v?: number) =>
 // There is no Competitions default asset — verified 404 on competitions 5677
 // and 5509 with every casing — but the Competitors one renders, so it stands in
 // for a missing competition badge instead of a 404 on the wall display.
-const COMP_IMG = `${IMG},d_Competitors:default1.png`;
+const COMP_IMG = CREST_IMG;
 export const competitionLogo = (id: number) => `${COMP_IMG}/v1/Competitions/${id}`;
 
 // -1 is 365scores' "no score yet" sentinel.

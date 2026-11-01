@@ -502,7 +502,11 @@
 
 /* ---- live: pitch ---- */
 /* The header is taller at this type size; fullscreen keeps its own height. */
-:root[data-design="studio"] .kp:not(:fullscreen):not(.cssfull) .kp-pitch { max-height: calc(100vh - 482px); }
+:root[data-design="studio"]:not([data-rail="closed"]) .kp:not(:fullscreen):not(.cssfull) .kp-pitch { max-height: calc(100vh - 482px); }
+:root[data-design="studio"] .kp-pitch { transition: max-height 340ms var(--land); }
+@media (min-width: 761px) {
+  :root[data-design="studio"][data-rail="closed"] .kh-nums { font-size: 46px; }
+}
 :root[data-design="studio"] .kp-turf { border-radius: var(--radius); border: 0; background: #154c32; }
 :root[data-design="studio"] .kp-name { padding: 0 5px; border-radius: 2px; background: rgba(8, 5, 12, .62); text-shadow: none; }
 :root[data-design="studio"] .kp-rate, :root[data-design="studio"] .kpc-rate { border-radius: 2px; font-family: var(--display); background: #ffc94d; color: #1a1420; }
@@ -697,7 +701,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   :root[data-design="studio"] *, :root[data-design="studio"] *::before, :root[data-design="studio"] *::after { animation-delay: 0s !important; animation-timeline: auto !important; }
-  :root[data-design="studio"] .kiosk { transition: none; }
+  :root[data-design="studio"] .kiosk, :root[data-design="studio"] .kp-pitch { transition: none; }
 }
 @keyframes studio-strip { to { transform: translateX(56px); } }
 @keyframes studio-blink { 50% { opacity: .35; } }

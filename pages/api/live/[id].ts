@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { fetchLiveDetail } from "@/lib/live365";
+import { bigFace, fetchLiveDetail } from "@/lib/live365";
 import { inlineImages, toDataUrl } from "@/lib/inlineImage";
 import type { LineupPlayer, LiveDetail, TeamLineup } from "@/types/live";
 import { publicError } from "@/lib/publicError";
@@ -12,7 +12,7 @@ async function inlineForPoster(d: LiveDetail): Promise<LiveDetail> {
   const faces = (list: LineupPlayer[]) => inlineImages(list, (p) => p.photo, (p, photo) => ({ ...p, photo }));
   const xi = async (lu: TeamLineup | null) =>
     lu && { ...lu, starting: await faces(lu.starting), bench: await faces(lu.bench) };
-  const [homeLogo, awayLogo] = await Promise.all([toDataUrl(d.match.home.logo), toDataUrl(d.match.away.logo)]);
+  const [homeLogo, awayLogo] = await Promise.all([toDataUrl(bigFace(d.match.home.logo)), toDataUrl(bigFace(d.match.away.logo))]);
   const homeLineup = await xi(d.homeLineup);
   const awayLineup = await xi(d.awayLineup);
   const goals = await inlineImages(d.goals, (g) => g.photo, (g, photo) => ({ ...g, photo }));

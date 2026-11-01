@@ -39,7 +39,7 @@ export const DEFAULT_MATCH_STATS_LAYOUT: MatchStatsLayout = {
   title: { show: true, text: "إحصائيات المباراة", x: 540, y: 96, fontSize: 56, color: "#ffffff" },
   subtitle: { show: true, text: "", x: 540, y: 152, fontSize: 26, color: "#f6c744" },
   teams: {
-    show: true, y: 270, crestSize: 120, nearX: 850, farX: 230, nameDy: 96,
+    show: true, y: 270, crestSize: 132, nearX: 850, farX: 230, nameDy: 96,
     nameFontSize: 28, nameColor: "#ffffff", scoreFontSize: 72, scoreColor: "#ffffff",
     statusDy: 62, statusFontSize: 22, statusColor: "#f6c744",
   },
