@@ -67,6 +67,20 @@ export interface TeamLineup {
   coach: LineupPlayer | null;
 }
 
+/** A goal, counted for the side it helped: an own goal belongs to the other team. */
+export interface Goal {
+  /** The event it came from, to find it again in the timeline. */
+  order: number;
+  home: boolean;
+  /** "23'", or "90+12'" in added time. */
+  minute: string;
+  player: string | null;
+  photo: string | null;
+  kind: "field" | "penalty" | "own";
+  /** The score straight after this goal. */
+  score: { home: number; away: number };
+}
+
 export interface LiveEvent {
   competitorId: number;
   minute: string;
@@ -205,6 +219,10 @@ export interface LiveDetail {
   homeLineup: TeamLineup | null;
   awayLineup: TeamLineup | null;
   events: LiveEvent[];
+  /** The goals, oldest first. Shootout kicks are not goals: see `shootout`. */
+  goals: Goal[];
+  /** The penalty shootout's score, when the match went to one. */
+  shootout: { home: number; away: number } | null;
   /** Team statistics per published period; [0] is always the whole match. */
   statGroups: StatGroup[];
   /** Ball-in-play and time-wasted blocks, when the source publishes them. */

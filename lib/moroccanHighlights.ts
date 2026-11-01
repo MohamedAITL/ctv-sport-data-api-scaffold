@@ -1,5 +1,5 @@
 import { fetch365Stats, type StatCategory } from "./scores365Stats";
-import { moroccansByClub } from "./live365";
+import { bigFace, moroccansByClub } from "./live365";
 import { STANDINGS_LEAGUES } from "@/config/standingsLeagues";
 import type { MoroccanPlayer } from "@/types/live";
 
@@ -22,8 +22,6 @@ export interface MoroccanHighlight {
 }
 
 const LOGO = "https://imagecache.365scores.com/image/upload/f_png,w_120,h_120,c_limit,q_auto/Competitions";
-// The spotlight draws the face at ~500px: the 120px rail thumbnail would blur.
-const bigFace = (url: string | null) => url && url.replace("w_120,h_120", "w_400,h_400");
 const NEGATIVE = /بطاقات/;
 
 /** Pure: the Moroccan rows of each competition's player leaderboards. */

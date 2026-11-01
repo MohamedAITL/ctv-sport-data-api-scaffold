@@ -12,7 +12,7 @@ const match = (over: Partial<LiveMatch> = {}): LiveMatch => ({
 });
 
 const detail = (m: LiveMatch): LiveDetail => ({
-  match: m, homeLineup: null, awayLineup: null, events: [],
+  match: m, homeLineup: null, awayLineup: null, events: [], goals: [], shootout: null,
   statGroups: [], facts: [], shots: [], topPerformers: [], venue: null, referee: null, tv: [],
 });
 

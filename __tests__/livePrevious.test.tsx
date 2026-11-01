@@ -11,7 +11,7 @@ const match: LiveMatch = {
   home: { id: 9974, name: "نهضة بركان", score: null, logo: null },
   away: { id: 5455, name: "الجيش الملكي", score: null, logo: null },
 };
-const detail = { match, homeLineup: null, awayLineup: null, events: [], statGroups: [], facts: [], shots: [], topPerformers: [], venue: null, referee: null, tv: [] } as LiveDetail;
+const detail = { match, homeLineup: null, awayLineup: null, events: [], goals: [], shootout: null, statGroups: [], facts: [], shots: [], topPerformers: [], venue: null, referee: null, tv: [] } as LiveDetail;
 
 const CLUB: Record<string, number> = { "نهضة بركان": 9974, "الجيش الملكي": 5455 };
 const past = (id: number, date: string, h: string, hs: number, as: number, a: string) => ({

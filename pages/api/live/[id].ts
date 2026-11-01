@@ -15,11 +15,13 @@ async function inlineForPoster(d: LiveDetail): Promise<LiveDetail> {
   const [homeLogo, awayLogo] = await Promise.all([toDataUrl(d.match.home.logo), toDataUrl(d.match.away.logo)]);
   const homeLineup = await xi(d.homeLineup);
   const awayLineup = await xi(d.awayLineup);
+  const goals = await inlineImages(d.goals, (g) => g.photo, (g, photo) => ({ ...g, photo }));
   return {
     ...d,
     match: { ...d.match, home: { ...d.match.home, logo: homeLogo }, away: { ...d.match.away, logo: awayLogo } },
     homeLineup,
     awayLineup,
+    goals,
   };
 }
 

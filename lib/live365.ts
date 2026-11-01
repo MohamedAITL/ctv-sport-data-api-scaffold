@@ -7,7 +7,7 @@
 //      Southern League and a Colombian second-division game). Every lineup field
 //      is therefore optional and the caller must cope with null.
 import type {
-  AthleteBio, AthleteSeason, FactBlock, FactRow, H2HRecord, LineupPlayer, MoroccanPlayer, PastMatch, PreviousMatches, Shot, LineupRole, LiveDetail, LiveEvent,
+  AthleteBio, AthleteSeason, FactBlock, FactRow, Goal, H2HRecord, LineupPlayer, MoroccanPlayer, PastMatch, PreviousMatches, Shot, LineupRole, LiveDetail, LiveEvent,
   LiveMatch, Performer, PerformerStat, StatGroup, StatRow, TeamLineup,
   TopPerformerRow,
 } from "@/types/live";
@@ -21,6 +21,8 @@ export const Q = "appTypeId=5&langId=27&timezoneName=Africa%2FCasablanca&userCou
 const IMG = "https://imagecache.365scores.com/image/upload/f_png,w_120,h_120,c_limit,q_auto";
 const CREST_IMG = `${IMG},d_Competitors:default1.png`;
 export const FACE_IMG = `${IMG},d_Athletes:default.png`;
+/** A poster draws a face far larger than the rail's thumbnail. */
+export const bigFace = (url: string | null) => url && url.replace("w_120,h_120", "w_400,h_400");
 
 const FOOTBALL = 1;
 const STATUS_LIVE = 3;
@@ -210,9 +212,10 @@ interface RawLineupMember {
 interface RawLineups { formation?: string; hasFieldPositions?: boolean; members?: RawLineupMember[] }
 interface RawDetailCompetitor extends RawCompetitor { lineups?: RawLineups }
 interface RawEvent {
-  competitorId?: number; gameTimeDisplay?: string; playerId?: number;
-  eventType?: { name?: string }; isMajor?: boolean; order?: number;
+  competitorId?: number; gameTimeDisplay?: string; playerId?: number; addedTime?: number; stageId?: number;
+  eventType?: { id?: number; subTypeId?: number; name?: string }; isMajor?: boolean; order?: number;
 }
+interface RawStage { id?: number; homeCompetitorScore?: number; awayCompetitorScore?: number }
 interface RawChartEvent {
   competitorNum?: number; time?: string; playerId?: number;
   xg?: string; xgot?: string; bodyPart?: string; goalDescription?: string;
@@ -227,6 +230,7 @@ interface RawDetail {
   game?: RawGame & {
     members?: RawMember[];
     events?: RawEvent[];
+    stages?: RawStage[];
     officials?: Array<{ name?: string }>;
     tvNetworks?: Array<{ name?: string }>;
     venue?: { name?: string };
@@ -484,6 +488,40 @@ export async function fetchAthlete(athleteId: number): Promise<AthleteBio | null
 // list carries (one of them charted twice, as a rebound).
 const GOAL_OUTCOME = 0;
 
+const GOAL_EVENT = 1; // not a disallowed goal or a missed penalty, which have their own types
+const OWN_GOAL = 2;
+const PENALTY_GOAL = 3;
+const SHOOTOUT_STAGE = 11;
+
+/** The match's goals, with the score each one left. Pure. */
+export function toGoals(events: RawEvent[] | undefined, members: RawMember[], homeId: number): Goal[] {
+  const byId = new Map(members.filter((m) => m.id).map((m) => [m.id as number, m]));
+  const score = { home: 0, away: 0 };
+  return (events ?? [])
+    .filter((e) => e.eventType?.id === GOAL_EVENT && e.stageId !== SHOOTOUT_STAGE)
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+    .map((e, i) => {
+      const home = e.competitorId === homeId; // the side it counts for, even for an own goal
+      if (home) score.home += 1; else score.away += 1;
+      const p = e.playerId !== undefined ? byId.get(e.playerId) : undefined;
+      const base = (e.gameTimeDisplay ?? "").replace("'", "");
+      return {
+        order: e.order ?? i,
+        home,
+        minute: base ? `${base}${e.addedTime ? `+${e.addedTime}` : ""}'` : "",
+        player: p?.name ?? null,
+        photo: p?.athleteId ? bigFace(`${FACE_IMG}/v${p.imageVersion ?? 1}/Athletes/${p.athleteId}`) : null,
+        kind: e.eventType?.subTypeId === OWN_GOAL ? "own" as const : e.eventType?.subTypeId === PENALTY_GOAL ? "penalty" as const : "field" as const,
+        score: { ...score },
+      };
+    });
+}
+
+export function toShootout(stages: RawStage[] | undefined): { home: number; away: number } | null {
+  const s = stages?.find((x) => x.id === SHOOTOUT_STAGE);
+  return s ? { home: s.homeCompetitorScore ?? 0, away: s.awayCompetitorScore ?? 0 } : null;
+}
+
 export function toShots(chart: RawChart | undefined, members: RawMember[]): Shot[] {
   const byId = new Map(members.filter((m) => m.id).map((m) => [m.id as number, m]));
   return (chart?.events ?? []).map((e) => ({
@@ -645,6 +683,8 @@ export async function fetchLiveDetail(gameId: number, matchupId: string): Promis
     homeLineup: buildLineup(g.homeCompetitor?.lineups, members),
     awayLineup: buildLineup(g.awayCompetitor?.lineups, members),
     events: events.sort((a, b) => a.order - b.order),
+    goals: toGoals(g.events, members, match.home.id),
+    shootout: toShootout(g.stages),
     statGroups,
     facts,
     topPerformers: toTopPerformers(g.topPerformers),

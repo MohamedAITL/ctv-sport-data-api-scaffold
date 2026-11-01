@@ -528,6 +528,9 @@
 :root[data-design="studio"] .kx-out .ico { width: 14px; height: 14px; margin-inline-end: 4px; vertical-align: -2px; color: var(--ok); }
 :root[data-design="studio"] .ke-card { border-radius: var(--radius); }
 :root[data-design="studio"] .ke-row.major .ke-card { border-color: var(--accent); border-inline-start-width: 4px; }
+:root[data-design="studio"] .ke-poster { border-radius: var(--radius); font-family: var(--display); font-size: 15px; color: var(--accent); transition: background-color 180ms var(--ease), transform 120ms var(--ease); }
+:root[data-design="studio"] .ke-poster:active { transform: scale(.96); }
+:root[data-design="studio"][data-theme="light"] .ke-poster { color: #9a5000; }
 :root[data-design="studio"] .ke-min { padding: 2px 6px; background: var(--panel-3); color: var(--text); font-family: var(--display); border-radius: 2px; }
 
 /* ---- live: previous meetings ---- */
