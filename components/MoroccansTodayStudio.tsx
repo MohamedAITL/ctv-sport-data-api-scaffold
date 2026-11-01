@@ -132,9 +132,8 @@ export default function MoroccansTodayStudio() {
     ? null
     : picked.length === 0
       ? t("اختر لاعباً واحداً على الأقل", "Pick at least one player")
-      : missing.length > 0
-        ? t("جاري تجهيز صور اللاعبين…", "Preparing player photos…")
-        : null;
+      : null;
+  const preparing = missing.length > 0 ? t("جاري تجهيز صور اللاعبين…", "Preparing player photos…") : null;
   const title = range === "week" ? "المغاربة هذا الأسبوع" : range === "yesterday" ? "المغاربة أمس" : "المغاربة اليوم";
   const subtitle = range === "week" ? `${arDate(shiftDay(today, 1 - WEEK_DAYS))} - ${arDate(today)}` : arDate(date);
   const scale = previewW / layout.width;
@@ -190,7 +189,7 @@ export default function MoroccansTodayStudio() {
         )}
 
         <TemplateUploader isCustom={templateSrc !== null} onTemplate={onTemplate} defaultLabel={t("لا يوجد قالب بعد — تُستخدم خلفية بسيطة. ارفع قالب المغاربة.")} resetLabel={t("حذف القالب")} />
-        <ExportControls posterRef={posterRef} canExport={onPoster.length > 0} blocked={blocked} onResetDesign={() => updateLayout(DEFAULT_MOROCCANS_TODAY_LAYOUT)} fileBase={`choufsport-moroccans-${range === "week" ? "week" : date}`} />
+        <ExportControls posterRef={posterRef} canExport={onPoster.length > 0} blocked={blocked} preparing={preparing} onResetDesign={() => updateLayout(DEFAULT_MOROCCANS_TODAY_LAYOUT)} fileBase={`choufsport-moroccans-${range === "week" ? "week" : date}`} />
         <MoroccansTodayDesign layout={layout} onChange={updateLayout} />
       </section>
 

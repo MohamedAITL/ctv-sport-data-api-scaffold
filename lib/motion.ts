@@ -15,7 +15,7 @@ export function canTransition(): boolean {
  * there is none to run, it simply runs `update`. `at` is where a theme change
  * opens from: the button that was pressed.
  */
-export function transition(kind: "route" | "theme", update: Update, at?: { x: number; y: number }): void {
+export function transition(kind: "route" | "theme" | "match", update: Update, at?: { x: number; y: number }): void {
   if (!canTransition()) { void update(); return; }
   const root = document.documentElement;
   if (at) { root.style.setProperty("--vx", `${at.x}px`); root.style.setProperty("--vy", `${at.y}px`); }

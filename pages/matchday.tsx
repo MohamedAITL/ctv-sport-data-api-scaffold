@@ -153,9 +153,8 @@ export default function Matchday() {
   const live = matches.filter((m) => m.isLive).length;
   const results = mode === "results";
   // A results poster with nothing played yet would be all dimmed kickoff times.
-  const exportBlock = missing.length > 0
-    ? t("جاري تجهيز شعارات المباريات المختارة…", "Preparing the picked matches' crests…")
-    : results && matches.length > 0 && finished + live === 0
+  const preparing = missing.length > 0 ? t("جاري تجهيز شعارات المباريات المختارة…", "Preparing the picked matches' crests…") : null;
+  const exportBlock = results && matches.length > 0 && finished + live === 0
     ? t("لم تنته أي مباراة بعد — تظهر النتائج بعد نهاية المباريات (اضغط تحديث)", "No match has finished yet — results appear once matches end (press Refresh)")
     : null;
 
@@ -237,7 +236,7 @@ export default function Matchday() {
                 </div>
               </details>
             )}
-            <ExportControls posterRef={posterRef} canExport={matches.length > 0} blocked={exportBlock} onResetDesign={() => updateLayout(DEFAULT_MATCHDAY_LAYOUT)} fileBase={results ? "choufsport-results" : "choufsport-matchday"} fileDate={date} />
+            <ExportControls posterRef={posterRef} canExport={matches.length > 0} blocked={exportBlock} preparing={preparing} onResetDesign={() => updateLayout(DEFAULT_MATCHDAY_LAYOUT)} fileBase={results ? "choufsport-results" : "choufsport-matchday"} fileDate={date} />
             <MatchdayTeams matches={matches} nameOverrides={nameOverrides} logoOverrides={logoOverrides} onName={onName} onLogo={onLogo} onClearLogo={onClearLogo} />
             <MatchdayDesign layout={layout} onChange={updateLayout} />
           </section>

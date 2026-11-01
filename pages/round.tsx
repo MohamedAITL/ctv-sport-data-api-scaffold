@@ -186,9 +186,8 @@ export default function RoundPage() {
     ? t("اختر مباراة واحدة على الأقل", "Pick at least one match")
     : results && finished === 0
     ? t("لم تنته أي مباراة في هذه الجولة بعد", "No match in this round has finished yet")
-    : missingKey
-    ? t("جاري تجهيز شعارات المباريات المختارة…", "Preparing the picked matches' crests…")
     : null;
+  const preparing = missingKey ? t("جاري تجهيز شعارات المباريات المختارة…", "Preparing the picked matches' crests…") : null;
 
   return (
     <>
@@ -258,7 +257,7 @@ export default function RoundPage() {
               </details>
             )}
             <TemplateUploader isCustom={templateSrc !== null} onTemplate={onTemplate} defaultLabel={t("لا يوجد قالب بعد — تُستخدم خلفية بسيطة. ارفع قالب الجولة.")} resetLabel={t("حذف القالب")} />
-            <ExportControls posterRef={posterRef} canExport={matches.length > 0} blocked={exportBlock} onResetDesign={() => updateLayout(DEFAULT_MATCHDAY_LAYOUT)} fileBase={`choufsport-round-${league}-${round ?? "x"}`} fileDate={matches[0]?.date} />
+            <ExportControls posterRef={posterRef} canExport={matches.length > 0} blocked={exportBlock} preparing={preparing} onResetDesign={() => updateLayout(DEFAULT_MATCHDAY_LAYOUT)} fileBase={`choufsport-round-${league}-${round ?? "x"}`} fileDate={matches[0]?.date} />
             <MatchdayTeams matches={shown} nameOverrides={nameOverrides} logoOverrides={logoOverrides} onName={onName} onLogo={onLogo} onClearLogo={onClearLogo} />
             <MatchdayDesign layout={layout} onChange={updateLayout} />
           </section>

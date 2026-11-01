@@ -19,7 +19,7 @@ export const sectionOf = (path: string) => /^\/(round|matchday|stats|news|live)/
  * theme (Studio opens dark; classic follows the system), the language's
  * direction and the tab's colour, so none of them flashes on load.
  */
-export const PREFS_BOOT = `try{var d=document.documentElement,g=localStorage.getItem("${DESIGN_KEY}")==="classic"?"classic":"studio",m=/^\\/(round|matchday|stats|news|live)/.exec(location.pathname),t=localStorage.getItem("${THEME_KEY}");d.dataset.design=g;d.dataset.section=m?m[1]:"standings";d.dataset.rail=localStorage.getItem("${RAIL_KEY}")==="closed"?"closed":"open";if(t!=="light"&&t!=="dark")t=g==="classic"&&matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";d.dataset.theme=t;var l=localStorage.getItem("${LANG_KEY}")==="en"?"en":"ar";d.lang=l;d.dir=l==="en"?"ltr":"rtl"}catch(e){}`;
+export const PREFS_BOOT = `try{var d=document.documentElement,g=localStorage.getItem("${DESIGN_KEY}")==="classic"?"classic":"studio",m=/^\\/(round|matchday|stats|news|live)/.exec(location.pathname),t=localStorage.getItem("${THEME_KEY}");d.dataset.design=g;d.dataset.section=m?m[1]:"standings";d.dataset.rail=localStorage.getItem("${RAIL_KEY}")==="closed"?"closed":"open";if(t!=="light"&&t!=="dark")t=g==="classic"&&matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";d.dataset.theme=t;var l=localStorage.getItem("${LANG_KEY}")==="en"?"en":"ar";d.lang=l;d.dir=l==="en"?"ltr":"rtl";if(!sessionStorage.getItem("chouf.intro")){sessionStorage.setItem("chouf.intro","1");d.dataset.intro="1"}}catch(e){}`;
 
 type From = { x: number; y: number };
 interface Prefs { lang: Lang; theme: Theme; design: Design; setLang: (l: Lang) => void; setTheme: (t: Theme, from?: From) => void; setDesign: (d: Design, from?: From) => void }

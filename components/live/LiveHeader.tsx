@@ -36,6 +36,7 @@ export default function LiveHeader({ d }: { d: LiveDetail }) {
 
   return (
     <header className="kh">
+      {(flash.home || flash.away) && <span className="kh-goal" aria-hidden="true">{t("هدف!", "Goal!")}</span>}
       <div className="kh-meta">
         <span>{m.competition}</span>
         {d.venue && <span>· {d.venue}</span>}

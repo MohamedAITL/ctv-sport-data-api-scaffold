@@ -699,9 +699,140 @@
   animation: studio-strip 700ms linear infinite;
 }
 
+/* ---- A visit opens on the brand; everything after moves with a reason. ---- */
+
+/* Once per visit, the two brand colours wipe off the page. */
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-design="studio"][data-intro]::before, :root[data-design="studio"][data-intro]::after {
+    content: ""; position: fixed; inset: 0; z-index: 10000; pointer-events: none;
+    animation: studio-page-out 720ms var(--sweep) forwards;
+  }
+  :root[data-design="studio"][data-intro]::before { background: var(--sec); animation-delay: 170ms; }
+  :root[data-design="studio"][data-intro]::after { background: var(--brand); animation-delay: 40ms; }
+  :root[data-design="studio"][dir="ltr"][data-intro]::before, :root[data-design="studio"][dir="ltr"][data-intro]::after { animation-name: studio-page-out-ltr; }
+}
+
+/* How far down the page you are, on the header's edge. */
+@supports (animation-timeline: scroll()) {
+  :root[data-design="studio"] .topbar::after {
+    content: ""; position: absolute; inset-inline: 0; bottom: -3px; height: 3px; pointer-events: none;
+    background: var(--sec); transform: scaleX(0); transform-origin: right;
+    animation: studio-progress linear forwards; animation-timeline: scroll(root block);
+  }
+  :root[data-design="studio"][dir="ltr"] .topbar::after { transform-origin: left; }
+}
+@keyframes studio-progress { to { transform: scaleX(1); } }
+
+/* The active tab is one block that travels. It is a grid item in the first cell,
+   so it takes the cell's size without measuring anything, in either direction. */
+@supports selector(:has(a)) {
+  :root[data-design="studio"] .kiosk-tabs { --at: 0; gap: 0; background: linear-gradient(var(--panel), var(--panel)) content-box; }
+  :root[data-design="studio"] .kiosk-seg { --at: 0; }
+  :root[data-design="studio"] :is(.kiosk-tabs, .kiosk-seg):has(button:nth-of-type(2).on) { --at: 1; }
+  :root[data-design="studio"] :is(.kiosk-tabs, .kiosk-seg):has(button:nth-of-type(3).on) { --at: 2; }
+  :root[data-design="studio"] :is(.kiosk-tabs, .kiosk-seg):has(button:nth-of-type(4).on) { --at: 3; }
+  :root[data-design="studio"] :is(.kiosk-tabs, .kiosk-seg)::before {
+    content: ""; grid-area: 1 / 1; background: var(--sec);
+    transition: transform 340ms var(--land); transform: translateX(calc(var(--dirx) * var(--at) * (100% + var(--tab-gap, 0px))));
+  }
+  :root[data-design="studio"] .kiosk-tabs::before { clip-path: var(--slant); }
+  :root[data-design="studio"] .kiosk-seg { --tab-gap: 6px; }
+  :root[data-design="studio"] .kiosk-seg::before { border-radius: 2px; }
+  :root[data-design="studio"] :is(.kiosk-tabs, .kiosk-seg) button { grid-row: 1; position: relative; z-index: 1; }
+  :root[data-design="studio"] :is(.kiosk-tabs, .kiosk-seg) button:nth-of-type(1) { grid-column: 1; }
+  :root[data-design="studio"] :is(.kiosk-tabs, .kiosk-seg) button:nth-of-type(2) { grid-column: 2; }
+  :root[data-design="studio"] :is(.kiosk-tabs, .kiosk-seg) button:nth-of-type(3) { grid-column: 3; }
+  :root[data-design="studio"] :is(.kiosk-tabs, .kiosk-seg) button:nth-of-type(4) { grid-column: 4; }
+  :root[data-design="studio"] .kiosk-tabs button, :root[data-design="studio"] .kiosk-tabs button:hover,
+  :root[data-design="studio"] .kiosk-tabs button.on, :root[data-design="studio"] .kiosk-tabs button.on:hover,
+  :root[data-design="studio"] .kiosk-seg button.on { background: transparent; clip-path: none; animation: none; }
+  :root[data-design="studio"] .kiosk-tabs button { transition: transform 120ms var(--ease), color 200ms var(--ease), min-height 300ms var(--land); }
+}
+
+/* Changing match: the old one holds with a bar running, then is cut away. */
+:root[data-design="studio"] .kiosk-main { position: relative; }
+:root[data-design="studio"] .kiosk-main[aria-busy="true"]::before {
+  content: ""; position: absolute; z-index: 5; inset-inline: 0; top: 0; height: 5px; pointer-events: none;
+  background: linear-gradient(90deg, transparent, var(--sec) 35%, #fff 50%, var(--sec) 65%, transparent) no-repeat;
+  background-size: 50% 100%; animation: studio-busy 900ms linear infinite;
+}
+@keyframes studio-busy { from { background-position: -100% 0; } to { background-position: 200% 0; } }
+:root[data-design="studio"][data-vt="match"] .kiosk-main { view-transition-name: chouf-match; }
+:root[data-design="studio"][data-vt="match"]::view-transition { pointer-events: none; }
+:root[data-design="studio"][data-vt="match"]::view-transition-old(root) { display: none; }
+:root[data-design="studio"][data-vt="match"]::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+:root[data-design="studio"][data-vt="match"]::view-transition-group(chouf-match) { animation: none; background: var(--sec); overflow: clip; }
+:root[data-design="studio"][data-vt="match"]::view-transition-old(chouf-match) { mix-blend-mode: normal; animation: studio-page-out 420ms var(--sweep) forwards; }
+:root[data-design="studio"][data-vt="match"]::view-transition-new(chouf-match) { mix-blend-mode: normal; animation: studio-page-in 460ms var(--sweep) 70ms backwards; }
+:root[data-design="studio"][dir="ltr"][data-vt="match"]::view-transition-old(chouf-match) { animation-name: studio-page-out-ltr; }
+:root[data-design="studio"][dir="ltr"][data-vt="match"]::view-transition-new(chouf-match) { animation-name: studio-page-in-ltr; }
+
+/* A goal crosses the header, on the slant. */
+:root[data-design="studio"] .kh { overflow: hidden; transition: padding 300ms var(--land); }
+:root[data-design="studio"] .kh-nums { transition: font-size 300ms var(--land); }
+:root[data-design="studio"] .kh-goal {
+  position: absolute; inset: 0; z-index: 3; display: grid; place-items: center; pointer-events: none;
+  background: var(--sec); color: var(--sec-ink); font-family: var(--display); font-size: 62px; font-weight: 900; line-height: 1;
+  animation: studio-goal 950ms var(--sweep) forwards;
+}
+@keyframes studio-goal {
+  from { clip-path: polygon(0 0, 0 0, -6% 100%, -6% 100%); }
+  28%, 72% { clip-path: polygon(0 0, 106% 0, 100% 100%, -6% 100%); }
+  to { clip-path: polygon(106% 0, 106% 0, 100% 100%, 100% 100%); }
+}
+:root[data-design="studio"] .kl-score.flip { display: inline-block; animation: studio-flip 900ms var(--land) backwards; }
+@keyframes studio-flip { from { opacity: 0; color: var(--sec); transform: rotateX(-90deg) translateY(-10px); } 45% { color: var(--sec); } }
+
+/* The match list deals in; only the first groups, a day can hold a hundred. */
+:root[data-design="studio"] .kl-group:nth-child(-n+7) { animation: studio-rise 340ms var(--land) backwards; }
+:root[data-design="studio"] .kl-group:nth-child(2) { animation-delay: 40ms; }
+:root[data-design="studio"] .kl-group:nth-child(3) { animation-delay: 80ms; }
+:root[data-design="studio"] .kl-group:nth-child(n+4):nth-child(-n+7) { animation-delay: 120ms; }
+
+/* The timeline draws down its spine, each side coming in from its own edge. */
+:root[data-design="studio"] .ke::before { transform-origin: top; animation: studio-spine 720ms var(--land) backwards; }
+@keyframes studio-spine { from { transform: scaleY(0); } }
+:root[data-design="studio"] .ke-row.home { --from: calc(var(--dirx) * 34px); animation-name: studio-side; }
+:root[data-design="studio"] .ke-row.away { --from: calc(var(--dirx) * -34px); animation-name: studio-side; }
+
+/* The head-to-head record lands one number at a time. */
+:root[data-design="studio"] .kh2h-side b { display: inline-block; animation: studio-pop 420ms var(--land) 140ms backwards; }
+:root[data-design="studio"] .kh2h-side.draw b { animation-delay: 210ms; }
+:root[data-design="studio"] .kh2h-side:nth-child(3) b { animation-delay: 280ms; }
+
+/* A player set down lands. */
+:root[data-design="studio"] .kp-man.moved .kp-face, :root[data-design="studio"] .kp-man.moved .kp-num { animation: studio-drop 340ms var(--land); }
+@keyframes studio-drop { from { transform: scale(1.32); } }
+
+/* Hovers sweep in from where the reader starts. */
+:root[data-design="studio"] .navlink:not(.active) {
+  background: linear-gradient(rgba(255, 255, 255, .13), rgba(255, 255, 255, .13)) no-repeat right / 0 100%;
+  clip-path: var(--slant); transition: background-size 260ms var(--land), color 180ms var(--ease);
+}
+:root[data-design="studio"][dir="ltr"] .navlink:not(.active) { background-position: left; }
+:root[data-design="studio"] .navlink:not(.active):hover { background-size: 100% 100%; }
+:root[data-design="studio"] :is(.btn.primary, .kxp-btn.primary, .kpv-export) { position: relative; overflow: hidden; }
+:root[data-design="studio"] :is(.btn.primary, .kxp-btn.primary, .kpv-export)::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; transform: translateX(-110%);
+  background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, .42) 50%, transparent 65%);
+}
+:root[data-design="studio"] :is(.btn.primary, .kxp-btn.primary, .kpv-export):hover:not(:disabled)::after { transform: translateX(110%); transition: transform 640ms var(--sweep); }
+
+/* Windows: the backdrop fades, a new poster crossfades, a saved one says so. */
+:root[data-design="studio"] .kpc-back { animation: studio-fade 240ms ease-out backwards; }
+:root[data-design="studio"] .kxp-swap { animation: studio-fade 280ms ease-out backwards; }
+:root[data-design="studio"] .saved, :root[data-design="studio"] .preparing { animation: studio-rise 300ms var(--land) backwards; }
+
+/* The tools sit in the foot bar here, so the pane must not carry them sideways. */
+@media (min-width: 1025px) {
+  :root[data-design="studio"][data-rail="closed"] .kiosk-pane > .kp { animation-name: studio-fade; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   :root[data-design="studio"] *, :root[data-design="studio"] *::before, :root[data-design="studio"] *::after { animation-delay: 0s !important; animation-timeline: auto !important; }
-  :root[data-design="studio"] .kiosk, :root[data-design="studio"] .kp-pitch { transition: none; }
+  :root[data-design="studio"] .kiosk, :root[data-design="studio"] .kp-pitch, :root[data-design="studio"] .kh, :root[data-design="studio"] .kh-nums,
+  :root[data-design="studio"] .kiosk-tabs::before, :root[data-design="studio"] .kiosk-seg::before, :root[data-design="studio"] .navlink:not(.active) { transition: none; }
+  :root[data-design="studio"] .kh-goal { display: none; }
 }
 @keyframes studio-strip { to { transform: translateX(56px); } }
 @keyframes studio-blink { 50% { opacity: .35; } }

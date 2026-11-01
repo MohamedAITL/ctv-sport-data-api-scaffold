@@ -64,6 +64,9 @@
 :root[data-theme="light"] .teamrow .logo.fallback { color: var(--text); }
 :root[data-theme="light"] .kl-ma em { color: #9b1c22; }
 :root[data-theme="light"] .btn:hover:not(:disabled) { box-shadow: 0 6px 16px rgba(40, 20, 60, 0.14); }
+/* Chips are filled with the light theme's darker text tones, so they take white text. */
+:root[data-theme="light"] :is(.kp-rate, .kpc-rate, .kp-in, .kpv-pill.w, .kpv-pill.d) { color: #fff; }
+:root[data-theme="light"] .ks-toggle .ks-export { color: var(--accent-2); }
 :root[data-theme="light"] .pill.warn { background: rgba(143, 90, 0, .10); border-color: rgba(143, 90, 0, .4); }
 
 * { box-sizing: border-box; }
@@ -1243,6 +1246,12 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
   /* The size is an inline style, set for the pitch's normal state. */
   :root[data-rail="closed"] .kp:not(:fullscreen):not(.cssfull) .kp-man :is(.kp-face, .kp-num) { width: 66px !important; height: 66px !important; }
 }
+/* Only the new design has a goal banner. */
+.kh-goal { display: none; }
+/* Export status: waiting for images is not a failure, and a download says it worked. */
+.preparing, .saved { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 14px; font-weight: 700; color: var(--muted); }
+.saved { color: var(--text); }
+.saved::before { content: "\2713"; color: var(--ok); font-weight: 900; }
 /* Two buttons and the clock share a phone's width. */
 @media (max-width: 760px) { .kiosk-refresh { padding: 0 14px; } }
 @media (max-width: 760px) { :root[data-rail="closed"] .kiosk { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 0px) minmax(0, 1fr); } }

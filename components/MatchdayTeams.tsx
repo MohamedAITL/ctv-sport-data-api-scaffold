@@ -42,7 +42,7 @@ export default function MatchdayTeams({ matches, nameOverrides, logoOverrides, o
               ) : (
                 <span className="logo fallback">{(team.name || "?").charAt(0)}</span>
               )}
-              <input className="namein" dir="auto" value={nameOverrides[team.id] ?? team.nameAr} title={team.name} onChange={(e) => onName(team.id, e.target.value)} />
+              <input className="namein" aria-label={t("اسم الفريق", "Team name")} dir="auto" value={nameOverrides[team.id] ?? team.nameAr} title={team.name} onChange={(e) => onName(team.id, e.target.value)} />
               <button className="btn tiny" onClick={() => inputs.current[team.id]?.click()}>{logoOverrides[team.id] ? t("تغيير", "Change") : t("رفع", "Upload")}</button>
               {logoOverrides[team.id] && <button className="btn tiny ghost" onClick={() => onClearLogo(team.id)}>{t("تراجع")}</button>}
               <input ref={(el) => { inputs.current[team.id] = el; }} type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" hidden onChange={(e) => pick(team.id, e)} />

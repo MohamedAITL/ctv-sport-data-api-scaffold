@@ -21,6 +21,11 @@ describe("transition", () => {
     expect(root.dataset.vt).toBeUndefined();
   });
 
+  it("marks a match change, so only the match pane wipes", () => {
+    transition("match", jest.fn());
+    expect(root.dataset.vt).toBe("match");
+  });
+
   it.each([
     ["the classic design", () => { root.dataset.design = "classic"; }],
     ["reduced motion", () => motion(true)],

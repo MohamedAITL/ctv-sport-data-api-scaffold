@@ -58,6 +58,7 @@ export default function TeamMappingEditor({
               )}
               <input
                 className="namein"
+                aria-label={t("اسم الفريق", "Team name")}
                 dir="auto"
                 value={nameOverrides[r.teamId] ?? r.nameAr}
                 title={r.nameOriginal}

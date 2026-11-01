@@ -107,9 +107,8 @@ export default function MoroccanStudio() {
     ? null
     : picked.length === 0
       ? t("اختر إحصائية واحدة على الأقل", "Pick at least one stat")
-      : missing.length > 0
-        ? t("جاري تجهيز صور اللاعبين…", "Preparing player photos…")
-        : null;
+      : null;
+  const preparing = missing.length > 0 ? t("جاري تجهيز صور اللاعبين…", "Preparing player photos…") : null;
   const scale = previewW / layout.width;
 
   return (
@@ -167,7 +166,7 @@ export default function MoroccanStudio() {
         )}
 
         <TemplateUploader isCustom={templateSrc !== null} onTemplate={onTemplate} defaultLabel={t("لا يوجد قالب بعد — تُستخدم خلفية بسيطة. ارفع قالب المغاربة.")} resetLabel={t("حذف القالب")} />
-        <ExportControls posterRef={posterRef} canExport={picked.length > 0} blocked={blocked} onResetDesign={() => updateLayout(DEFAULT_MOROCCAN_LAYOUT)} fileBase={picked.length === 1 ? `choufsport-moroccan-${picked[0].playerId}` : "choufsport-moroccans"} />
+        <ExportControls posterRef={posterRef} canExport={picked.length > 0} blocked={blocked} preparing={preparing} onResetDesign={() => updateLayout(DEFAULT_MOROCCAN_LAYOUT)} fileBase={picked.length === 1 ? `choufsport-moroccan-${picked[0].playerId}` : "choufsport-moroccans"} />
         <MoroccanDesign layout={layout} onChange={updateLayout} />
       </section>
 

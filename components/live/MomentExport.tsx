@@ -58,10 +58,9 @@ export default function MomentExport({ match, initial, onClose }: { match: LiveM
       ready={Boolean(d)}
       error={error}
       onClose={onClose}
-      poster={(ref, l, tpl) => d && (goal
+      poster={(ref, l, tpl) => d && <div key={String(pick)} className="kxp-swap">{goal
         ? <GoalPoster ref={ref} match={d.match} goal={goal} score={addsUp ? goal.score : { home: d.match.home.score, away: d.match.away.score }} layout={noFooter(l.goal, tpl)} templateSrc={tpl} />
-        : <FullTimePoster ref={ref} match={d.match} goals={addsUp ? d.goals : []} shootout={d.shootout} layout={noFooter(l.final, tpl)} templateSrc={tpl} />
-      )}
+        : <FullTimePoster ref={ref} match={d.match} goals={addsUp ? d.goals : []} shootout={d.shootout} layout={noFooter(l.final, tpl)} templateSrc={tpl} />}</div>}
       design={(l, set) => (goal
         ? <GoalDesign layout={l.goal} onChange={(n) => set({ ...l, goal: n })} />
         : <FullTimeDesign layout={l.final} onChange={(n) => set({ ...l, final: n })} />

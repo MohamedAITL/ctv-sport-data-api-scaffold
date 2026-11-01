@@ -3,6 +3,8 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import LiveList from "@/components/live/LiveList";
 import PrefsToggle from "@/components/PrefsToggle";
+import { canTransition, transition } from "@/lib/motion";
+import { flushSync } from "react-dom";
 import Loader, { PaneSkeleton, RailSkeleton } from "@/components/Loader";
 import { fetchEnd, fetchStart } from "@/lib/fetching";
 import LiveHeader from "@/components/live/LiveHeader";
@@ -35,6 +37,7 @@ export default function LivePage() {
   const [matches, setMatches] = useState<LiveMatch[]>([]);
   const [selected, setSelected] = useState<LiveMatch | null>(null);
   const [detail, setDetail] = useState<LiveDetail | null>(null);
+  const detailReq = useRef(0);
   const [tab, setTab] = useState<Tab>("lineup");
   const [tabDir, setTabDir] = useState<"next" | "prev">("next");
   const [railOpen, setRailOpen] = useState(true);
@@ -79,10 +82,16 @@ export default function LivePage() {
     return list;
   }, []);
 
-  const loadDetail = useCallback(async (m: LiveMatch) => {
+  const loadDetail = useCallback(async (m: LiveMatch, wipe = false) => {
+    const req = ++detailReq.current;
     const res = await fetch(`/api/live/${m.id}?matchup=${encodeURIComponent(m.matchupId)}`);
     const json = await res.json();
-    if (json.detail) setDetail(json.detail);
+    // Only the latest answer counts: a slow match must not replace the one opened after it.
+    if (req !== detailReq.current) return true;
+    if (!json.detail) return false;
+    if (wipe) transition("match", () => flushSync(() => setDetail(json.detail)));
+    else setDetail(json.detail);
+    return true;
   }, []);
 
   const refreshAll = useCallback(async (manual = false) => {
@@ -123,7 +132,15 @@ export default function LivePage() {
     return () => { stop(); document.removeEventListener("visibilitychange", onVis); };
   }, [refreshAll, date]);
 
-  const pick = (m: LiveMatch) => { setSelected(m); setDetail(null); loadDetail(m); };
+  const pick = (m: LiveMatch) => {
+    setSelected(m);
+    // The new design holds this match until the next is ready, then wipes across.
+    const wipe = detail !== null && canTransition();
+    if (!wipe) setDetail(null);
+    // The regular refresh clears this and tries the match again.
+    const failed = () => { setDetail(null); setError(t("تعذر تحميل المباراة، ستتم إعادة المحاولة.", "Could not load the match. Trying again shortly.")); };
+    loadDetail(m, wipe).then((ok) => { if (!ok) failed(); }, failed);
+  };
 
   // Live matches head both filters, so without this the rail looks unchanged
   // when you switch — which read as "the button does nothing".
@@ -194,7 +211,7 @@ export default function LivePage() {
           </div>
         </aside>
 
-        <main className="kiosk-main">
+        <main className="kiosk-main" aria-busy={Boolean(detail && selected && detail.match.id !== selected.id)}>
           {error && <p className="kiosk-err">{error}</p>}
           {detail ? (
             <>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { LiveMatch, LiveTeam, MoroccanPlayer } from "@/types/live";
 import { useLang } from "@/lib/prefs";
 import Icon from "@/components/Icon";
@@ -24,6 +24,12 @@ function Crest({ team }: { team: LiveTeam }) {
   if (!team.logo || broken) return <span className="kl-crest" />;
   // eslint-disable-next-line @next/next/no-img-element
   return <img src={team.logo} alt="" onError={() => setBroken(true)} />;
+}
+
+/** A new score flips in: keyed so each change replays it, and never on the first paint. */
+function Score({ value }: { value: number | null }) {
+  const first = useRef(value);
+  return <span key={value ?? "-"} className={`kl-score${value !== first.current ? " flip" : ""}`}>{value ?? "-"}</span>;
 }
 
 function CompLogo({ src }: { src: string | null }) {
@@ -157,12 +163,12 @@ export default function LiveList({ matches, selectedId, onSelect, searching = fa
               <div className="kl-team">
                 <Crest team={m.home} />
                 <span className="kl-name">{m.home.name}</span>
-                <span className="kl-score">{m.home.score ?? "-"}</span>
+                <Score value={m.home.score} />
               </div>
               <div className="kl-team">
                 <Crest team={m.away} />
                 <span className="kl-name">{m.away.name}</span>
-                <span className="kl-score">{m.away.score ?? "-"}</span>
+                <Score value={m.away.score} />
               </div>
             </button>
           ))}

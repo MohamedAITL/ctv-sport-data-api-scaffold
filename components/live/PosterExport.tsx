@@ -45,6 +45,7 @@ export default function PosterExport<L>({
   const [templateSrc, setTemplateSrc] = useState<string | null>(null);
   const [failed, setFailed] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
   const [host, setHost] = useState<Element | null>(null);
 
   // In native fullscreen the browser paints only that subtree, so the overlay
@@ -76,8 +77,11 @@ export default function PosterExport<L>({
     if (!posterRef.current) return;
     setBusy(true);
     setFailed(null);
+    setDone(false);
     try {
       await downloadPoster(posterRef.current, format, posterFilename(format, fileBase));
+      setDone(true);
+      setTimeout(() => setDone(false), 2400);
     } catch (e) {
       setFailed(t("تعذر التصدير: ", "Export failed: ") + (e as Error).message);
     } finally {
@@ -108,6 +112,7 @@ export default function PosterExport<L>({
                 </div>
               </div>
               {note?.(layout)}
+              {done && <p className="saved" role="status">{t("تم تحميل الملصق", "Poster downloaded")}</p>}
               <div className="kxp-actions">
                 <button type="button" className="kxp-btn primary" disabled={busy} onClick={() => save("png")}>
                   {busy && <i className="spinner" />}{t("تحميل PNG (1080×1350)", "Download PNG (1080×1350)")}

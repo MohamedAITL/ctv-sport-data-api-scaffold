@@ -165,9 +165,8 @@ export default function TotwStudio({ league, leagueField }: { league: number; le
     ? null
     : filled < slots.length
       ? t(`اختر ${slots.length} لاعباً (${filled}/${slots.length})`, `Pick ${slots.length} players (${filled}/${slots.length})`)
-      : missing.length > 0
-        ? t("جاري تجهيز صور اللاعبين…", "Preparing player photos…")
-        : null;
+      : null;
+  const preparing = missing.length > 0 ? t("جاري تجهيز صور اللاعبين…", "Preparing player photos…") : null;
   const subtitle = [(leagueById(league)?.ar ?? ""), roundName].filter(Boolean).join(" · ");
   const scale = previewW / layout.width;
 
@@ -246,7 +245,7 @@ export default function TotwStudio({ league, leagueField }: { league: number; le
         )}
 
         <TemplateUploader isCustom={templateSrc !== null} onTemplate={onTemplate} defaultLabel={t("لا يوجد قالب بعد — تُستخدم خلفية بسيطة. ارفع قالب تشكيلة الجولة.")} resetLabel={t("حذف القالب")} />
-        <ExportControls posterRef={posterRef} canExport={Boolean(forLeague) && round !== null} blocked={blocked} onResetDesign={() => updateLayout(DEFAULT_TOTW_LAYOUT)} fileBase={`choufsport-totw-${league}-${round ?? "x"}`} />
+        <ExportControls posterRef={posterRef} canExport={Boolean(forLeague) && round !== null} blocked={blocked} preparing={preparing} onResetDesign={() => updateLayout(DEFAULT_TOTW_LAYOUT)} fileBase={`choufsport-totw-${league}-${round ?? "x"}`} />
         <TotwDesign layout={layout} onChange={updateLayout} />
       </section>
 
