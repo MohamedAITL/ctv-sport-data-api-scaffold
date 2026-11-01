@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import { Crest, centred } from "./H2HPoster";
 import type { FullTimeLayout } from "@/config/fullTimeLayout";
 import type { Goal, LiveMatch } from "@/types/live";
+import { POSTER_FONT } from "@/config/posterFont";
 
 interface Props {
   match: LiveMatch;
@@ -12,7 +13,7 @@ interface Props {
 }
 
 const MARK = { field: "", penalty: " (ض.ج)", own: " (ه.ذ)" } as const;
-const CHAR_EM = 0.5; // Cairo's average glyph width at this weight
+const CHAR_EM = 0.5; // Rubik's average glyph width at these weights
 const NAME_WIDTH = 400; // a name stays within its side of the poster
 
 /** The size that keeps `text` within `width`: a name must never be cut off. */
@@ -66,7 +67,7 @@ const FullTimePoster = forwardRef<HTMLDivElement, Props>(function FullTimePoster
       ref={ref}
       style={{
         position: "relative", width: L.width, height: L.height, overflow: "hidden",
-        fontFamily: "Cairo, sans-serif", color: "#ffffff", direction: "rtl",
+        fontFamily: POSTER_FONT, color: "#ffffff", direction: "rtl",
         background: templateSrc ? "#2b1a45" : "linear-gradient(160deg,#3a1d55 0%,#2a1340 55%,#45205f 100%)",
       }}
     >

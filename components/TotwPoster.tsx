@@ -3,6 +3,7 @@ import { centred, Crest } from "./live/H2HPoster";
 import { Markings, spot } from "./live/LineupPoster";
 import type { TotwLayout } from "@/config/totwLayout";
 import type { TotwPlayer } from "@/lib/totw";
+import { POSTER_FONT } from "@/config/posterFont";
 
 export interface TotwSlot { line: number | null; side: number | null; player: TotwPlayer | null }
 
@@ -84,7 +85,7 @@ const TotwPoster = forwardRef<HTMLDivElement, Props>(function TotwPoster(
       ref={ref}
       style={{
         position: "relative", width: L.width, height: L.height, overflow: "hidden",
-        fontFamily: "Cairo, sans-serif", color: "#ffffff", direction: "rtl",
+        fontFamily: POSTER_FONT, color: "#ffffff", direction: "rtl",
         background: templateSrc ? "#2b1a45" : "linear-gradient(160deg,#3a1d55 0%,#2a1340 55%,#45205f 100%)",
       }}
     >

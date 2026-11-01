@@ -28,7 +28,7 @@
   --shim: rgba(255, 255, 255, .08);
   /* Arabic is Rubik, as in the classic design. Latin and digits are Alexandria,
      whose digits share one width, so live scores hold still. */
-  --display: "Alexandria Latin", "Rubik Variable", Rubik, Cairo, system-ui, sans-serif;
+  --display: "Alexandria Latin", "Rubik Variable", Rubik, system-ui, sans-serif;
   /* The slant from the logo's panel. */
   --cut: 10px;
   --slant: polygon(var(--cut) 0, 100% 0, calc(100% - var(--cut)) 100%, 0 100%);

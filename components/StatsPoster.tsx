@@ -1,6 +1,7 @@
 import { forwardRef, type CSSProperties } from "react";
 import type { StatRow } from "@/lib/scores365Stats";
 import type { StatsLayout } from "@/config/statsLayout";
+import { POSTER_FONT } from "@/config/posterFont";
 
 interface Props {
   title: string;
@@ -49,7 +50,7 @@ const StatsPoster = forwardRef<HTMLDivElement, Props>(function StatsPoster(
         width: L.width,
         height: L.height,
         overflow: "hidden",
-        fontFamily: "Cairo, sans-serif",
+        fontFamily: POSTER_FONT,
         background: templateSrc ? "#2b1a45" : "linear-gradient(160deg,#3a1d55 0%,#2a1340 55%,#45205f 100%)",
       }}
     >

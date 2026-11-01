@@ -3,6 +3,7 @@ import { centred } from "./live/H2HPoster";
 import PlayerSpotlight, { Img, MAX_TILES, type SpotlightStat } from "./PlayerSpotlight";
 import { DEFAULT_MOROCCAN_LAYOUT, type MoroccanLayout } from "@/config/moroccanLayout";
 import type { MoroccanHighlight } from "@/lib/moroccanHighlights";
+import { POSTER_FONT } from "@/config/posterFont";
 
 interface Props {
   highlights: MoroccanHighlight[];
@@ -54,7 +55,7 @@ const MoroccanPoster = forwardRef<HTMLDivElement, Props>(function MoroccanPoster
       ref={ref}
       style={{
         position: "relative", width: L.width, height: L.height, overflow: "hidden",
-        fontFamily: "Cairo, sans-serif", color: "#ffffff", direction: "rtl",
+        fontFamily: POSTER_FONT, color: "#ffffff", direction: "rtl",
         background: templateSrc ? "#2b1a45" : "linear-gradient(160deg,#3a1d55 0%,#2a1340 55%,#45205f 100%)",
       }}
     >

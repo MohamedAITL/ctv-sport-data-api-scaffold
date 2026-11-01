@@ -3,6 +3,7 @@ import { Crest, centred } from "./H2HPoster";
 import { fitFont } from "./FullTimePoster";
 import type { GoalLayout } from "@/config/goalLayout";
 import type { Goal, LiveMatch } from "@/types/live";
+import { POSTER_FONT } from "@/config/posterFont";
 
 interface Props {
   match: LiveMatch;
@@ -31,7 +32,7 @@ const GoalPoster = forwardRef<HTMLDivElement, Props>(function GoalPoster({ match
       ref={ref}
       style={{
         position: "relative", width: L.width, height: L.height, overflow: "hidden",
-        fontFamily: "Cairo, sans-serif", color: "#ffffff", direction: "rtl",
+        fontFamily: POSTER_FONT, color: "#ffffff", direction: "rtl",
         background: templateSrc ? "#2b1a45" : "linear-gradient(160deg,#3a1d55 0%,#2a1340 55%,#45205f 100%)",
       }}
     >

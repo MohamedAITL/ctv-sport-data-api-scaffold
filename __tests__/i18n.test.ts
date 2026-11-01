@@ -43,4 +43,10 @@ describe("posters stay Arabic", () => {
   it.each(posters)("%s does not follow the UI language", (f) => {
     expect(fs.readFileSync(path.join(root, "components", f), "utf8")).not.toMatch(/useLang|lib\/prefs/);
   });
+
+  it.each(posters.filter((f) => f !== "PlayerSpotlight.tsx"))("%s prints in the app's Arabic font", (f) => {
+    const src = fs.readFileSync(path.join(root, "components", f), "utf8");
+    expect(src).toContain("fontFamily: POSTER_FONT");
+    expect(src.match(/fontFamily:/g)).toHaveLength(1);
+  });
 });

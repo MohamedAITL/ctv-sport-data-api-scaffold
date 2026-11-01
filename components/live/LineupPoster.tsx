@@ -2,6 +2,7 @@ import { Fragment, forwardRef, type CSSProperties } from "react";
 import { centred, Crest } from "./H2HPoster";
 import type { LineupLayout } from "@/config/lineupLayout";
 import type { LineupPlayer, LiveMatch, LiveTeam, TeamLineup } from "@/types/live";
+import { POSTER_FONT } from "@/config/posterFont";
 
 export type LineupTeams = "both" | "home" | "away";
 
@@ -177,7 +178,7 @@ const LineupPoster = forwardRef<HTMLDivElement, Props>(function LineupPoster(
       ref={ref}
       style={{
         position: "relative", width: L.width, height: L.height, overflow: "hidden",
-        fontFamily: "Cairo, sans-serif", color: "#ffffff", direction: "rtl",
+        fontFamily: POSTER_FONT, color: "#ffffff", direction: "rtl",
         background: templateSrc ? "#2b1a45" : "linear-gradient(160deg,#3a1d55 0%,#2a1340 55%,#45205f 100%)",
       }}
     >

@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import { Crest, centred } from "./H2HPoster";
 import type { MatchStatsLayout } from "@/config/matchStatsLayout";
 import type { LiveMatch, StatRow } from "@/types/live";
+import { POSTER_FONT } from "@/config/posterFont";
 
 interface Props {
   match: LiveMatch;
@@ -39,7 +40,7 @@ const MatchStatsPoster = forwardRef<HTMLDivElement, Props>(function MatchStatsPo
       ref={ref}
       style={{
         position: "relative", width: L.width, height: L.height, overflow: "hidden",
-        fontFamily: "Cairo, sans-serif", color: "#ffffff", direction: "rtl",
+        fontFamily: POSTER_FONT, color: "#ffffff", direction: "rtl",
         background: templateSrc ? "#2b1a45" : "linear-gradient(160deg,#3a1d55 0%,#2a1340 55%,#45205f 100%)",
       }}
     >

@@ -1,15 +1,8 @@
 import "@/styles/globals.css";
 import "@/styles/studio.css";
-// The app's own typeface: one variable file covers 300-900 and ships an Arabic
-// subset, so the UI gets the whole weight range for fewer requests than the
-// four static Cairo faces it replaces.
+// The app's typeface, and the posters' (config/posterFont.ts): one variable file
+// covers weights 300-900 and ships an Arabic subset.
 import "@fontsource-variable/rubik";
-// Cairo stays loaded because every poster hardcodes it: the exported PNGs must
-// not change when the app around them does. It is no longer the UI font.
-import "@fontsource/cairo/400.css";
-import "@fontsource/cairo/700.css";
-import "@fontsource/cairo/800.css";
-import "@fontsource/cairo/900.css";
 import { useEffect } from "react";
 import { useRouter } from "next/router";
 import type { AppProps } from "next/app";

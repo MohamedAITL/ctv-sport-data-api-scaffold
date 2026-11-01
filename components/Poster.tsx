@@ -1,6 +1,7 @@
 import { forwardRef, type CSSProperties } from "react";
 import type { TeamRow } from "@/types/standings";
 import { type LayoutConfig, zoneColor } from "@/config/defaultLayout";
+import { POSTER_FONT } from "@/config/posterFont";
 
 interface PosterProps {
   rows: TeamRow[];
@@ -75,7 +76,7 @@ const Poster = forwardRef<HTMLDivElement, PosterProps>(function Poster(
         height: L.height,
         overflow: "hidden",
         background: "#2b1a45",
-        fontFamily: "Cairo, sans-serif",
+        fontFamily: POSTER_FONT,
       }}
     >
       {templateSrc && (

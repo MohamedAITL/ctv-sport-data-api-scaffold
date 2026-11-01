@@ -1,6 +1,7 @@
 import { forwardRef, type CSSProperties } from "react";
 import type { H2HLayout } from "@/config/h2hLayout";
 import type { H2HRecord, LiveMatch, PastMatch } from "@/types/live";
+import { POSTER_FONT } from "@/config/posterFont";
 
 interface Props {
   match: LiveMatch;
@@ -59,7 +60,7 @@ const H2HPoster = forwardRef<HTMLDivElement, Props>(function H2HPoster(
       ref={ref}
       style={{
         position: "relative", width: L.width, height: L.height, overflow: "hidden",
-        fontFamily: "Cairo, sans-serif", color: "#ffffff", direction: "rtl",
+        fontFamily: POSTER_FONT, color: "#ffffff", direction: "rtl",
         background: templateSrc ? "#2b1a45" : "linear-gradient(160deg,#3a1d55 0%,#2a1340 55%,#45205f 100%)",
       }}
     >

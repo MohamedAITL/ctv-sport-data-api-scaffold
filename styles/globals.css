@@ -78,8 +78,8 @@ html, body {
   padding: 0;
   background: var(--bg);
   color: var(--text);
-  /* Rubik for the app. The posters ask for Cairo by name, so they are unaffected. */
-  font-family: "Rubik Variable", Rubik, Cairo, system-ui, -apple-system, Arial, sans-serif;
+  /* Rubik for the app. The posters ask for it by name in config/posterFont.ts. */
+  font-family: "Rubik Variable", Rubik, system-ui, -apple-system, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -641,8 +641,8 @@ html, body {
 /* ======================= Redesign: chrome, type, motion =======================
    Brand-coloured premium pass over the same markup. Everything here is colour,
    type, radius, shadow and GPU-only motion — no layout rewrites, and nothing
-   that touches the poster components (they are 100% inline styles and keep
-   Cairo, so an exported PNG is byte-for-byte unaffected). */
+   that touches the poster components (they are 100% inline styles, so an
+   exported PNG is unaffected). */
 
 /* ---- type scale: one set of rules that also suits a wall display ---- */
 h1, h2, h3, h4 { letter-spacing: -0.01em; }
