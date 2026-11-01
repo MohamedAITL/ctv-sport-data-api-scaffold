@@ -16,6 +16,13 @@ describe("goal and result posters", () => {
     expect(MOMENT_BACKGROUNDS[649].src).toBe("/templates/saudi.jpg");
   });
 
+  it("gives both Botolas their background on goal and result posters, never on standings", () => {
+    expect(MOMENT_BACKGROUNDS[557].src).toBe("/templates/moment-botola.jpg");
+    expect(MOMENT_BACKGROUNDS[5651].src).toBe("/templates/moment-botola.jpg");
+    expect(BUNDLED_TEMPLATES[557]).toBe("/templates/botola.jpg");
+    expect(BUNDLED_TEMPLATES[5651]).toBeUndefined();
+  });
+
   it("shrinks a long name to its width and leaves a short one alone", () => {
     expect(fitFont("ليل", 40, 400)).toBe(40);
     const long = "الدفاع الحسني الجديدي لكرة القدم";
