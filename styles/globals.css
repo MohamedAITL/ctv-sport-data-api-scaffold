@@ -61,6 +61,9 @@
   --shadow-2: 0 6px 18px rgba(40, 20, 60, 0.14);
 }
 :root[data-theme="light"] .field select option { background: #ffffff; color: #1c1525; }
+:root[data-theme="light"] .field select { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231c1525' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>"); }
+/* The link back to the news sits on the page, not on the dark header. */
+:root[data-theme="light"] .navlink:not(.topbar .navlink), :root[data-theme="light"] .navlink:not(.topbar .navlink):hover { color: var(--text); }
 :root[data-theme="light"] .teamrow .logo.fallback { color: var(--text); }
 :root[data-theme="light"] .kl-ma em { color: #9b1c22; }
 :root[data-theme="light"] .btn:hover:not(:disabled) { box-shadow: 0 6px 16px rgba(40, 20, 60, 0.14); }
@@ -1234,13 +1237,13 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
   :root[data-rail="closed"] .kiosk-tabs { padding-block: 8px; }
   :root[data-rail="closed"] .kiosk-tabs button { min-height: 52px; }
   :root[data-rail="closed"] .kp:not(:fullscreen):not(.cssfull) .kp-pitch { max-height: calc(100vh - 400px); }
+  :root[data-rail="closed"] .kp:not(:fullscreen):not(.cssfull) .kp-hint { display: none; }
 }
 @media (min-width: 1025px) {
   :root[data-rail="closed"] .kp:not(:fullscreen):not(.cssfull) .kp-pitch { max-height: calc(100vh - 324px); }
   :root[data-rail="closed"] .kp:not(:fullscreen):not(.cssfull) .kp-tools {
     position: fixed; z-index: 3; bottom: 12px; left: 50%; transform: translateX(-50%); margin: 0; flex-wrap: nowrap;
   }
-  :root[data-rail="closed"] .kp:not(:fullscreen):not(.cssfull) .kp-hint { display: none; }
   :root[data-rail="closed"] .kp:not(:fullscreen):not(.cssfull) .kp-man { width: 108px; }
   :root[data-rail="closed"] .kp:not(:fullscreen):not(.cssfull) .kp-name { max-width: 108px; }
   /* The size is an inline style, set for the pitch's normal state. */
