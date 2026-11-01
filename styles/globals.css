@@ -1131,7 +1131,7 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
 @media (max-width: 760px) {
   /* minmax(0, …): a bare 1fr will not shrink below its widest child, and the
      kiosk's overflow:hidden would quietly clip the rest. */
-  .kiosk { --rail-w: 100vw; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 44vh) minmax(0, 1fr); }
+  .kiosk { --rail-w: 100vw; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 54vh) minmax(0, 1fr); }
   .kiosk-rail { border-left: 0; border-bottom: 1px solid var(--border); }
   .kiosk-railhead { padding: 10px 12px; }
   .kh { padding: 12px 12px 8px; }
@@ -1173,6 +1173,33 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
 .kl-ma img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; background: var(--panel-3); border: 2px solid #c1272d; flex: none; }
 .kl-ma img + img { margin-inline-start: -12px; }
 .kl-ma em { font-style: normal; font-size: 13px; font-weight: 800; color: #f3c6c7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
+
+/* Search and favourites on the match list. */
+.kiosk-search { position: relative; margin-bottom: 10px; }
+.kiosk-search input {
+  width: 100%; min-height: 64px; padding: 0 16px; padding-inline-end: 64px; border-radius: 12px;
+  border: 1.5px solid var(--border-2); background: var(--panel); color: var(--text);
+  font-family: inherit; font-size: 16px; font-weight: 700;
+}
+.kiosk-search input::-webkit-search-cancel-button { display: none; }
+.kiosk-search input::placeholder { color: var(--muted); font-weight: 500; }
+.kiosk-search button {
+  position: absolute; top: 0; bottom: 0; inset-inline-end: 0; width: 64px; border: 0; background: none;
+  color: var(--text); font-size: 28px; line-height: 1; cursor: pointer;
+}
+.kl-grouprow { position: sticky; top: 0; z-index: 2; display: flex; gap: 6px; margin: 0 0 8px; }
+.kl-grouprow .kl-grouphead { position: static; flex: 1; width: auto; min-width: 0; margin: 0; }
+.kl-star {
+  flex: none; width: 64px; min-height: 64px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer;
+  background: var(--bg-2); color: var(--muted); font-family: inherit; font-size: 24px; line-height: 1;
+}
+.kl-star[aria-pressed="true"] { color: var(--accent); }
+@media (max-width: 760px) {
+  .kiosk-search { margin-bottom: 6px; }
+  .kiosk-search input { min-height: 44px; font-size: 16px; }
+  .kiosk-search button { width: 44px; }
+  .kl-star { width: 48px; min-height: 48px; }
+}
 
 /* The match list closes, and the match takes the whole screen. */
 :root[data-rail="closed"] .kiosk { grid-template-columns: 0px 1fr; }

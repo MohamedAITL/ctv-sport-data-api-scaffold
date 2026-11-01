@@ -13,6 +13,7 @@ import LivePrevious from "@/components/live/LivePrevious";
 import type { LiveDetail, LiveMatch } from "@/types/live";
 import { todayMA } from "@/lib/today";
 import { RAIL_KEY, useLang, type T } from "@/lib/prefs";
+import { searchMatches } from "@/lib/searchMatches";
 import Icon from "@/components/Icon";
 
 const POLL_MS = 15_000; // the source itself caches for 5s
@@ -38,6 +39,7 @@ export default function LivePage() {
   const [tabDir, setTabDir] = useState<"next" | "prev">("next");
   const [railOpen, setRailOpen] = useState(true);
   const [filter, setFilter] = useState<Filter>("live");
+  const [query, setQuery] = useState("");
   const [date, setDate] = useState<string>(isoToday());
   const [updatedAt, setUpdatedAt] = useState<string>("");
   const [busy, setBusy] = useState(false);
@@ -138,8 +140,11 @@ export default function LivePage() {
     refreshAll(true);
   };
 
-  const shown =
-    filter === "live" ? matches.filter((m) => m.isLive)
+  const searching = query.trim().length > 0;
+  // A search covers the whole day: what you want may not be in the current filter.
+  const shown = searching
+    ? searchMatches(matches, query)
+    : filter === "live" ? matches.filter((m) => m.isLive)
     : filter === "done" ? matches.filter((m) => m.isFinished)
     : matches;
   const liveCount = matches.filter((m) => m.isLive).length;
@@ -169,6 +174,15 @@ export default function LivePage() {
               <button type="button" className="kiosk-daylabel" onClick={() => goDay(isoToday())}>{arDay(date, t, locale)}</button>
               <button type="button" aria-label={t("اليوم التالي")} onClick={() => goDay(shiftDay(date, 1))}>›</button>
             </div>
+            <div className="kiosk-search">
+              <input
+                type="search" dir="auto" value={query}
+                aria-label={t("بحث عن فريق أو مسابقة أو لاعب", "Search team, competition or player")}
+                placeholder={t("بحث عن فريق أو مسابقة أو لاعب", "Search team, competition or player")}
+                onChange={(e) => { setQuery(e.target.value); toTop(); }}
+              />
+              {searching && <button type="button" aria-label={t("مسح البحث", "Clear search")} onClick={() => { setQuery(""); toTop(); }}>×</button>}
+            </div>
             <div className="kiosk-seg three">
               <button type="button" className={filter === "live" ? "on" : ""} onClick={() => pickFilter("live")}>{t("مباشر (")}{liveCount})</button>
               <button type="button" className={filter === "done" ? "on" : ""} onClick={() => pickFilter("done")}>{t("النتائج (")}{doneCount})</button>
@@ -176,7 +190,7 @@ export default function LivePage() {
             </div>
           </div>
           <div className="kl-scroll" ref={railRef}>
-            {listLoading ? <RailSkeleton /> : <LiveList matches={shown} selectedId={selected?.id ?? null} onSelect={pick} />}
+            {listLoading ? <RailSkeleton /> : <LiveList matches={shown} selectedId={selected?.id ?? null} onSelect={pick} searching={searching} empty={searching ? t(`لا نتائج لـ «${query.trim()}»`, `No results for "${query.trim()}"`) : undefined} />}
           </div>
         </aside>
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { LiveMatch, LiveTeam, MoroccanPlayer } from "@/types/live";
 import { useLang } from "@/lib/prefs";
+import Icon from "@/components/Icon";
 
 // Crests 404 when the payload carried no imageVersion; show nothing rather than
 // a broken-image icon on a wall display.
@@ -36,15 +37,20 @@ interface Props {
   matches: LiveMatch[];
   selectedId: number | null;
   onSelect: (m: LiveMatch) => void;
+  /** A search is running: folded competitions show their matches, and stay folded after. */
+  searching?: boolean;
+  empty?: string;
 }
 
 // Which competitions the operator has folded away. Kept per browser so a wall
 // screen comes back up the way it was left.
 const CLOSED_KEY = "live.closedCompetitions";
+// Which competitions are starred, and so listed first.
+const FAV_KEY = "live.favCompetitions";
 
-function loadClosed(): number[] {
+function loadIds(key: string): number[] {
   try {
-    const raw = localStorage.getItem(CLOSED_KEY);
+    const raw = localStorage.getItem(key);
     const ids = raw ? (JSON.parse(raw) as unknown) : [];
     return Array.isArray(ids) ? ids.filter((n): n is number => typeof n === "number") : [];
   } catch {
@@ -73,15 +79,21 @@ export function groupByCompetition(matches: LiveMatch[]) {
   return groups;
 }
 
+/** Starred competitions first, each side keeping its order. */
+export function pinFavourites<G extends { id: number }>(groups: G[], favs: number[]): G[] {
+  return [...groups.filter((g) => favs.includes(g.id)), ...groups.filter((g) => !favs.includes(g.id))];
+}
+
 // Left rail. Rows are full-width tap targets — on a wall screen a finger is the
 // only pointer, so there is no hover state to lean on.
-export default function LiveList({ matches, selectedId, onSelect }: Props) {
+export default function LiveList({ matches, selectedId, onSelect, searching = false, empty }: Props) {
   const { t } = useLang();
-  const groups = groupByCompetition(matches);
   const [closed, setClosed] = useState<number[]>([]);
+  const [favs, setFavs] = useState<number[]>([]);
+  const groups = pinFavourites(groupByCompetition(matches), favs);
   // localStorage is read after mount so the server and the first client render
   // agree.
-  useEffect(() => { setClosed(loadClosed()); }, []);
+  useEffect(() => { setClosed(loadIds(CLOSED_KEY)); setFavs(loadIds(FAV_KEY)); }, []);
 
   const toggle = (id: number) => {
     setClosed((cur) => {
@@ -90,23 +102,44 @@ export default function LiveList({ matches, selectedId, onSelect }: Props) {
       return next;
     });
   };
+  const toggleFav = (id: number) => {
+    setFavs((cur) => {
+      const next = cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id];
+      try { localStorage.setItem(FAV_KEY, JSON.stringify(next)); } catch { /* private mode */ }
+      return next;
+    });
+  };
 
   return (
     <div className="kl-list">
-      {groups.map((g) => (
-        <section key={g.id} className={closed.includes(g.id) ? "kl-group closed" : "kl-group"}>
-          <button
-            type="button"
-            className="kl-grouphead"
-            aria-expanded={!closed.includes(g.id)}
-            onClick={() => toggle(g.id)}
-          >
-            <CompLogo src={g.logo} />
-            <span>{g.name}</span>
-            <em>{g.matches.length}</em>
-            <i className="kl-chev" aria-hidden="true" />
-          </button>
-          {!closed.includes(g.id) && g.matches.map((m) => (
+      {groups.map((g) => {
+        const shut = closed.includes(g.id) && !searching;
+        const fav = favs.includes(g.id);
+        return (
+        <section key={g.id} className={shut ? "kl-group closed" : "kl-group"}>
+          <div className="kl-grouprow">
+            <button
+              type="button"
+              className="kl-grouphead"
+              aria-expanded={!shut}
+              onClick={() => toggle(g.id)}
+            >
+              <CompLogo src={g.logo} />
+              <span>{g.name}</span>
+              <em>{g.matches.length}</em>
+              <i className="kl-chev" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              className="kl-star"
+              aria-pressed={fav}
+              aria-label={`${fav ? t("إزالة من المفضلة", "Remove from favourites") : t("إضافة إلى المفضلة", "Add to favourites")}: ${g.name}`}
+              onClick={() => toggleFav(g.id)}
+            >
+              <Icon name="star" /><span className="glyph">{fav ? "★" : "☆"}</span>
+            </button>
+          </div>
+          {!shut && g.matches.map((m) => (
             <button
               key={m.id}
               type="button"
@@ -134,8 +167,9 @@ export default function LiveList({ matches, selectedId, onSelect }: Props) {
             </button>
           ))}
         </section>
-      ))}
-      {matches.length === 0 && <p className="kl-empty">{t("لا توجد مباريات")}</p>}
+        );
+      })}
+      {matches.length === 0 && <p className="kl-empty">{empty ?? t("لا توجد مباريات")}</p>}
     </div>
   );
 }
