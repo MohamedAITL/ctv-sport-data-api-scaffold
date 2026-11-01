@@ -507,6 +507,10 @@
 @media (min-width: 761px) {
   :root[data-design="studio"][data-rail="closed"] .kh-nums { font-size: 46px; }
 }
+/* A phone's pitch is already full width, so the height is what closing can add. */
+@media (max-width: 760px) {
+  :root[data-design="studio"][data-rail="closed"] .kp:not(:fullscreen):not(.cssfull) .kp-pitch { height: calc(100vh - 450px); }
+}
 :root[data-design="studio"] .kp-turf { border-radius: var(--radius); border: 0; background: #154c32; }
 :root[data-design="studio"] .kp-name { padding: 0 5px; border-radius: 2px; background: rgba(8, 5, 12, .62); text-shadow: none; }
 :root[data-design="studio"] .kp-rate, :root[data-design="studio"] .kpc-rate { border-radius: 2px; font-family: var(--display); background: #ffc94d; color: #1a1420; }

@@ -15,18 +15,26 @@ export const BUNDLED_TEMPLATES: Record<number, string> = {
 };
 
 /**
- * Goal and result posters are centred on the page, where a framed template's
- * rank strip would run under the home crest. So those leagues use a copy with
- * one centred panel. `branded` backgrounds print their own footer. Botola's has
- * its own file because its standings template is a finished poster.
+ * Every poster in the live section uses its competition's background. They are
+ * centred on the page, where a framed template's rank strip would run under the
+ * home crest, so those leagues use a copy with one centred panel. `branded`
+ * backgrounds print their own footer. Botola's has its own file because its
+ * standings template is a finished poster, and Saudi's sits its logo higher,
+ * clear of the team line on the lineup poster.
  */
-export const MOMENT_BACKGROUNDS: Record<number, { src: string; branded: boolean }> = {
+export const LIVE_BACKGROUNDS: Record<number, { src: string; branded: boolean }> = {
   [BOTOLA_LEAGUE]: { src: "/templates/moment-botola.jpg", branded: true },
   [BOTOLA2_LEAGUE]: { src: "/templates/moment-botola.jpg", branded: true },
   572: { src: "/templates/ucl.jpg", branded: true },
-  649: { src: "/templates/saudi.jpg", branded: true },
+  649: { src: "/templates/moment-saudi.jpg", branded: true },
   11: { src: "/templates/moment-laliga.jpg", branded: false },
   17: { src: "/templates/moment-seriea.jpg", branded: false },
   25: { src: "/templates/moment-bundesliga.jpg", branded: false },
   35: { src: "/templates/moment-ligue1.jpg", branded: false },
 };
+
+/** A background that prints its own footer replaces the poster's; an upload does not. */
+export function withBackgroundFooter<T extends { footer: { show: boolean } }>(layout: T, competitionId: number, template: string | null): T {
+  const background = LIVE_BACKGROUNDS[competitionId];
+  return background?.branded && template === background.src ? { ...layout, footer: { ...layout.footer, show: false } } : layout;
+}

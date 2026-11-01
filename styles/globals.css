@@ -1226,28 +1226,34 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
 /* The match list closes, and the match takes the whole screen. */
 :root[data-rail="closed"] .kiosk { grid-template-columns: 0px 1fr; }
 :root[data-rail="closed"] .kiosk-rail { border: 0; }
-/* Hiding the list gives the pitch height as well as width: the header and tabs
-   tighten, and on a wide screen the tools move into the foot bar and the players
-   grow with the pitch. A phone is limited by its width, so nothing changes there. */
+/* Hiding the list hands the pitch the height as well as the width: everything
+   around it tightens, and on a wide screen the tools join the foot bar and the
+   players grow with the pitch. The caps below are what that surround leaves. */
 @media (min-width: 761px) {
-  :root[data-rail="closed"] .kh { padding-block: 10px 8px; }
-  :root[data-rail="closed"] .kh-meta { margin-bottom: 4px; }
-  :root[data-rail="closed"] .kh-status { margin-top: 4px; }
-  :root[data-rail="closed"] .kh-nums { font-size: 52px; }
-  :root[data-rail="closed"] .kiosk-tabs { padding-block: 8px; }
-  :root[data-rail="closed"] .kiosk-tabs button { min-height: 52px; }
-  :root[data-rail="closed"] .kp:not(:fullscreen):not(.cssfull) .kp-pitch { max-height: calc(100vh - 400px); }
+  :root[data-rail="closed"] .kh { padding-block: 6px; }
+  :root[data-rail="closed"] .kh-meta { display: none; }
+  :root[data-rail="closed"] .kh-status { margin-top: 2px; }
+  :root[data-rail="closed"] .kh-side img { width: 52px; height: 52px; }
+  :root[data-rail="closed"] .kh-nums { font-size: 46px; }
+  :root[data-rail="closed"] .kiosk-tabs { padding-block: 6px; }
+  :root[data-rail="closed"] .kiosk-tabs button { min-height: 44px; }
+  :root[data-rail="closed"] .kiosk-foot { padding-block: 8px; }
+  :root[data-rail="closed"] .kiosk-refresh, :root[data-rail="closed"] .kp-tool { min-height: 48px; }
   :root[data-rail="closed"] .kp:not(:fullscreen):not(.cssfull) .kp-hint { display: none; }
+  /* A real pitch's shape, not a screen's, so a tall tablet fills its height too. */
+  :root[data-rail="closed"] .kp:not(:fullscreen):not(.cssfull) .kp-pitch { aspect-ratio: 105 / 68; max-height: calc(100vh - 326px); margin-bottom: 8px; }
 }
 @media (min-width: 1025px) {
-  :root[data-rail="closed"] .kp:not(:fullscreen):not(.cssfull) .kp-pitch { max-height: calc(100vh - 324px); }
+  :root[data-rail="closed"] .kp:not(:fullscreen):not(.cssfull) .kp-pitch { max-height: calc(100vh - 250px); }
   :root[data-rail="closed"] .kp:not(:fullscreen):not(.cssfull) .kp-tools {
-    position: fixed; z-index: 3; bottom: 12px; left: 50%; transform: translateX(-50%); margin: 0; flex-wrap: nowrap;
+    position: fixed; z-index: 3; bottom: 8px; left: 50%; transform: translateX(-50%); margin: 0; flex-wrap: nowrap;
   }
   :root[data-rail="closed"] .kp:not(:fullscreen):not(.cssfull) .kp-man { width: 108px; }
   :root[data-rail="closed"] .kp:not(:fullscreen):not(.cssfull) .kp-name { max-width: 108px; }
   /* The size is an inline style, set for the pitch's normal state. */
-  :root[data-rail="closed"] .kp:not(:fullscreen):not(.cssfull) .kp-man :is(.kp-face, .kp-num) { width: 66px !important; height: 66px !important; }
+  :root[data-rail="closed"] .kp:not(:fullscreen):not(.cssfull) .kp-man :is(.kp-face, .kp-num) {
+    width: clamp(54px, 8vh, 74px) !important; height: clamp(54px, 8vh, 74px) !important;
+  }
 }
 /* Only the new design has a goal banner. */
 .kh-goal { display: none; }

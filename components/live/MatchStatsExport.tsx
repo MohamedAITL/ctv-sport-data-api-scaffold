@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import MatchStatsPoster from "./MatchStatsPoster";
 import MatchStatsDesign from "./MatchStatsDesign";
 import PosterExport from "./PosterExport";
+import { LIVE_BACKGROUNDS, withBackgroundFooter } from "@/config/templates";
 import { DEFAULT_MATCH_STATS_LAYOUT, type MatchStatsLayout } from "@/config/matchStatsLayout";
 import type { LiveDetail, LiveMatch, StatRow } from "@/types/live";
 import { useLang } from "@/lib/prefs";
@@ -67,13 +68,14 @@ export default function MatchStatsExport({ match, onClose }: { match: LiveMatch;
       title={t("ملصق إحصائيات المباراة")}
       layoutKey="botola.matchStatsLayout"
       templateKey="matchStats"
+      fallbackTemplate={LIVE_BACKGROUNDS[match.competitionId]?.src}
       defaults={DEFAULT_MATCH_STATS_LAYOUT}
       fileBase={`choufsport-stats-${match.home.id}-${match.away.id}`}
       ready={Boolean(d)}
       error={error}
       onClose={onClose}
       poster={(ref, l, tpl) => d && group && (
-        <MatchStatsPoster ref={ref} match={d.match} rows={rows} period={period === 0 ? null : group.name} layout={l} templateSrc={tpl} />
+        <MatchStatsPoster ref={ref} match={d.match} rows={rows} period={period === 0 ? null : group.name} layout={withBackgroundFooter(l, match.competitionId, tpl)} templateSrc={tpl} />
       )}
       design={(l, set) => <MatchStatsDesign layout={l} onChange={set} />}
       note={() => d && rows.length === 0 && <p className="kxp-note">{t("اختر إحصائية واحدة على الأقل لتظهر على الملصق.")}</p>}

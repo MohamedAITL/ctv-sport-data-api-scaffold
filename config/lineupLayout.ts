@@ -93,5 +93,5 @@ export const DEFAULT_LINEUP_LAYOUT: LineupLayout = {
   },
   singleScale: 1.4,
   opponent: { show: true, text: "ضد" },
-  footer: { show: true, text: "Choufsport", x: 540, y: 1320, fontSize: 20, color: "#ffffff" },
+  footer: { show: true, text: "Choufsport", x: 540, y: 1298, fontSize: 20, color: "#ffffff" },
 };

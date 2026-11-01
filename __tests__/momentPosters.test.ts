@@ -1,26 +1,34 @@
 import fs from "fs";
 import path from "path";
 import { fitFont, scorerLines } from "@/components/live/FullTimePoster";
-import { BUNDLED_TEMPLATES, MOMENT_BACKGROUNDS } from "@/config/templates";
+import { BUNDLED_TEMPLATES, LIVE_BACKGROUNDS, withBackgroundFooter } from "@/config/templates";
 import { crest, competitionLogo, FACE_IMG } from "@/lib/live365";
 import type { Goal } from "@/types/live";
 
 describe("goal and result posters", () => {
   it("every bundled background ships with the app", () => {
-    const files = [...Object.values(BUNDLED_TEMPLATES), ...Object.values(MOMENT_BACKGROUNDS).map((b) => b.src)];
+    const files = [...Object.values(BUNDLED_TEMPLATES), ...Object.values(LIVE_BACKGROUNDS).map((b) => b.src)];
     for (const f of files) expect(fs.existsSync(path.join("public", f))).toBe(true);
   });
 
   it("gives the Saudi league its own background on every poster that has one", () => {
     expect(BUNDLED_TEMPLATES[649]).toBe("/templates/saudi.jpg");
-    expect(MOMENT_BACKGROUNDS[649].src).toBe("/templates/saudi.jpg");
+    expect(LIVE_BACKGROUNDS[649].src).toBe("/templates/moment-saudi.jpg");
   });
 
   it("gives both Botolas their background on goal and result posters, never on standings", () => {
-    expect(MOMENT_BACKGROUNDS[557].src).toBe("/templates/moment-botola.jpg");
-    expect(MOMENT_BACKGROUNDS[5651].src).toBe("/templates/moment-botola.jpg");
+    expect(LIVE_BACKGROUNDS[557].src).toBe("/templates/moment-botola.jpg");
+    expect(LIVE_BACKGROUNDS[5651].src).toBe("/templates/moment-botola.jpg");
     expect(BUNDLED_TEMPLATES[557]).toBe("/templates/botola.jpg");
     expect(BUNDLED_TEMPLATES[5651]).toBeUndefined();
+  });
+
+  it("hides the poster's footer only over a background that prints its own", () => {
+    const layout = { footer: { show: true } };
+    expect(withBackgroundFooter(layout, 572, "/templates/ucl.jpg").footer.show).toBe(false);
+    expect(withBackgroundFooter(layout, 572, "data:image/png;base64,uploaded").footer.show).toBe(true);
+    expect(withBackgroundFooter(layout, 11, "/templates/moment-laliga.jpg").footer.show).toBe(true);
+    expect(withBackgroundFooter(layout, 7, null).footer.show).toBe(true);
   });
 
   it("shrinks a long name to its width and leaves a short one alone", () => {
