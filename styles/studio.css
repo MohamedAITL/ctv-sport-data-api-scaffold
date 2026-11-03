@@ -875,3 +875,4 @@
   :root[data-design="studio"] .kp-tool { padding-inline: 14px; font-size: 16px; }
   :root[data-design="studio"] .kiosk-foot { padding-block: 4px; }
 }
+:root[data-design="studio"] .kxs .field.wide input.kxs-rate { width: 76px; flex: 0 0 76px; min-width: 0; }

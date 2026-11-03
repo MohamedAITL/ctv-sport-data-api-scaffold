@@ -22,7 +22,7 @@ const widgetKey = (league: number, round: string) => `botola.totwWidget.${league
 
 interface TotwState { competition: number; totw: Totw | null; playedRounds: number[] }
 /** What was changed by hand, per competition and round. */
-interface Picks { formation?: string; slots?: Record<number, number>; coach?: number; ratings?: Record<number, number> }
+interface Picks { formation?: string; slots?: Record<number, number>; coach?: number; ratings?: Record<number, number>; filled?: boolean }
 
 const label = (p: TotwPlayer) => `${p.number ?? ""} ${p.shortName || p.name}`.trim();
 // A pool player whose face is not inlined yet must not reach the poster with a
@@ -47,9 +47,11 @@ export default function TotwStudio({ league, leagueField }: { league: number; le
   const [editing, setEditing] = useState(false);
   const [faces, setFaces] = useState<Map<number, TotwPlayer>>(new Map());
   const [pasted, setPasted] = useState("");
-  const [pasteResult, setPasteResult] = useState<{ found: number; missed: string[] } | { error: string } | null>(null);
+  const [pasteResult, setPasteResult] = useState<{ found: number; missed: string[]; rated: boolean } | { error: string } | null>(null);
   const [widget, setWidget] = useState<string | null>(null);
   const [tag, setTag] = useState("");
+  // What is typed in each rating box, so "7." can become "7.5".
+  const [rateText, setRateText] = useState<Record<number, string>>({});
 
   useEffect(() => {
     try { const r = localStorage.getItem(LKEY); if (r) setLayout(deepMerge(DEFAULT_TOTW_LAYOUT, JSON.parse(r))); } catch { /* defaults */ }
@@ -88,7 +90,7 @@ export default function TotwStudio({ league, leagueField }: { league: number; le
     if (!roundId) return;
     try { const r = localStorage.getItem(picksKey(league, roundId)); setPicks(r ? JSON.parse(r) : {}); } catch { setPicks({}); }
     setFaces(new Map());
-    setPasted(""); setPasteResult(null); setTag("");
+    setPasted(""); setPasteResult(null); setTag(""); setRateText({});
     try { setWidget(localStorage.getItem(widgetKey(league, roundId))); } catch { setWidget(null); }
   }, [league, roundId]);
   const saveWidget = (src: string | null) => {
@@ -170,8 +172,9 @@ export default function TotwStudio({ league, leagueField }: { league: number; le
   const fillFromPaste = (text = pasted) => {
     if (!pool) return;
     const r = matchPasted(text, pool.players, formation);
-    setPasteResult({ found: r.found, missed: r.missed });
-    if (r.found > 0) savePicks({ ...picks, formation: r.formation, slots: r.slots, ratings: r.ratings });
+    setPasteResult({ found: r.found, missed: r.missed, rated: Object.keys(r.ratings).length > 0 });
+    // The widget's copy carries no ratings: keep whatever was typed for these players.
+    if (r.found > 0) { savePicks({ ...picks, formation: r.formation, slots: r.slots, ratings: { ...picks.ratings, ...r.ratings }, filled: true }); setRateText({}); }
   };
 
   // One press after copying inside the widget: no paste box, no other tab.
@@ -183,6 +186,14 @@ export default function TotwStudio({ league, leagueField }: { league: number; le
     } catch {
       setPasteResult({ error: t("اسمح للمتصفح بقراءة الحافظة، أو ألصق النص في المربع أدناه.", "Allow the browser to read the clipboard, or paste the text in the box below.") });
     }
+  };
+
+  const setRating = (id: number, text: string) => {
+    setRateText((m) => ({ ...m, [id]: text }));
+    const n = Number(text.trim().replace(",", "."));
+    const ratings = { ...(picks.ratings ?? {}) };
+    if (text.trim() && Number.isFinite(n) && n >= 0 && n <= 10) ratings[id] = Math.round(n * 10) / 10; else delete ratings[id];
+    savePicks({ ...picks, ratings });
   };
 
   const pickSlot = (i: number, id: number) => {
@@ -221,7 +232,7 @@ export default function TotwStudio({ league, leagueField }: { league: number; le
               </select>
             )}
           </label>
-          <div className="kv"><span>{t("المصدر")}</span><b>{!forLeague ? "—" : official ? t("التشكيلة الرسمية", "Official team") : picks.ratings ? t("تعبئة تلقائية", "Filled automatically") : t("اختيار يدوي", "Picked by hand")}</b></div>
+          <div className="kv"><span>{t("المصدر")}</span><b>{!forLeague ? "—" : official ? t("التشكيلة الرسمية", "Official team") : picks.filled ? t("تعبئة تلقائية", "Filled automatically") : t("اختيار يدوي", "Picked by hand")}</b></div>
           {forLeague && !official && (
             <p className="muted">{t("لا تتوفر تشكيلة رسمية للجولة ولا تقييمات للاعبين في هذه المسابقة — ألصق تشكيلة الجولة لتعبئتها تلقائياً، أو اختر اللاعبين بنفسك.", "No official team or player ratings for this competition: paste the team of the round to fill it in automatically, or pick the players yourself.")}</p>
           )}
@@ -281,6 +292,7 @@ export default function TotwStudio({ league, leagueField }: { league: number; le
                           ? t("لم يُعثر على أي لاعب من هذه الجولة في النص.", "No player from this round was found in the text.")
                           : t(`تم التعرف على ${pasteResult.found} من 11 لاعباً.`, `Found ${pasteResult.found} of 11 players.`)}
                         {pasteResult.missed.length > 0 && <> {t("لم يُعثر على: ", "Not found: ")}<bdi>{pasteResult.missed.slice(0, 6).join("، ")}</bdi>{t(" — اخترهم من القوائم.", " — pick them from the lists.")}</>}
+                        {pasteResult.found > 0 && !pasteResult.rated && <> {t("التقييمات لا تُنسخ من التشكيلة: اكتبها في الخانة بجانب كل لاعب.", "Ratings are not copied with the team: type them in the box beside each player.")}</>}
                       </p>
                     ))}
                   </div>
@@ -296,6 +308,7 @@ export default function TotwStudio({ league, leagueField }: { league: number; le
                   {slots.map((s, i) => (
                     <label key={i} className={`field wide${picks.slots?.[i] ? " kxs-on" : ""}`}>
                       <span>{i === 0 ? t("حارس المرمى", "Goalkeeper") : s.player?.position ?? t(`اللاعب ${i + 1}`, `Player ${i + 1}`)}</span>
+                      <div className="kxs-pick">
                       <select value={s.player?.id ?? ""} onChange={(e) => pickSlot(i, Number(e.target.value))}>
                         <option value="">{t("— اختر لاعباً —")}</option>
                         {s.player && !poolById.has(s.player.id) && <option value={s.player.id}>{label(s.player)} — {s.player.club?.name}</option>}
@@ -307,6 +320,15 @@ export default function TotwStudio({ league, leagueField }: { league: number; le
                           </optgroup>
                         ))}
                       </select>
+                      {s.player && (
+                        <input
+                          type="text" inputMode="decimal" className="kxs-rate" dir="ltr" placeholder={t("التقييم", "Rating")}
+                          aria-label={t(`تقييم ${s.player.shortName || s.player.name}`, `Rating for ${s.player.shortName || s.player.name}`)}
+                          value={rateText[s.player.id] ?? (picks.ratings?.[s.player.id]?.toFixed(1) ?? "")}
+                          onChange={(e) => setRating((s.player as TotwPlayer).id, e.target.value)}
+                        />
+                      )}
+                      </div>
                     </label>
                   ))}
                 </div>

@@ -1,12 +1,14 @@
 import { embedSrc, matchPasted } from "@/lib/totwPaste";
 import { formationSlots, type TotwPlayer } from "@/lib/totw";
+import fs from "fs";
+import path from "path";
 import pool from "./fixtures/botolaRound6Pool.json";
 
 // Botola round 6, as the app reads it: 246 players, starters and substitutes who came on.
 const players = pool as TotwPlayer[];
 const id = (slug: string) => (players.find((p) => p.slug === slug) as TotwPlayer).id;
 
-// A team as it is copied from a page: header lines, then each player's rating above his name.
+// A team typed as a list: header lines, each player's rating above his name, each row right to left.
 const TEAM: Array<[string, string]> = [
   ["7.9", "M. El Kajoui"], ["7.4", "H. El Moussaoui"], ["7.1", "I. Kandouss"], ["7.6", "J. Harkass"], ["7.0", "H. Manout"],
   ["7.3", "Y. Labhiri"], ["8.2", "A. Lamirat"], ["7.2", "Ayoub Khairi"], ["8.0", "M. Chouiar"], ["8.6", "O. Lamlioui"], ["7.8", "R. Mendes"],
@@ -22,11 +24,11 @@ describe("a pasted team of the round", () => {
     expect(out.missed).toEqual([]);
   });
 
-  it("puts the keeper in goal and the back four from their own left to right", () => {
+  it("puts the keeper in goal and reads each row right to left", () => {
     const spots = formationSlots("4-3-3");
     expect(out.slots[0]).toBe(id("munir-el-kajoui"));
     const back = spots.map((s, i) => ({ ...s, i })).filter((s) => s.line === spots[1].line).sort((a, b) => a.side - b.side);
-    expect(back.map((s) => out.slots[s.i])).toEqual(["el-moussaoui", "ismael-kandouss", "j.-harkass", "haytam-manout"].map(id));
+    expect(back.map((s) => out.slots[s.i])).toEqual(["haytam-manout", "j.-harkass", "ismael-kandouss", "el-moussaoui"].map(id));
   });
 
   it("finds a substitute who came on", () => {
@@ -90,16 +92,16 @@ describe("an embed code", () => {
   });
 });
 
-// Copied from the real widget for Botola round 6: its names, its ratings, its own lines.
-describe("the real team of the round, as the widget shows it", () => {
-  const WIDGET = ["Botola Pro", "Team of the Round", "8.4", "M. Chouiar", "7.7", "J. Rhabra", "7.8", "Y. Mehri", "8.2", "Y. Labhiri", "7.9", "A. Serrhat",
-    "7.8", "A. Mahir", "7.7", "I. Dayo", "7.8", "I. E. Alami", "8.5", "Smaali", "8.2", "M. Moufid", "7.9", "A. E. Ouaad", "Sofascore", "NEVER MISS", "SEE MUCH MORE"].join("\n");
-  const out = matchPasted(WIDGET, players);
+// Exactly what Ctrl+A, Ctrl+C gives inside the real widget for Botola round 6:
+// full name, club, short name, keeper first, each row right to left. No ratings.
+describe("the real team of the round, copied from the widget", () => {
+  const COPY = fs.readFileSync(path.join(__dirname, "fixtures/botolaRound6Widget.txt"), "utf8");
+  const out = matchPasted(COPY, players);
   const spots = formationSlots(out.formation).map((s, i) => ({ ...s, i }));
   const row = (line: number) => spots.filter((s) => s.line === line).sort((a, b) => a.side - b.side).map((s) => out.slots[s.i]);
   const lines = Array.from(new Set(spots.slice(1).map((s) => s.line))).sort((a, b) => a - b);
 
-  it("finds all eleven, French spellings included, and says nothing about the page's own lines", () => {
+  it("finds all eleven, and takes the club lines as clubs, never as missing players", () => {
     expect(out).toMatchObject({ found: 11, formation: "4-3-3", missed: [] });
   });
 
@@ -107,16 +109,22 @@ describe("the real team of the round, as the widget shows it", () => {
     expect(Object.values(out.slots)).toEqual(expect.arrayContaining([id("jawad-ghabra"), id("a.-khairi")]));
   });
 
-  it("lays each row out as the widget draws it, left to right", () => {
+  it("lays each row out as the widget draws it, left to right on the poster", () => {
     expect(out.slots[0]).toBe(id("amine-el-ouaad"));
     expect(row(lines[0])).toEqual(["issoufou-dayo", "ismail-el-alami", "hamza-smaali", "mohamed-moufid"].map(id));
     expect(row(lines[1])).toEqual(["yassine-labhiri", "anas-serrhat", "abdessamad-mahir"].map(id));
     expect(row(lines[2])).toEqual(["mounir-chouiar", "jawad-ghabra", "a.-khairi"].map(id));
   });
 
-  it("carries each rating", () => {
-    expect(out.ratings[id("hamza-smaali")]).toBe(8.5);
-    expect(out.ratings[id("a.-khairi")]).toBe(7.8);
-    expect(out.ratings[id("jawad-ghabra")]).toBe(7.7);
+  it("brings no ratings: the widget does not let them be copied", () => {
+    expect(out.ratings).toEqual({});
+  });
+
+  it("uses the club beside a name to pick between namesakes", () => {
+    // Two players are "Khafi": alone the name is a tie; with a club line it is not.
+    const club = (slug: string) => (players.find((p) => p.slug === slug) as TotwPlayer).club?.slug?.replace(/-/g, " ") ?? "";
+    expect(matchPasted("Khafi", players).found).toBe(0);
+    expect(Object.values(matchPasted(`Khafi\n${club("ismail-khafi")}`, players).slots)).toEqual([id("ismail-khafi")]);
+    expect(Object.values(matchPasted(`Khafi\n${club("ayoub-el-khafi")}`, players).slots)).toEqual([id("ayoub-el-khafi")]);
   });
 });

@@ -2,9 +2,10 @@
 //
 // The text is whatever was copied from a page that shows a team: names and
 // ratings, in any layout, in Latin letters or Arabic. Nothing here trusts that
-// layout. Each line is matched by name against everyone who played the round.
-// Each player's row comes from his position in his own match; within a row the
-// paste's order is kept, since a page lists a row left to right.
+// layout. Each line is matched by name against everyone who played the round,
+// helped by a club line next to it when the copy has one. Each player's row
+// comes from his position in his own match; within a row the copy runs right to
+// left, as the widget's text does (keeper first, then each row from the back).
 import { normalise } from "./searchMatches";
 import { formationSlots, type TotwPlayer } from "./totw";
 
@@ -55,6 +56,22 @@ const rowOf = (p: TotwPlayer): Row => {
   return line < 40 ? "D" : line < 75 ? "M" : "F";
 };
 
+// Words every club name shares: "RS", "Athletic Club", "Union Sport"...
+const CLUB_WEAK = new Set(["fc", "ac", "as", "cs", "sc", "rs", "us", "club", "athletic", "athletique", "sport", "sports", "sportif", "union", "de", "du", "la", "le", "el", "al"]);
+/** The round's clubs a line names: by a word of their Latin name, or by its initials ("Fath Union Sport" is FUS). */
+function clubsNamed(line: string, players: TotwPlayer[]): Set<number> {
+  const ws = words(line);
+  const acronym = ws.map((w) => w.charAt(0)).join("");
+  const out = new Set<number>();
+  for (const p of players) {
+    const c = p.club;
+    if (!c || out.has(c.id)) continue;
+    const tokens = words((c.slug ?? "").replace(/-/g, " ")).filter((t) => !CLUB_WEAK.has(t));
+    if (tokens.some((t) => ws.includes(t) || (t.length >= 3 && t === acronym))) out.add(c.id);
+  }
+  return out;
+}
+
 interface Known { own: Set<string>; surname?: string; skeletons: Set<string>; initials: string }
 const known = new WeakMap<TotwPlayer, Known>();
 function knownOf(p: TotwPlayer): Known {
@@ -102,15 +119,18 @@ export function matchPasted(text: string, players: TotwPlayer[], fallback = "4-3
   const nums = lines.map((l) => Array.from(l.matchAll(RATING), (m) => Number(m[1].replace(",", "."))));
   const onlyNumber = lines.map((l) => /^[\d.,\s]+$/.test(l));
   const used = new Set<number>();
+  // A line naming a club is the club of the player beside it, never a player.
+  const clubs = lines.map((l, i) => (onlyNumber[i] ? new Set<number>() : clubsNamed(l, players)));
   const best = new Map<number, { score: number; line: number }>();
   const missed: string[] = [];
 
   lines.forEach((l, i) => {
-    if (onlyNumber[i] || NOISE.test(latin(normalise(l)))) return;
+    if (onlyNumber[i] || clubs[i].size > 0 || NOISE.test(latin(normalise(l)))) return;
+    const near = clubs[i + 1]?.size ? clubs[i + 1] : clubs[i - 1] ?? new Set<number>();
     const ws = words(l.replace(RATING, " "));
     if (ws.length === 0) return;
     const initials = latin(l.replace(RATING, " ")).split(" ").filter((w) => w.length === 1);
-    const ranked = players.map((p) => ({ p, s: score(ws, initials, p) })).filter((x) => x.s > 0).sort((a, b) => b.s - a.s);
+    const ranked = players.map((p) => { const s = score(ws, initials, p); return { p, s: s && p.club && near.has(p.club.id) ? s + 1 : s }; }).filter((x) => x.s > 0).sort((a, b) => b.s - a.s);
     if (ranked.length === 0 || (ranked[1] && ranked[1].s === ranked[0].s)) {
       if (ws.some((w) => w.length >= 3 && !WEAK.has(w))) missed.push(l);
       return;
@@ -148,8 +168,8 @@ export function matchPasted(text: string, players: TotwPlayer[], fallback = "4-3
     lines_.forEach((line, k) => {
       if (rowFor(k) !== r) return;
       const row = spots.filter((s) => s.line === line).sort((a, b) => a.side - b.side);
-      // Within a row the page lists players left to right, as it draws them.
-      const here = queue.splice(0, row.length).sort((a, b) => at(a) - at(b));
+      // The copy lists a row right to left: its first player stands on the right.
+      const here = queue.splice(0, row.length).sort((a, b) => at(b) - at(a));
       here.forEach((p, j) => { slots[row[j].i] = p.id; });
     });
   }

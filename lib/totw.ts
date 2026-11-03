@@ -9,7 +9,7 @@
 import { crest, FACE_IMG, fetchLiveDetail, get, Q, rowSides } from "./live365";
 import { fetch365Games, matchesInRound } from "./scores365Games";
 
-export interface TotwClub { id: number; name: string; logo: string | null }
+export interface TotwClub { id: number; name: string; logo: string | null; slug?: string }
 export interface TotwPlayer {
   /** The athlete, so the same player is the same id in every source. */
   id: number;
@@ -114,7 +114,7 @@ export async function fetchRoundPool(competitionId: number, round: number): Prom
     const { match, homeLineup, awayLineup } = d.value;
     for (const [team, lu] of [[match.home, homeLineup], [match.away, awayLineup]] as const) {
       if (!lu) continue;
-      const club: TotwClub = { id: team.id, name: team.name, logo: team.logo };
+      const club: TotwClub = { id: team.id, name: team.name, logo: team.logo, slug: team.slug };
       const add = (into: Map<number, TotwPlayer>) => (p: (typeof lu.starting)[number]) => {
         const id = p.athleteId ?? p.id;
         // A replayed match lists the same players twice; keep the first.

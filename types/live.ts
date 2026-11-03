@@ -4,6 +4,8 @@
 export interface LiveTeam {
   id: number;
   name: string;
+  /** The name in Latin letters, as a URL slug ("rsb-berkane"). */
+  slug?: string;
   score: number | null;
   logo: string | null;
 }

@@ -50,7 +50,7 @@ export const competitionLogo = (id: number) => `${COMP_IMG}/v1/Competitions/${id
 const score = (v?: number): number | null =>
   v === undefined || v === null || v < 0 ? null : Math.round(v);
 
-interface RawCompetitor { id?: number; name?: string; score?: number; imageVersion?: number; countryId?: number }
+interface RawCompetitor { id?: number; name?: string; nameForURL?: string; score?: number; imageVersion?: number; countryId?: number }
 interface RawGame {
   id?: number;
   sportId?: number;
@@ -79,8 +79,8 @@ export function toMatch(g: RawGame): LiveMatch | null {
     clock: g.gameTimeDisplay ?? "",
     isLive: g.statusGroup === STATUS_LIVE,
     isFinished: g.statusGroup === STATUS_FINISHED,
-    home: { id: h.id, name: h.name ?? "", score: score(h.score), logo: crest(h.id, h.imageVersion) },
-    away: { id: a.id, name: a.name ?? "", score: score(a.score), logo: crest(a.id, a.imageVersion) },
+    home: { id: h.id, name: h.name ?? "", slug: h.nameForURL, score: score(h.score), logo: crest(h.id, h.imageVersion) },
+    away: { id: a.id, name: a.name ?? "", slug: a.nameForURL, score: score(a.score), logo: crest(a.id, a.imageVersion) },
   };
 }
 
