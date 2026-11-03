@@ -1,4 +1,4 @@
-import { matchPasted } from "@/lib/totwPaste";
+import { embedSrc, matchPasted } from "@/lib/totwPaste";
 import { formationSlots, type TotwPlayer } from "@/lib/totw";
 import pool from "./fixtures/botolaRound6Pool.json";
 
@@ -40,9 +40,11 @@ describe("a pasted team of the round", () => {
     expect(shirt.ratings[id("oussama-lamlioui")]).toBeUndefined();
   });
 
-  it("does not care about the order of the paste", () => {
-    const shuffled = matchPasted(paste([...TEAM].reverse()), players);
-    expect(shuffled.slots).toEqual(out.slots);
+  it("takes each player's row from his position, whatever order the lines come in", () => {
+    const reversed = matchPasted(paste([...TEAM].reverse()), players);
+    const rows = (r: typeof out) => formationSlots(r.formation).map((s, i) => [s.line, r.slots[i]] as const)
+      .reduce((m, [line, pid]) => m.set(line, [...(m.get(line) ?? []), pid].sort()), new Map<number, number[]>());
+    expect(rows(reversed)).toEqual(rows(out));
   });
 
   it("reads Arabic names too", () => {
@@ -52,9 +54,11 @@ describe("a pasted team of the round", () => {
 
   it("settles a shared surname with the initial, and leaves a true tie to be picked by hand", () => {
     expect(Object.values(matchPasted("A. El Khafi", players).slots)).toEqual([id("ayoub-el-khafi")]);
-    const tie = matchPasted("A. Khairi", players);
+    // Our data's Latin name for يوسف مهري is "a.-khairi": his Arabic first name says Y, so "A." is Ayoub.
+    expect(Object.values(matchPasted("A. Khairi", players).slots)).toEqual([id("ayoub-khairi")]);
+    const tie = matchPasted("Khafi", players);
     expect(tie.found).toBe(0);
-    expect(tie.missed).toEqual(["A. Khairi"]);
+    expect(tie.missed).toEqual(["Khafi"]);
   });
 
   it("fills what it found into the current formation when some are missing", () => {
@@ -67,5 +71,52 @@ describe("a pasted team of the round", () => {
   it("ignores a paste with no players in it, and never echoes the page's own name", () => {
     expect(matchPasted("Team of the Week\nRound 6\nBotola Pro", players)).toMatchObject({ found: 0, missed: [] });
     expect(matchPasted("Sofascore\nTeam of the Round provided by Sofascore\nRating\n8.6\nO. Lamlioui", players)).toMatchObject({ found: 1, missed: [] });
+  });
+});
+
+describe("an embed code", () => {
+  const CODE = `<iframe id="x" width="100%" height="598" src="https://widgets.example.com/en/embed/unique-tournament/937/season/102220/round/30347/teamOfTheWeek?showCompetitionLogo=true&amp;widgetTheme=light" frameBorder="0"></iframe>`;
+
+  it("gives the widget's address, from the whole tag or the address alone", () => {
+    expect(embedSrc(CODE)).toBe("https://widgets.example.com/en/embed/unique-tournament/937/season/102220/round/30347/teamOfTheWeek?showCompetitionLogo=true&widgetTheme=light");
+    expect(embedSrc("https://widgets.example.com/en/embed/x")).toBe("https://widgets.example.com/en/embed/x");
+  });
+
+  it("refuses anything that is not a secure embed page", () => {
+    expect(embedSrc("hello")).toBeNull();
+    expect(embedSrc('<iframe src="http://widgets.example.com/en/embed/x">')).toBeNull();
+    expect(embedSrc('<iframe src="javascript:alert(1)">')).toBeNull();
+    expect(embedSrc("https://example.com/page")).toBeNull();
+  });
+});
+
+// Copied from the real widget for Botola round 6: its names, its ratings, its own lines.
+describe("the real team of the round, as the widget shows it", () => {
+  const WIDGET = ["Botola Pro", "Team of the Round", "8.4", "M. Chouiar", "7.7", "J. Rhabra", "7.8", "Y. Mehri", "8.2", "Y. Labhiri", "7.9", "A. Serrhat",
+    "7.8", "A. Mahir", "7.7", "I. Dayo", "7.8", "I. E. Alami", "8.5", "Smaali", "8.2", "M. Moufid", "7.9", "A. E. Ouaad", "Sofascore", "NEVER MISS", "SEE MUCH MORE"].join("\n");
+  const out = matchPasted(WIDGET, players);
+  const spots = formationSlots(out.formation).map((s, i) => ({ ...s, i }));
+  const row = (line: number) => spots.filter((s) => s.line === line).sort((a, b) => a.side - b.side).map((s) => out.slots[s.i]);
+  const lines = Array.from(new Set(spots.slice(1).map((s) => s.line))).sort((a, b) => a - b);
+
+  it("finds all eleven, French spellings included, and says nothing about the page's own lines", () => {
+    expect(out).toMatchObject({ found: 11, formation: "4-3-3", missed: [] });
+  });
+
+  it("reads Rhabra as غبرة and Mehri by his Arabic name", () => {
+    expect(Object.values(out.slots)).toEqual(expect.arrayContaining([id("jawad-ghabra"), id("a.-khairi")]));
+  });
+
+  it("lays each row out as the widget draws it, left to right", () => {
+    expect(out.slots[0]).toBe(id("amine-el-ouaad"));
+    expect(row(lines[0])).toEqual(["issoufou-dayo", "ismail-el-alami", "hamza-smaali", "mohamed-moufid"].map(id));
+    expect(row(lines[1])).toEqual(["yassine-labhiri", "anas-serrhat", "abdessamad-mahir"].map(id));
+    expect(row(lines[2])).toEqual(["mounir-chouiar", "jawad-ghabra", "a.-khairi"].map(id));
+  });
+
+  it("carries each rating", () => {
+    expect(out.ratings[id("hamza-smaali")]).toBe(8.5);
+    expect(out.ratings[id("a.-khairi")]).toBe(7.8);
+    expect(out.ratings[id("jawad-ghabra")]).toBe(7.7);
   });
 });

@@ -7,7 +7,7 @@ import ExportControls from "./ExportControls";
 import { DEFAULT_TOTW_LAYOUT, type TotwLayout } from "@/config/totwLayout";
 import { leagueById } from "@/config/standingsLeagues";
 import { FORMATIONS, formationSlots, roundOfKey, type RoundPool, type Totw, type TotwPlayer } from "@/lib/totw";
-import { matchPasted } from "@/lib/totwPaste";
+import { embedSrc, matchPasted } from "@/lib/totwPaste";
 import { useCachedData } from "@/lib/useCachedData";
 import { useFitWidth } from "@/lib/useFitWidth";
 import { deepMerge } from "@/lib/persist";
@@ -18,6 +18,7 @@ import { useLang } from "@/lib/prefs";
 const PREVIEW_W = 480;
 const LKEY = "botola.totwLayout";
 const picksKey = (league: number, round: string) => `botola.totwPicks.${league}.${round}`;
+const widgetKey = (league: number, round: string) => `botola.totwWidget.${league}.${round}`;
 
 interface TotwState { competition: number; totw: Totw | null; playedRounds: number[] }
 /** What was changed by hand, per competition and round. */
@@ -46,7 +47,9 @@ export default function TotwStudio({ league, leagueField }: { league: number; le
   const [editing, setEditing] = useState(false);
   const [faces, setFaces] = useState<Map<number, TotwPlayer>>(new Map());
   const [pasted, setPasted] = useState("");
-  const [pasteResult, setPasteResult] = useState<{ found: number; missed: string[] } | null>(null);
+  const [pasteResult, setPasteResult] = useState<{ found: number; missed: string[] } | { error: string } | null>(null);
+  const [widget, setWidget] = useState<string | null>(null);
+  const [tag, setTag] = useState("");
 
   useEffect(() => {
     try { const r = localStorage.getItem(LKEY); if (r) setLayout(deepMerge(DEFAULT_TOTW_LAYOUT, JSON.parse(r))); } catch { /* defaults */ }
@@ -85,8 +88,13 @@ export default function TotwStudio({ league, leagueField }: { league: number; le
     if (!roundId) return;
     try { const r = localStorage.getItem(picksKey(league, roundId)); setPicks(r ? JSON.parse(r) : {}); } catch { setPicks({}); }
     setFaces(new Map());
-    setPasted(""); setPasteResult(null);
+    setPasted(""); setPasteResult(null); setTag("");
+    try { setWidget(localStorage.getItem(widgetKey(league, roundId))); } catch { setWidget(null); }
   }, [league, roundId]);
+  const saveWidget = (src: string | null) => {
+    setWidget(src);
+    try { if (src) localStorage.setItem(widgetKey(league, roundId), src); else localStorage.removeItem(widgetKey(league, roundId)); } catch { /* private mode */ }
+  };
   const savePicks = (next: Picks) => {
     setPicks(next);
     try { localStorage.setItem(picksKey(league, roundId), JSON.stringify(next)); } catch { /* private mode */ }
@@ -159,11 +167,22 @@ export default function TotwStudio({ league, leagueField }: { league: number; le
     return Array.from(groups.entries());
   }, [pool]);
 
-  const fillFromPaste = () => {
+  const fillFromPaste = (text = pasted) => {
     if (!pool) return;
-    const r = matchPasted(pasted, pool.players, formation);
+    const r = matchPasted(text, pool.players, formation);
     setPasteResult({ found: r.found, missed: r.missed });
     if (r.found > 0) savePicks({ ...picks, formation: r.formation, slots: r.slots, ratings: r.ratings });
+  };
+
+  // One press after copying inside the widget: no paste box, no other tab.
+  const fillFromClipboard = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      setPasted(text);
+      fillFromPaste(text);
+    } catch {
+      setPasteResult({ error: t("اسمح للمتصفح بقراءة الحافظة، أو ألصق النص في المربع أدناه.", "Allow the browser to read the clipboard, or paste the text in the box below.") });
+    }
   };
 
   const pickSlot = (i: number, id: number) => {
@@ -226,20 +245,44 @@ export default function TotwStudio({ league, leagueField }: { league: number; le
               <>
                 {!official && (
                   <div className="kxs-paste">
-                    <label className="field wide">
-                      <span>{t("ألصق تشكيلة الجولة", "Paste the team of the round")}</span>
-                      <textarea rows={4} dir="auto" value={pasted} onChange={(e) => setPasted(e.target.value)}
-                        placeholder={t("الأسماء والتقييمات كما نسختها، بأي ترتيب", "Names and ratings as copied, in any order")} />
-                    </label>
-                    <button type="button" className="btn" disabled={!pasted.trim()} onClick={fillFromPaste}>{t("تعبئة تلقائية", "Fill automatically")}</button>
-                    {pasteResult && (
+                    {widget ? (
+                      <>
+                        <iframe className="kxs-widget" src={widget} title={t("تشكيلة الجولة المرجعية", "Reference team of the round")} loading="lazy" sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox" />
+                        <p className="muted">{t("اضغط داخل التشكيلة أعلاه، ثم Ctrl+A وCtrl+C، ثم اضغط:", "Click inside the team above, press Ctrl+A then Ctrl+C, then press:")}</p>
+                        <div className="row">
+                          <button type="button" className="btn primary" onClick={fillFromClipboard}>{t("تعبئة من الحافظة", "Fill from clipboard")}</button>
+                          <button type="button" className="btn ghost" onClick={() => saveWidget(null)}>{t("تغيير الكود", "Change the code")}</button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <label className="field wide">
+                          <span>{t("ألصق كود تشكيلة الجولة لتظهر هنا", "Paste the team of the round embed code to show it here")}</span>
+                          <textarea rows={3} dir="ltr" value={tag} onChange={(e) => setTag(e.target.value)} placeholder="<iframe src=…></iframe>" />
+                        </label>
+                        {tag.trim() && !embedSrc(tag) && <p className="err">{t("هذا ليس كود تضمين صالحاً.", "That is not a valid embed code.")}</p>}
+                        <button type="button" className="btn" disabled={!embedSrc(tag)} onClick={() => saveWidget(embedSrc(tag))}>{t("عرض التشكيلة", "Show the team")}</button>
+                      </>
+                    )}
+                    <details className="kxs-manual">
+                      <summary>{t("أو ألصق النص بنفسك", "Or paste the text yourself")}</summary>
+                      <label className="field wide">
+                        <span>{t("ألصق تشكيلة الجولة", "Paste the team of the round")}</span>
+                        <textarea rows={4} dir="auto" value={pasted} onChange={(e) => setPasted(e.target.value)}
+                          placeholder={t("الأسماء والتقييمات كما نسختها، بأي ترتيب", "Names and ratings as copied, in any order")} />
+                      </label>
+                      <button type="button" className="btn" disabled={!pasted.trim()} onClick={() => fillFromPaste()}>{t("تعبئة تلقائية", "Fill automatically")}</button>
+                    </details>
+                    {pasteResult && ("error" in pasteResult ? (
+                      <p className="err" role="status">{pasteResult.error}</p>
+                    ) : (
                       <p className={pasteResult.found === 0 ? "err" : "muted"} role="status">
                         {pasteResult.found === 0
                           ? t("لم يُعثر على أي لاعب من هذه الجولة في النص.", "No player from this round was found in the text.")
                           : t(`تم التعرف على ${pasteResult.found} من 11 لاعباً.`, `Found ${pasteResult.found} of 11 players.`)}
                         {pasteResult.missed.length > 0 && <> {t("لم يُعثر على: ", "Not found: ")}<bdi>{pasteResult.missed.slice(0, 6).join("، ")}</bdi>{t(" — اخترهم من القوائم.", " — pick them from the lists.")}</>}
                       </p>
-                    )}
+                    ))}
                   </div>
                 )}
                 <label className="field wide">

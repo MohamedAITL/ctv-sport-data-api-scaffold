@@ -2,9 +2,9 @@
 //
 // The text is whatever was copied from a page that shows a team: names and
 // ratings, in any layout, in Latin letters or Arabic. Nothing here trusts that
-// layout. Each line is matched by name against everyone who played the round,
-// and each player is placed by his position in his own match, so the order of
-// the paste does not matter.
+// layout. Each line is matched by name against everyone who played the round.
+// Each player's row comes from his position in his own match; within a row the
+// paste's order is kept, since a page lists a row left to right.
 import { normalise } from "./searchMatches";
 import { formationSlots, type TotwPlayer } from "./totw";
 
@@ -24,7 +24,22 @@ const RATING = /(?:^|[^\d.,])(10[.,]0|[3-9][.,]\d)(?![\d.,])/g;
 const WEAK = new Set(["el", "al", "ben", "bin", "ibn", "abu", "de", "da", "di", "la", "le", "van", "von", "jr", "ال", "بن", "ابن", "ابو"]);
 // Words a copied team carries besides the players.
 // The page's own name is among them, and must never be echoed back as "not found".
-const NOISE = /team of the (week|round)|round|matchday|botola|formation|\bpro\b|rating|provided|powered|sofa\s?score|تشكيله الجوله|الجوله|البطوله|التقييم/i;
+const NOISE = /team of the (week|round)|round|matchday|botola|formation|\bpro\b|rating|provided|powered|sofa\s?score|never miss|see (much )?more|تشكيله الجوله|الجوله|البطوله|التقييم/i;
+
+// Names reach us spelled two ways: our data's own Latin and Arabic, and the page's
+// French-style Latin ("Rhabra" is غبرة, "Serrhat" is سرغات). Their consonants agree.
+const AR: Record<string, string> = {
+  "ب": "b", "ت": "t", "ث": "t", "ج": "j", "ح": "h", "خ": "k", "د": "d", "ذ": "d", "ر": "r", "ز": "z", "س": "s", "ش": "s",
+  "ص": "s", "ض": "d", "ط": "t", "ظ": "z", "غ": "g", "ف": "f", "ق": "k", "ك": "k", "ل": "l", "م": "m", "ن": "n", "ه": "h",
+};
+const arSkeleton = (w: string) => Array.from(w.replace(/^ال/, ""), (c) => AR[c] ?? "").join("").replace(/(.)\1+/g, "$1");
+const latinSkeleton = (w: string) => w.replace(/rh|gh/g, "g").replace(/kh/g, "k").replace(/ch|sh/g, "s").replace(/th/g, "t").replace(/dj/g, "j")
+  .replace(/[qc]/g, "k").replace(/[aeiouyw]/g, "").replace(/(.)\1+/g, "$1");
+// The Latin letters an Arabic first name can start with.
+const AR_INITIAL: Record<string, string> = {
+  "ا": "aeiou", "أ": "aeiou", "إ": "ei", "آ": "a", "ع": "aeiou", "ي": "yi", "و": "wo", "ج": "jg", "غ": "gr", "ش": "sc", "خ": "kh", "ق": "kq",
+};
+const arInitials = (w: string) => AR_INITIAL[w.charAt(0)] ?? AR[w.charAt(0)] ?? "";
 
 const latin = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z؀-ۿ]+/g, " ").trim();
 const words = (s: string) => latin(normalise(s)).split(" ").filter((w) => w.length >= 2);
@@ -40,19 +55,41 @@ const rowOf = (p: TotwPlayer): Row => {
   return line < 40 ? "D" : line < 75 ? "M" : "F";
 };
 
-/** How well a line names a player: a surname or a strong word must match; an initial settles shared surnames. */
-function score(line: string[], initials: string[], p: TotwPlayer): number {
-  const own = new Set([...words((p.slug ?? "").replace(/-/g, " ")), ...words(p.name), ...words(p.shortName)]);
-  const surname = words((p.slug ?? "").replace(/-/g, " ")).filter((w) => !WEAK.has(w)).pop();
-  let s = 0, strong = false;
-  for (const w of line) {
-    if (!own.has(w)) continue;
-    if (WEAK.has(w)) { s += .3; continue; }
-    s += w === surname ? 1.5 : 1;
-    if (w.length >= 3) strong = true;
+interface Known { own: Set<string>; surname?: string; skeletons: Set<string>; initials: string }
+const known = new WeakMap<TotwPlayer, Known>();
+function knownOf(p: TotwPlayer): Known {
+  let k = known.get(p);
+  if (!k) {
+    const slug = words((p.slug ?? "").replace(/-/g, " "));
+    const arabic = p.name.split(/\s+/).filter(Boolean);
+    k = {
+      own: new Set([...slug, ...words(p.name), ...words(p.shortName)]),
+      surname: slug.filter((w) => !WEAK.has(w)).pop(),
+      skeletons: new Set([...slug.map(latinSkeleton), ...arabic.map(arSkeleton)].filter((x) => x.length >= 3)),
+      initials: (slug[0]?.charAt(0) ?? "") + arInitials(arabic[0] ?? ""),
+    };
+    known.set(p, k);
   }
-  const first = latin(p.slug ?? "").charAt(0);
-  if (strong && first && initials.includes(first)) s += .5;
+  return k;
+}
+
+/**
+ * How well a line names a player: a surname or a strong word must match, by
+ * spelling or, failing that, by its consonants; an initial settles shared surnames.
+ */
+function score(line: string[], initials: string[], p: TotwPlayer): number {
+  const k = knownOf(p);
+  let s = 0, strong = false, sounded = false;
+  for (const w of line) {
+    if (k.own.has(w)) {
+      if (WEAK.has(w)) { s += .3; continue; }
+      s += w === k.surname ? 1.5 : 1;
+      if (w.length >= 3) strong = true;
+    } else if (!sounded && !WEAK.has(w) && k.skeletons.has(latinSkeleton(w))) {
+      s += .8; strong = true; sounded = true; // counted once: one word, two spellings
+    }
+  }
+  if (strong && initials.some((i) => k.initials.includes(i))) s += .5;
   return strong ? s : 0;
 }
 
@@ -69,7 +106,7 @@ export function matchPasted(text: string, players: TotwPlayer[], fallback = "4-3
   const missed: string[] = [];
 
   lines.forEach((l, i) => {
-    if (onlyNumber[i] || NOISE.test(normalise(l))) return;
+    if (onlyNumber[i] || NOISE.test(latin(normalise(l)))) return;
     const ws = words(l.replace(RATING, " "));
     if (ws.length === 0) return;
     const initials = latin(l.replace(RATING, " ")).split(" ").filter((w) => w.length === 1);
@@ -92,6 +129,7 @@ export function matchPasted(text: string, players: TotwPlayer[], fallback = "4-3
     ratings[id] = nums[near][nums[near].length - 1];
   }
 
+  const at = (p: TotwPlayer) => best.get(p.id)?.line ?? 0;
   const chosen = Array.from(best.entries()).sort((a, b) => b[1].score - a[1].score).slice(0, 11)
     .map(([id]) => players.find((p) => p.id === id) as TotwPlayer);
   const by = (r: Row) => chosen.filter((p) => rowOf(p) === r);
@@ -110,7 +148,8 @@ export function matchPasted(text: string, players: TotwPlayer[], fallback = "4-3
     lines_.forEach((line, k) => {
       if (rowFor(k) !== r) return;
       const row = spots.filter((s) => s.line === line).sort((a, b) => a.side - b.side);
-      const here = queue.splice(0, row.length).sort((a, b) => (a.side ?? 50) - (b.side ?? 50));
+      // Within a row the page lists players left to right, as it draws them.
+      const here = queue.splice(0, row.length).sort((a, b) => at(a) - at(b));
       here.forEach((p, j) => { slots[row[j].i] = p.id; });
     });
   }
@@ -120,4 +159,18 @@ export function matchPasted(text: string, players: TotwPlayer[], fallback = "4-3
   for (const p of chosen) if (!placed.has(p.id) && rowOf(p) !== "G" && free.length) slots[free.shift() as number] = p.id;
 
   return { formation, slots, ratings, found: Object.keys(slots).length, missed };
+}
+
+/**
+ * The address inside an embed code (or the address itself), for showing the
+ * widget next to the poster. Only a secure embed page is accepted.
+ */
+export function embedSrc(code: string): string | null {
+  const raw = (code.match(/src\s*=\s*["']([^"']+)["']/i)?.[1] ?? code).trim().replace(/&amp;/g, "&");
+  try {
+    const u = new URL(raw);
+    return u.protocol === "https:" && /\/embed\//.test(u.pathname) ? u.toString() : null;
+  } catch {
+    return null;
+  }
 }
