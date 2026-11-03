@@ -6,7 +6,7 @@ import { NEWS_SOURCES, sourceName } from "../types/news";
 // The app never names its data sources on screen. Code may (identifiers,
 // comments, fetch URLs); text a user can read may not. "البطولة", "Goal" and
 // "الرياضة" are left out: they are also ordinary words and league names.
-const NAMES = /365\s?scores|hesport|hespress|elbotola|kooora|هسبورت|هسبريس|كووورة|بي إن سبورت|سكاي نيوز/i;
+const NAMES = /365\s?scores|sofa\s?score|hesport|hespress|elbotola|kooora|هسبورت|هسبريس|كووورة|بي إن سبورت|سكاي نيوز/i;
 
 const files = (dir: string): string[] =>
   fs.readdirSync(dir, { withFileTypes: true }).flatMap((d) => {

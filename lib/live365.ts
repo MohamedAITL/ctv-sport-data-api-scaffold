@@ -196,7 +196,7 @@ export async function fetchLiveMatches(isoDate?: string): Promise<LiveMatch[]> {
 
 const ROLE: Record<number, LineupRole> = { 1: "starting", 2: "substitute", 3: "missing", 4: "coach" };
 
-interface RawMember { id?: number; name?: string; shortName?: string; jerseyNumber?: number; athleteId?: number; imageVersion?: number }
+interface RawMember { id?: number; name?: string; shortName?: string; nameForURL?: string; jerseyNumber?: number; athleteId?: number; imageVersion?: number }
 interface RawPlayerStat { name?: string; value?: string; isTop?: boolean }
 interface RawLineupMember {
   id?: number;
@@ -304,6 +304,7 @@ function buildLineup(lu: RawLineups | undefined, members: RawMember[]): TeamLine
       id: lm.id ?? 0,
       name: m.name ?? "",
       shortName: m.shortName || m.name || "",
+      slug: m.nameForURL,
       athleteId: m.athleteId ?? null,
       number: m.jerseyNumber ?? null,
       photo: m.athleteId ? `${FACE_IMG}/v${m.imageVersion ?? 1}/Athletes/${m.athleteId}` : null,

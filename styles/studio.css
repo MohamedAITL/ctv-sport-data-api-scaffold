@@ -314,7 +314,7 @@
 :root[data-design="studio"] .field.wide:has(select) + .field.wide:has(select), :root[data-design="studio"] .field.wide:has(select) + .kv { margin-top: 10px; }
 :root[data-design="studio"] .field.wide:not(:has(select)) > span { flex: 0 0 auto; max-width: 50%; }
 :root[data-design="studio"] .field.wide input[type="text"] { flex: 1; width: auto; min-width: 0; }
-:root[data-design="studio"] .field input[type="number"], :root[data-design="studio"] .field input[type="text"], :root[data-design="studio"] .field input[type="date"], :root[data-design="studio"] .field input[type="search"] {
+:root[data-design="studio"] .field input[type="number"], :root[data-design="studio"] .field input[type="text"], :root[data-design="studio"] .field input[type="date"], :root[data-design="studio"] .field input[type="search"], :root[data-design="studio"] .field textarea {
   min-height: 38px; border-radius: var(--radius); border-color: var(--border-2);
 }
 :root[data-design="studio"] .field input[type="color"] { border-radius: var(--radius); }

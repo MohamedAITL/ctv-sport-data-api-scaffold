@@ -7,6 +7,7 @@ import ExportControls from "./ExportControls";
 import { DEFAULT_TOTW_LAYOUT, type TotwLayout } from "@/config/totwLayout";
 import { leagueById } from "@/config/standingsLeagues";
 import { FORMATIONS, formationSlots, roundOfKey, type RoundPool, type Totw, type TotwPlayer } from "@/lib/totw";
+import { matchPasted } from "@/lib/totwPaste";
 import { useCachedData } from "@/lib/useCachedData";
 import { useFitWidth } from "@/lib/useFitWidth";
 import { deepMerge } from "@/lib/persist";
@@ -20,7 +21,7 @@ const picksKey = (league: number, round: string) => `botola.totwPicks.${league}.
 
 interface TotwState { competition: number; totw: Totw | null; playedRounds: number[] }
 /** What was changed by hand, per competition and round. */
-interface Picks { formation?: string; slots?: Record<number, number>; coach?: number }
+interface Picks { formation?: string; slots?: Record<number, number>; coach?: number; ratings?: Record<number, number> }
 
 const label = (p: TotwPlayer) => `${p.number ?? ""} ${p.shortName || p.name}`.trim();
 // A pool player whose face is not inlined yet must not reach the poster with a
@@ -44,6 +45,8 @@ export default function TotwStudio({ league, leagueField }: { league: number; le
   const [picks, setPicks] = useState<Picks>({});
   const [editing, setEditing] = useState(false);
   const [faces, setFaces] = useState<Map<number, TotwPlayer>>(new Map());
+  const [pasted, setPasted] = useState("");
+  const [pasteResult, setPasteResult] = useState<{ found: number; missed: string[] } | null>(null);
 
   useEffect(() => {
     try { const r = localStorage.getItem(LKEY); if (r) setLayout(deepMerge(DEFAULT_TOTW_LAYOUT, JSON.parse(r))); } catch { /* defaults */ }
@@ -82,6 +85,7 @@ export default function TotwStudio({ league, leagueField }: { league: number; le
     if (!roundId) return;
     try { const r = localStorage.getItem(picksKey(league, roundId)); setPicks(r ? JSON.parse(r) : {}); } catch { setPicks({}); }
     setFaces(new Map());
+    setPasted(""); setPasteResult(null);
   }, [league, roundId]);
   const savePicks = (next: Picks) => {
     setPicks(next);
@@ -102,11 +106,11 @@ export default function TotwStudio({ league, leagueField }: { league: number; le
   const officialById = useMemo(() => new Map([...(totw?.players ?? []), ...(totw?.coach ? [totw.coach] : [])].map((p) => [p.id, p])), [totw]);
   const poolById = useMemo(() => new Map([...(pool?.players ?? []), ...(pool?.coaches ?? [])].map((p) => [p.id, p])), [pool]);
   const resolve = useCallback((id: number): TotwPlayer | null => {
-    const ready = faces.get(id) ?? officialById.get(id);
-    if (ready) return ready;
-    const p = poolById.get(id);
-    return p ? faceless(p) : null;
-  }, [faces, officialById, poolById]);
+    const p = faces.get(id) ?? officialById.get(id) ?? (poolById.has(id) ? faceless(poolById.get(id) as TotwPlayer) : null);
+    // A pasted team brings the ratings this competition's own data lacks.
+    const rating = picks.ratings?.[id];
+    return p && rating !== undefined ? { ...p, rating } : p;
+  }, [faces, officialById, poolById, picks.ratings]);
 
   const formation = picks.formation ?? totw?.formation ?? "4-3-3";
   const slots: TotwSlot[] = useMemo(() => {
@@ -155,6 +159,13 @@ export default function TotwStudio({ league, leagueField }: { league: number; le
     return Array.from(groups.entries());
   }, [pool]);
 
+  const fillFromPaste = () => {
+    if (!pool) return;
+    const r = matchPasted(pasted, pool.players, formation);
+    setPasteResult({ found: r.found, missed: r.missed });
+    if (r.found > 0) savePicks({ ...picks, formation: r.formation, slots: r.slots, ratings: r.ratings });
+  };
+
   const pickSlot = (i: number, id: number) => {
     const next: Picks = { ...picks, slots: { ...(picks.slots ?? {}) } };
     if (id) next.slots![i] = id; else delete next.slots![i];
@@ -191,9 +202,9 @@ export default function TotwStudio({ league, leagueField }: { league: number; le
               </select>
             )}
           </label>
-          <div className="kv"><span>{t("المصدر")}</span><b>{!forLeague ? "—" : official ? t("التشكيلة الرسمية", "Official team") : t("اختيار يدوي", "Picked by hand")}</b></div>
+          <div className="kv"><span>{t("المصدر")}</span><b>{!forLeague ? "—" : official ? t("التشكيلة الرسمية", "Official team") : picks.ratings ? t("تعبئة تلقائية", "Filled automatically") : t("اختيار يدوي", "Picked by hand")}</b></div>
           {forLeague && !official && (
-            <p className="muted">{t("لا تتوفر تشكيلة رسمية للجولة ولا تقييمات للاعبين في هذه المسابقة — اختر اللاعبين من أساسيي الجولة.")}</p>
+            <p className="muted">{t("لا تتوفر تشكيلة رسمية للجولة ولا تقييمات للاعبين في هذه المسابقة — ألصق تشكيلة الجولة لتعبئتها تلقائياً، أو اختر اللاعبين بنفسك.", "No official team or player ratings for this competition: paste the team of the round to fill it in automatically, or pick the players yourself.")}</p>
           )}
           <div className="kv"><span>{t("الحالة")}</span><span className={loading ? "pill" : error ? "pill warn" : "pill ok"}>{loading ? t("جاري التحميل…", "Loading…") : error ? t("خطأ", "Error") : t("متصل", "Connected")}</span></div>
           {error && <p className="err">{error}</p>}
@@ -207,12 +218,30 @@ export default function TotwStudio({ league, leagueField }: { league: number; le
             <label className="field wide">
               <span>{t("الخطة")}</span>
               <select value={formation} onChange={(e) => savePicks({ ...picks, formation: e.target.value })}>
-                {Array.from(new Set([...(totw?.formation ? [totw.formation] : []), ...FORMATIONS])).map((f) => <option key={f} value={f}>{f}</option>)}
+                {Array.from(new Set([...(totw?.formation ? [totw.formation] : []), ...(picks.formation ? [picks.formation] : []), ...FORMATIONS])).map((f) => <option key={f} value={f}>{f}</option>)}
               </select>
             </label>
-            {poolLoading && !pool && <Loader label={t("جاري تحميل أساسيي الجولة…")} size={28} />}
+            {poolLoading && !pool && <Loader label={t("جاري تحميل لاعبي الجولة…", "Loading the round's players…")} size={28} />}
             {pool && (
               <>
+                {!official && (
+                  <div className="kxs-paste">
+                    <label className="field wide">
+                      <span>{t("ألصق تشكيلة الجولة", "Paste the team of the round")}</span>
+                      <textarea rows={4} dir="auto" value={pasted} onChange={(e) => setPasted(e.target.value)}
+                        placeholder={t("الأسماء والتقييمات كما نسختها، بأي ترتيب", "Names and ratings as copied, in any order")} />
+                    </label>
+                    <button type="button" className="btn" disabled={!pasted.trim()} onClick={fillFromPaste}>{t("تعبئة تلقائية", "Fill automatically")}</button>
+                    {pasteResult && (
+                      <p className={pasteResult.found === 0 ? "err" : "muted"} role="status">
+                        {pasteResult.found === 0
+                          ? t("لم يُعثر على أي لاعب من هذه الجولة في النص.", "No player from this round was found in the text.")
+                          : t(`تم التعرف على ${pasteResult.found} من 11 لاعباً.`, `Found ${pasteResult.found} of 11 players.`)}
+                        {pasteResult.missed.length > 0 && <> {t("لم يُعثر على: ", "Not found: ")}<bdi>{pasteResult.missed.slice(0, 6).join("، ")}</bdi>{t(" — اخترهم من القوائم.", " — pick them from the lists.")}</>}
+                      </p>
+                    )}
+                  </div>
+                )}
                 <label className="field wide">
                   <span>{t("المدرب")}</span>
                   <select value={coach?.id ?? ""} onChange={(e) => savePicks({ ...picks, coach: Number(e.target.value) || undefined })}>

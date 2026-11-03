@@ -172,6 +172,11 @@ html, body {
 .field.check { justify-content: flex-start; gap: 6px; }
 .field input[type="number"], .field input[type="text"], .field input[type="date"], .field input[type="search"] { width: 96px; background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 6px 8px; font-family: inherit; font-size: 13px; }
 .field input:focus { outline: none; border-color: var(--accent); }
+.field textarea { width: 100%; min-height: 96px; resize: vertical; background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 8px 10px; font: inherit; font-size: 14px; line-height: 1.5; }
+.field textarea:focus { outline: none; border-color: var(--accent); }
+.field:has(textarea) { flex-direction: column; align-items: stretch; }
+.kxs-paste { display: flex; flex-direction: column; gap: 8px; padding-bottom: 12px; margin-bottom: 12px; border-bottom: 1px solid var(--border); }
+.kxs-paste .btn { align-self: flex-start; }
 .field.wide input[type="text"], .field.wide input[type="date"] { width: 100%; }
 .field input[type="color"] { width: 42px; height: 30px; padding: 0; border: 1px solid var(--border); border-radius: 7px; background: none; cursor: pointer; }
 .field input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent); }

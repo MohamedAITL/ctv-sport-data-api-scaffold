@@ -39,6 +39,8 @@ export interface LineupPlayer {
   athleteId: number | null;
   name: string;
   shortName: string;
+  /** The name in Latin letters, as a URL slug ("munir-el-kajoui"): what a pasted team is matched on. */
+  slug?: string;
   number: number | null;
   photo: string | null;
   position: string | null; // Arabic

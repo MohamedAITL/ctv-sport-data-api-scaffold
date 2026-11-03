@@ -3,8 +3,9 @@
 // 365scores publishes its own for the big leagues and international
 // tournaments (`/competitions/teamOfTheWeek/`, `weekKey` picks a round). It has
 // none for Botola, the Throne Cup or the CAF club competitions, and those
-// matches carry no player ratings either, so there the team is picked by hand
-// from everyone who started the round: `fetchRoundPool`.
+// matches carry no player ratings either, so there the team is pasted
+// (lib/totwPaste.ts) or picked by hand from everyone who played the round:
+// `fetchRoundPool`.
 import { crest, FACE_IMG, fetchLiveDetail, get, Q, rowSides } from "./live365";
 import { fetch365Games, matchesInRound } from "./scores365Games";
 
@@ -14,6 +15,8 @@ export interface TotwPlayer {
   id: number;
   name: string;
   shortName: string;
+  /** The name in Latin letters, where the source gives one. */
+  slug?: string;
   number: number | null;
   position: string | null; // Arabic
   line: number | null;
@@ -97,8 +100,7 @@ export async function playedRounds(competitionId: number): Promise<number[]> {
   return Array.from(rounds).sort((a, b) => a - b);
 }
 
-// shortcut: starters only — a substitute who came on cannot be picked; add the
-// benches' subbed-on players if that is ever wanted.
+// Everyone who played the round: the starters and the substitutes who came on.
 export async function fetchRoundPool(competitionId: number, round: number): Promise<RoundPool> {
   const { matches } = await fetch365Games(competitionId);
   const games = matchesInRound(matches, round).filter((m) => m.isFinished);
@@ -118,12 +120,13 @@ export async function fetchRoundPool(competitionId: number, round: number): Prom
         // A replayed match lists the same players twice; keep the first.
         if (!into.has(id)) {
           into.set(id, {
-            id, name: p.name, shortName: p.shortName, number: p.number, position: p.position,
+            id, name: p.name, shortName: p.shortName, slug: p.slug, number: p.number, position: p.position,
             line: p.line, side: p.side, rating: p.rating, photo: p.photo, club,
           });
         }
       };
       lu.starting.forEach(add(players));
+      lu.bench.filter((p) => p.subbedIn).forEach(add(players));
       if (lu.coach) add(coaches)(lu.coach);
     }
   }
