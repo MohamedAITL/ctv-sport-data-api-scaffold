@@ -72,7 +72,8 @@ export function toMatch(g: RawGame): LiveMatch | null {
     id: g.id,
     matchupId: `${h.id}-${a.id}-${g.competitionId ?? 0}`,
     competitionId: g.competitionId ?? 0,
-    competition: g.competitionDisplayName ?? "",
+    // The game page names it "المغرب, الدوري المغربي"; the country is noise on a poster.
+    competition: (g.competitionDisplayName ?? "").split(/[,،]\s*/).pop()?.trim() ?? "",
     competitionLogo: g.competitionId ? competitionLogo(g.competitionId) : null,
     startTime: g.startTime ?? "",
     statusText: g.statusText ?? "",
@@ -658,6 +659,8 @@ export async function fetchMatchSheet(gameId: number, matchupId: string): Promis
   };
 }
 
+const ENGLISH_EVENTS: Record<string, string> = { Substitution: "تبديل", Woodwork: "كرة في القائم" };
+
 export async function fetchLiveDetail(gameId: number, matchupId: string): Promise<LiveDetail | null> {
   // Stats failing must not cost us the lineup, so they are settled separately.
   const [detRes, statRes] = await Promise.allSettled([
@@ -675,8 +678,8 @@ export async function fetchLiveDetail(gameId: number, matchupId: string): Promis
   const events: LiveEvent[] = (g.events ?? []).map((e, i) => ({
     competitorId: e.competitorId ?? 0,
     minute: e.gameTimeDisplay ?? "",
-    // The Arabic feed still sends this one label in English.
-    type: (e.eventType?.name ?? "").replace(/^Substitution$/, "تبديل"),
+    // The Arabic feed still sends these labels in English.
+    type: ENGLISH_EVENTS[e.eventType?.name ?? ""] ?? e.eventType?.name ?? "",
     player: byPlayer.get(e.playerId)?.name ?? null,
     isMajor: Boolean(e.isMajor),
     order: e.order ?? i,

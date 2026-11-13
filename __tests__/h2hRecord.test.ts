@@ -70,7 +70,21 @@ describe("posterMeetings", () => {
 
   it("filters to the competition before taking the last five", () => {
     const mixed = [past(1, 2, 0, 99), ...all.slice(1)];
-    const { meetings } = posterMeetings(mixed, match, { ...DEFAULT_H2H_LAYOUT, rows: 5, sameCompetitionOnly: true });
+    const { meetings, fellBack } = posterMeetings(mixed, match, { ...DEFAULT_H2H_LAYOUT, rows: 5, sameCompetitionOnly: true });
     expect(meetings.map((m) => m.id)).toEqual([2, 3, 4, 5, 6]);
+    expect(fellBack).toBe(false);
+  });
+
+  // Morocco and Niger, before their Africa Cup qualifier: five meetings, none in that competition.
+  it("shows every meeting, never 0-0-0, when the teams never met in this competition", () => {
+    const elsewhere = all.slice(0, 5).map((m) => ({ ...m, competitionId: 645 }));
+    const { meetings, rec, fellBack } = posterMeetings(elsewhere, match, { ...DEFAULT_H2H_LAYOUT, rows: 5, sameCompetitionOnly: true });
+    expect(fellBack).toBe(true);
+    expect(meetings).toHaveLength(5);
+    expect(rec).toMatchObject({ played: 5, homeWins: 5, homeGoals: 9, awayGoals: 2 });
+  });
+
+  it("has nothing to fall back on when the teams never met at all", () => {
+    expect(posterMeetings([], match, DEFAULT_H2H_LAYOUT)).toMatchObject({ meetings: [], fellBack: false });
   });
 });

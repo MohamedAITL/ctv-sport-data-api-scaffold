@@ -14,12 +14,14 @@ import { useLang } from "@/lib/prefs";
  * the last `rows` of them, newest first, never the whole history. The poster
  * is about this tie in this competition (a Champions League night is not told
  * by two friendlies); by id, not name — the same competition reads
- * "… - ربع النهائي" once the knockout starts.
+ * "… - ربع النهائي" once the knockout starts. Teams that never met in it get
+ * all their meetings instead (`fellBack`), never an empty 0-0-0 poster.
  */
-export function posterMeetings(all: PastMatch[], match: LiveMatch, l: H2HLayout): { meetings: PastMatch[]; rec: H2HRecord } {
-  const pool = l.sameCompetitionOnly ? all.filter((m) => m.competitionId === match.competitionId) : all;
-  const meetings = pool.slice(0, l.rows);
-  return { meetings, rec: h2hRecord(meetings, match.home.id) };
+export function posterMeetings(all: PastMatch[], match: LiveMatch, l: H2HLayout): { meetings: PastMatch[]; rec: H2HRecord; fellBack: boolean } {
+  const here = l.sameCompetitionOnly ? all.filter((m) => m.competitionId === match.competitionId) : all;
+  const fellBack = here.length === 0 && all.length > 0;
+  const meetings = (fellBack ? all : here).slice(0, l.rows);
+  return { meetings, rec: h2hRecord(meetings, match.home.id), fellBack };
 }
 
 /**
@@ -72,8 +74,8 @@ export default function H2HExport({ match, onClose }: { match: LiveMatch; onClos
       }}
       titles={(l) => { const { meetings, rec } = pick(l); return h2hTitles(match, meetings, rec); }}
       design={(l, set) => <H2HDesign layout={l} onChange={set} />}
-      note={(l) => pick(l).meetings.length === 0 && (
-        <p className="kxp-note">{t("لم يلتق الفريقان من قبل في ")}{match.competition}{t(" — أطفئ «هذه المسابقة فقط» لعرض كل المواجهات.")}</p>
+      note={(l) => pick(l).fellBack && (
+        <p className="kxp-note">{t("لم يلتق الفريقان من قبل في ")}{match.competition}{t("، فالملصق يعرض كل مواجهاتهما.", ", so the poster shows all their meetings.")}</p>
       )}
     />
   );

@@ -14,7 +14,6 @@ export const EN: Record<string, string> = {
   " من ": " of ",
   " مواجهة · الأهداف": " meetings · goals",
   " مواجهة · الأهداف ": " meetings · goals ",
-  " — أطفئ «هذه المسابقة فقط» لعرض كل المواجهات.": " — switch off “This competition only” to show every meeting.",
   " — احتياط": " — sub",
   " — الباقي معروض.": " — the rest is shown.",
   " — الترتيب": " — rank",

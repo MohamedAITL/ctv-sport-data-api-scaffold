@@ -200,6 +200,20 @@ describe("fetchLiveDetail", () => {
     expect(d.events[0].type).toBe("تبديل");
   });
 
+  it("puts the feed's English Woodwork label in Arabic", async () => {
+    const payload = JSON.parse(JSON.stringify(detailPayload));
+    payload.game.events[0].eventType.name = "Woodwork";
+    mock((u) => (u.includes("/game/stats/") ? { statistics: [], statisticsFilters: [] } : payload));
+    expect((await fetchLiveDetail(100, "140-174-11"))!.events[0].type).toBe("كرة في القائم");
+  });
+
+  it("names the competition without the country the game page puts in front", async () => {
+    const payload = JSON.parse(JSON.stringify(detailPayload));
+    payload.game.competitionDisplayName = "المغرب, الدوري المغربي";
+    mock((u) => (u.includes("/game/stats/") ? { statistics: [], statisticsFilters: [] } : payload));
+    expect((await fetchLiveDetail(100, "140-174-11"))!.match.competition).toBe("الدوري المغربي");
+  });
+
   it("joins lineup entries to members and splits them by role", async () => {
     mock((u) => (u.includes("/game/stats/")
       ? { statistics: [], statisticsFilters: [{ filterId: -1, name: "المباراة" }] }
